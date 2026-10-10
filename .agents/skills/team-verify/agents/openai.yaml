@@ -1,3 +1,0 @@
-interface:
-  display_name: "QA 확인"
-  short_description: "병합된 작업을 재현 절차로 검증하고 해결된 이슈를 종료합니다."
