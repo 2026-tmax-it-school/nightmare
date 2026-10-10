@@ -664,7 +664,9 @@ export class UI {
   notebook(hintText) {
     return new Promise(resolve => {
       const tabs = ['소지품', '단서', '기억 조각', '생각하기'];
-      let tab = 0, idx = 0;
+      // 목록은 구분선(y 104~404) 안에 ROWS줄만 보이고, 커서를 따라 스크롤된다
+      const ROWS = 11;
+      let tab = 0, idx = 0, first = 0;
       const c = this.fixed(this.s.add.container(0, 0), 180);
       c.add([
         this.s.add.rectangle(0, 0, W, H, 0x060608, 0.95).setOrigin(0),
@@ -680,7 +682,8 @@ export class UI {
       });
       const list = this.s.add.container(0, 0);
       const detail = this.s.add.text(250, 110, '', textStyle(14, '#d8d0c0', { wordWrap: { width: W - 290, useAdvancedWrap: true } }));
-      c.add([list, detail]);
+      const more = this.s.add.text(222, 410, '', textStyle(11, '#6d6875')).setOrigin(1, 0);
+      c.add([list, detail, more]);
 
       const entries = () => {
         if (tab === 0) return state.items.map(id => DB.items[id]);
@@ -693,16 +696,22 @@ export class UI {
         list.removeAll(true);
         const es = entries();
         idx = Math.min(idx, Math.max(0, es.length - 1));
+        first = Phaser.Math.Clamp(first, idx - ROWS + 1, idx);
         if (!es.length) list.add(this.s.add.text(28, 110, '(없음)', textStyle(14, '#6d6875')));
-        es.forEach((e, i) => list.add(this.s.add.text(28, 110 + i * 26, (i === idx ? '▶ ' : '   ') + e.name, textStyle(14, i === idx ? '#ffffff' : '#8f8996'))));
+        es.slice(first, first + ROWS).forEach((e, r) => {
+          const i = first + r;
+          list.add(this.s.add.text(28, 110 + r * 26, (i === idx ? '▶ ' : '   ') + e.name, textStyle(14, i === idx ? '#ffffff' : '#8f8996')));
+        });
+        more.setText(es.length > ROWS ? `${idx + 1} / ${es.length}` : '');
         detail.setText(es[idx]?.desc || '');
       };
       const off = this.listen(e => {
         const d = dirOf(e);
-        if (d === 'left') { tab = (tab + tabs.length - 1) % tabs.length; idx = 0; sfx('tick'); }
-        else if (d === 'right') { tab = (tab + 1) % tabs.length; idx = 0; sfx('tick'); }
-        else if (d === 'up') { idx = Math.max(0, idx - 1); sfx('tick'); }
-        else if (d === 'down') { idx += 1; sfx('tick'); }
+        const last = entries().length - 1;
+        if (d === 'left') { tab = (tab + tabs.length - 1) % tabs.length; idx = first = 0; sfx('tick'); }
+        else if (d === 'right') { tab = (tab + 1) % tabs.length; idx = first = 0; sfx('tick'); }
+        else if (d === 'up') { if (idx > 0) { idx--; sfx('tick'); } }
+        else if (d === 'down') { if (idx < last) { idx++; sfx('tick'); } }
         else if (e.code === 'Escape') { off(); c.destroy(); resolve(); return; }
         draw();
       });
