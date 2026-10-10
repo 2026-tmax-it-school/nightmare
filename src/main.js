@@ -11,6 +11,16 @@ import DemoEnd from './scenes/DemoEnd.js';
 // ?debug: 화면이 가려져도 루프가 돌도록 타이머 사용 + 콘솔에서 window.__game 접근
 const debug = new URLSearchParams(location.search).has('debug');
 
+// 캔버스 텍스트는 웹폰트가 늦게 로드돼도 자동으로 다시 그려지지 않으므로,
+// 「 」 같은 기호가 깨지지 않도록 폰트 로드를 기다린 뒤 게임을 시작한다.
+const timeout = ms => new Promise(r => setTimeout(r, ms));
+try {
+  await Promise.race([
+    Promise.all([document.fonts.load('400 16px "Noto Sans KR"'), document.fonts.load('700 16px "Noto Sans KR"')]),
+    timeout(2000),
+  ]);
+} catch {}
+
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
