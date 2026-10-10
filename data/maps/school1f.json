@@ -46,7 +46,18 @@
     { "x": 11.3, "y": 10.15, "text": "왜 모른 척했어", "angle": -4, "cond": { "flag": "stage1" } },
     { "x": 26.4, "y": 11.55, "text": "피아노 왕자 ㅋㅋ", "angle": 3, "cond": { "flag": "stage1" } },
     { "x": 33.2, "y": 10.2, "text": "기억해", "angle": -2, "cond": { "flag": "stage1" } },
-    { "x": 2.2, "y": 16.4, "text": "너도 웃었잖아", "angle": 5, "cond": { "flag": "stage1" } }
+    { "x": 2.2, "y": 16.4, "text": "너도 웃었잖아", "angle": 5, "cond": { "flag": "stage1" } },
+    { "x": 21.6, "y": 12.35, "text": "내가 데려올게", "angle": -3, "cond": { "flag": "stage2" } },
+    { "x": 31.2, "y": 12.35, "text": "뜨거워", "angle": 5, "cond": { "flag": "stage2" } }
+  ],
+  "decor": [
+    { "x": 12, "y": 12, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 20, "y": 11, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 25, "y": 10, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 27, "y": 12, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 28, "y": 11, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 29, "y": 12, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 33, "y": 10, "tex": "scorch", "cond": { "flag": "stage2" } }
   ],
   "onEnter": {
     "once": "ch1_start",
@@ -56,6 +67,20 @@
       { "t": "text", "who": "재민", "text": "……일단 둘러보자. 나갈 길도 찾아야 해." }
     ]
   },
+  "onEnterIf": [
+    {
+      "once": "ret1f", "cond": { "flag": "stage2" },
+      "script": [
+        { "t": "wait", "ms": 300 },
+        { "t": "text", "text": "1층에 내려서자 탄내가 코를 찌른다." },
+        { "t": "text", "text": "복도 바닥 곳곳이 검게 그을려 있다. 마치 그날, 불이 번졌던 것처럼." },
+        { "t": "sfx", "name": "whisper" },
+        { "t": "text", "text": "……어디선가, 누군가 문을 두드리는 소리가 들린 것 같다." },
+        { "t": "text", "who": "재민", "text": "교무실 열쇠… 교무실은 복도 동쪽 끝, 계단실 옆이었지." },
+        { "t": "save" }
+      ]
+    }
+  ],
   "triggers": [
     { "x": 24, "y": 10, "w": 3, "h": 1, "once": "near13", "script": "near13" },
     { "x": 21, "y": 1, "w": 9, "h": 8, "once": "enter13", "script": "enter13" },
@@ -281,7 +306,20 @@
         ]
       }
     ],
-    "door_staff": [{ "t": "text", "text": "교무실. 잠겨 있다. 유리창 너머로 서류 더미가 보인다." }],
+    "door_staff": [
+      {
+        "t": "if", "cond": { "item": "keyOffice" },
+        "then": [
+          { "t": "sfx", "name": "unlock" },
+          { "t": "text", "text": "교무실 열쇠를 꽂자, 자물쇠가 힘없이 돌아간다." },
+          { "t": "text", "who": "재민", "text": "……담임이 숨기려던 게, 여기 있어." },
+          { "t": "flag", "key": "demo_end" },
+          { "t": "save" },
+          { "t": "goto", "scene": "DemoEnd" }
+        ],
+        "else": [{ "t": "text", "text": "교무실. 잠겨 있다. 유리창 너머로 서류 더미가 보인다." }]
+      }
+    ],
     "door_science": [
       {
         "t": "if", "cond": { "flag": "stage1" },

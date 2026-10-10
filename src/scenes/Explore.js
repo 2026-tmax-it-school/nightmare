@@ -14,6 +14,11 @@ const cx = t => t * TILE + TILE / 2;
 const MOVE_MS = 150;
 const CHASE_STEP_MS = 250;
 const CHASE_GIVE_UP_MS = 4500;
+// 부정 수치 (GDD 4.4)
+const DENIAL_HAUNT = 30;   // 이상이면 가끔 환각
+const DENIAL_PHANTOM = 60; // 이상이면 환각 때 그림자 환영도
+const DENIAL_MAX = 100;    // 붙잡힘
+const HAUNT_EVERY_S = 30;  // 환각 최소 간격(초), 여기에 0~15초를 더한다
 
 export default class Explore extends Phaser.Scene {
   constructor() { super('Explore'); }
@@ -53,6 +58,12 @@ export default class Explore extends Phaser.Scene {
         .setDepth(1).setAlpha(0.85).setAngle(g.angle ?? 0);
       t.cond = g.cond;
       return t;
+    });
+    // 학교 변화 단계에 따라 나타나는 바닥 장식 (그을음 등)
+    this.decor = (m.decor || []).map(d => {
+      const img = this.add.image(cx(d.x), cx(d.y), d.tex).setDepth(1);
+      img.cond = d.cond;
+      return img;
     });
 
     const pos = this.arrive || (resume ? state.pos : m.spawn);
@@ -94,6 +105,8 @@ export default class Explore extends Phaser.Scene {
     this.applyStage();
     this.updatePrompt();
     this.updateArea();
+    this.haunt = 0;
+    this.time.addEvent({ delay: 1000, loop: true, callback: this.denialTick, callbackScope: this });
     cam.fadeIn(500);
     this.time.delayedCall(550, () => this.runEnter());
   }
@@ -227,6 +240,10 @@ export default class Explore extends Phaser.Scene {
     const list = [];
     const e = this.map.onEnter;
     if (e && !flag(e.once)) { setFlag(e.once); list.push(...e.script); }
+    // 조건부 진입 이벤트 (예: 옥상 이후 1층 귀환)
+    for (const c of this.map.onEnterIf || []) {
+      if (!flag(c.once) && checkCond(c.cond)) { setFlag(c.once); list.push(...c.script); }
+    }
     if (state.flags.pendingChase) list.push({ t: 'text', text: '……발소리가 다가온다.' }, { t: 'resumeChase' });
     if (list.length) await this.run(list);
   }
@@ -274,8 +291,48 @@ export default class Explore extends Phaser.Scene {
   }
 
   applyStage() {
-    this.tint.setFillStyle(0x5a0000, (flag('stage1') ? 0.1 : 0) + state.denial / 400);
+    this.tint.setFillStyle(0x5a0000, (flag('stage1') ? 0.1 : 0) + (flag('stage2') ? 0.08 : 0) + state.denial / 400);
     this.decals.forEach(d => d.setVisible(checkCond(d.cond)));
+    this.decor.forEach(d => d.setVisible(checkCond(d.cond)));
+  }
+
+  // ── 부정 수치: 높을수록 환각, 최대치면 붙잡힌다 ──
+  denialTick() {
+    if (this.over || !this.map.dark) return;
+    if (state.denial >= DENIAL_MAX) {
+      if (!this.busy && !this.hidden) this.caught();
+      return;
+    }
+    if (this.busy || this.hidden || this.chase || state.denial < DENIAL_HAUNT) return;
+    if (++this.haunt < HAUNT_EVERY_S) return;
+    this.haunt = -Phaser.Math.Between(0, 15);
+    sfx('follow');
+    this.ui.glitch(250);
+    if (state.denial >= DENIAL_PHANTOM) this.phantom();
+  }
+
+  // 손전등 빛 가장자리의 빈 칸에 그림자가 잠깐 서 있다 사라진다 (쫓아오지 않음)
+  // 벽 너머에 나타나지 않도록 걸어서 4~6칸 거리인 칸만 고른다
+  phantom() {
+    const dist = new Map([[key(this.tx, this.ty), 0]]);
+    const q = [[this.tx, this.ty]];
+    const spots = [];
+    while (q.length) {
+      const [x, y] = q.shift();
+      const d = dist.get(key(x, y));
+      if (d >= 4) spots.push([x, y]);
+      if (d >= 6) continue;
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const nx = x + dx, ny = y + dy;
+        if (dist.has(key(nx, ny)) || !this.passable(nx, ny)) continue;
+        dist.set(key(nx, ny), d + 1);
+        q.push([nx, ny]);
+      }
+    }
+    if (!spots.length) return;
+    const [x, y] = Phaser.Utils.Array.GetRandom(spots);
+    const s = this.add.image(cx(x), cx(y), 'shadow').setDepth(3).setAlpha(0);
+    this.tweens.add({ targets: s, alpha: 0.85, duration: 400, hold: 900, yoyo: true, onComplete: () => s.destroy() });
   }
 
   // ── 사물함 ──
