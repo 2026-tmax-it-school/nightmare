@@ -7,8 +7,8 @@ on:
   push:
     branches: [main, develop]
 
-# This repository has no application yet. These checks validate only the
-# review integration. Wire the review listener to real app CI when it exists.
+# These checks validate only the review integration, not the Phaser game.
+# Wire the review listener to real application CI when that CI is available.
 permissions:
   contents: read
 
