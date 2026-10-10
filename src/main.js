@@ -11,6 +11,14 @@ import DemoEnd from './scenes/DemoEnd.js';
 // ?debug: 화면이 가려져도 루프가 돌도록 타이머 사용 + 콘솔에서 window.__game 접근
 const debug = new URLSearchParams(location.search).has('debug');
 
+// pixelArt(최근접 필터)를 글씨에도 적용하면 화면 배율에 따라 획이 빠져 깨진다 → 텍스트만 선형 필터
+const makeText = Phaser.GameObjects.GameObjectFactory.prototype.text;
+Phaser.GameObjects.GameObjectFactory.prototype.text = function (...args) {
+  const t = makeText.apply(this, args);
+  t.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+  return t;
+};
+
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
