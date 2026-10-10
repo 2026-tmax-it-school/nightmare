@@ -44,13 +44,13 @@ export class UI {
   ensureDialog() {
     if (this.dlg) return this.dlg;
     const c = this.fixed(this.s.add.container(20, H - 128), 120);
-    const bg = this.s.add.rectangle(0, 0, W - 40, 112, 0x0a0a0f, 0.9).setOrigin(0).setStrokeStyle(1, 0x5d5a66);
+    // 1px 테두리는 픽셀 경계에 반씩 걸쳐 왼쪽 선이 통째로 빠진다 → 2px
+    const bg = this.s.add.rectangle(0, 0, W - 40, 112, 0x0a0a0f, 0.9).setOrigin(0).setStrokeStyle(2, 0x5d5a66);
     const name = this.s.add.text(16, 10, '', textStyle(14, '#c9a46a'));
     const body = this.s.add.text(16, 34, '', textStyle(15, '#e8e2d6', { wordWrap: { width: W - 80, useAdvancedWrap: true } }));
-    const arrow = this.s.add.text(W - 64, 88, '▼', textStyle(12, '#8a8494'));
+    const arrow = this.s.add.text(W - 66, 86, '▼', textStyle(14, '#c9c2d0'));
     c.add([bg, name, body, arrow]);
-    this.s.tweens.add({ targets: arrow, alpha: 0.2, duration: 500, yoyo: true, repeat: -1 });
-    this.dlg = { c, name, body, arrow };
+    this.dlg = { c, name, body, arrow, blink: null };
     return this.dlg;
   }
 
@@ -69,7 +69,10 @@ export class UI {
         done = true;
         tick.remove();
         d.body.setText(text);
+        // 깜박임이 흐린 순간에 나타나면 못 보고 넘기므로, 항상 선명한 상태에서 다시 시작
         d.arrow.setVisible(true);
+        d.blink?.remove();
+        d.blink = this.s.tweens.add({ targets: d.arrow, alpha: { from: 1, to: 0.35 }, duration: 500, yoyo: true, repeat: -1 });
       };
       const tick = this.s.time.addEvent({
         delay: 22, loop: true,
