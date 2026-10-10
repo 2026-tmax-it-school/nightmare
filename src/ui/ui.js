@@ -126,7 +126,7 @@ export class UI {
     const p = this.s.add.text(18, 14, prompt, textStyle(14, '#c9b89a', { wordWrap: { width: 344, useAdvancedWrap: true } }));
     const top = p.height + 28;
     const h = top + labels.length * 28 + 6;
-    c.add(this.s.add.rectangle(0, 0, 380, h, 0x0a0a0f, 0.94).setOrigin(0).setStrokeStyle(1, 0x5d5a66));
+    c.add(this.s.add.rectangle(0, 0, 380, h, 0x0a0a0f, 0.94).setOrigin(0).setStrokeStyle(2, 0x5d5a66));
     c.add(p);
     c.setY(H / 2 - h / 2);
     const i = await this.select(c, 22, top, labels);
@@ -249,7 +249,7 @@ export class UI {
       for (let col = 0; col < p.cols; col++) {
         for (let row = 0; row < p.rows; row++) {
           const x = gx + col * (cw + gapX), y = gy + row * (ch + gapY);
-          c.add(this.s.add.rectangle(x, y, cw, ch, 0xc8bb98).setOrigin(0).setStrokeStyle(1, 0x6a5a44));
+          c.add(this.s.add.rectangle(x, y, cw, ch, 0xc8bb98).setOrigin(0).setStrokeStyle(2, 0x6a5a44));
           const name = p.names[`${col},${row}`];
           if (name) c.add(this.s.add.text(x + cw / 2, y + ch / 2, name, textStyle(13, '#3a2e20')).setOrigin(0.5).setAlpha(0.55));
         }
@@ -300,7 +300,7 @@ export class UI {
       let pos = 0, wrong = 0;
       const startX = pw / 2 - (n * 54 - 10) / 2;
       const boxes = vals.map((_, i) => {
-        c.add(this.s.add.rectangle(startX + i * 54, 60, 44, 56, 0x0c0d0f).setOrigin(0).setStrokeStyle(1, 0x5a5f66));
+        c.add(this.s.add.rectangle(startX + i * 54, 60, 44, 56, 0x0c0d0f).setOrigin(0).setStrokeStyle(2, 0x5a5f66));
         const t = this.s.add.text(startX + i * 54 + 22, 88, '0', textStyle(28, '#e8e2d6')).setOrigin(0.5);
         c.add(t);
         return t;
