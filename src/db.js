@@ -8,4 +8,5 @@ export const DB = {
   hints: {},
   cutscenes: {},
   maps: {},
+  checkpoints: [], // 개발자 모드 전용
 };

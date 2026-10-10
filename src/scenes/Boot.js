@@ -1,4 +1,4 @@
-import { W, H, MAPS } from '../constants.js';
+import { W, H, MAPS, DEV } from '../constants.js';
 import { DB } from '../db.js';
 import { makeTextures } from '../textures.js';
 import { textStyle } from '../ui/ui.js';
@@ -13,6 +13,7 @@ export default class Boot extends Phaser.Scene {
     this.load.json('hints', 'data/hints.json');
     this.load.json('cutscenes', 'data/cutscenes.json');
     for (const id of MAPS) this.load.json('map_' + id, `data/maps/${id}.json`);
+    if (DEV) this.load.json('checkpoints', 'data/checkpoints.json');
   }
 
   create() {
@@ -28,6 +29,7 @@ export default class Boot extends Phaser.Scene {
     Object.assign(DB.hints, json('hints'));
     Object.assign(DB.cutscenes, json('cutscenes'));
     for (const id of MAPS) DB.maps[id] = json('map_' + id);
-    this.scene.start('Title');
+    if (DEV) DB.checkpoints = json('checkpoints').checkpoints;
+    this.scene.start(DEV ? 'Dev' : 'Title');
   }
 }
