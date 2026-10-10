@@ -7,30 +7,10 @@ const SLIT = { x0: 170, x1: 470, y0: 176, h: 9, gap: 14, n: 6 };
 const SLIT_Y1 = SLIT.y0 + SLIT.n * SLIT.gap;
 const SEE_DIST = 8;                          // 이 칸 수 안이면 실루엣이 보인다
 
-export class LockerView {
-  constructor(scene) {
-    this.s = scene;
-    this.scale = 0;
-    this.offset = 0;
-
-    const outside = scene.add.graphics();
-    this.drawCorridor(outside);
-    this.figure = this.makeFigure(scene);
-    const door = scene.add.graphics();
-    this.drawDoor(door);
-
-    this.view = scene.add.container(0, 0, [outside, this.figure, door]);
-    this.root = scene.add.container(0, 0, [
-      this.view,
-      scene.add.text(W / 2, H - 30, '사물함 안에 숨어 있다 — E: 나가기', textStyle(12, '#6f6878')).setOrigin(0.5),
-    ]).setScrollFactor(0).setDepth(90).setAlpha(0);
-
-    scene.tweens.add({ targets: this.root, alpha: 1, duration: 180 });
-    // 숨소리에 맞춰 시야가 천천히 오르내린다
-    this.breath = scene.tweens.add({ targets: this.view, y: 3, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-  }
-
-  drawCorridor(g) {
+// 장소별 틈 너머 풍경. 통풍구로 보이는 건 x 170~470, y 176~260 띠뿐이라 핵심 요소는 그 안에 둔다.
+// 맵 데이터의 사물함 오브젝트에 "view"로 지정한다 (없으면 corridor).
+const SCENERY = {
+  corridor(g) {
     g.fillStyle(0x000000).fillRect(0, 0, W, H);
     // 바닥 / 좌우 벽 / 천장을 소실점으로 모은다
     g.fillStyle(0x1d1f27).fillTriangle(0, H, W, H, VX, VY);
@@ -52,6 +32,88 @@ export class LockerView {
     }
     // 복도 끝은 완전한 어둠
     g.fillStyle(0x000000).fillCircle(VX, VY, 34);
+  },
+
+  // 교실 뒤편에서 앞을 본다: 칠판, 달빛 드는 창문, 줄지은 책상
+  classroom(g) {
+    g.fillStyle(0x000000).fillRect(0, 0, W, H);
+    g.fillStyle(0x19181d).fillRect(110, 100, 420, 200);              // 앞쪽 벽
+    g.fillStyle(0x221a14).fillTriangle(0, H, W, H, VX, 300);         // 나무 바닥
+    g.fillRect(110, 300, 420, 6);
+    // 칠판
+    g.fillStyle(0x3a2e22).fillRect(172, 158, 196, 80);
+    g.fillStyle(0x17271e).fillRect(176, 162, 188, 70);
+    g.lineStyle(1, 0x5d6e62, 0.45);
+    g.lineBetween(190, 180, 250, 176).lineBetween(196, 196, 300, 192).lineBetween(270, 214, 340, 210);
+    g.fillStyle(0x3a2e22).fillRect(172, 236, 196, 4);                // 분필 받침
+    // 창문 + 달빛
+    g.fillStyle(0x24324c).fillRect(386, 150, 80, 92);
+    g.fillStyle(0x34466a, 0.6).fillRect(390, 154, 34, 40).fillRect(428, 198, 34, 40);
+    g.fillStyle(0x15161a).fillRect(424, 150, 4, 92).fillRect(386, 194, 80, 4);
+    g.fillStyle(0x6a82b0, 0.07).fillTriangle(386, 242, 466, 242, 520, H).fillTriangle(386, 242, 300, H, 520, H);
+    // 책상 줄 (멀수록 작게)
+    for (const [y, w, h, gap] of [[244, 30, 7, 46], [254, 40, 9, 60]]) {
+      for (let x = 182; x + w <= 470; x += gap) {
+        g.fillStyle(0x4a3826).fillRect(x, y, w, h);
+        g.fillStyle(0x2a2018).fillRect(x + 2, y + h, 2, 6).fillRect(x + w - 4, y + h, 2, 6);
+      }
+    }
+  },
+
+  // 경비실: 꺼진 CCTV 모니터 묶음, 책상, 벽의 열쇠함, 철문
+  guardroom(g) {
+    g.fillStyle(0x000000).fillRect(0, 0, W, H);
+    g.fillStyle(0x1a1c19).fillRect(130, 110, 380, 190);              // 벽
+    g.fillStyle(0x1e2021).fillTriangle(0, H, W, H, VX, 300);         // 바닥
+    g.fillRect(130, 300, 380, 6);
+    // 달력
+    g.fillStyle(0x6c665a).fillRect(180, 168, 26, 34);
+    g.fillStyle(0x8e2a24).fillRect(180, 168, 26, 6);
+    g.fillStyle(0x3a3a36);
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) g.fillRect(183 + c * 6, 178 + r * 6, 3, 3);
+    // CCTV 모니터 2×2 — 하나만 희미하게 지직거린다
+    g.fillStyle(0x2a2a2e).fillRect(232, 164, 108, 70);
+    g.fillStyle(0x0a0c10).fillRect(236, 168, 48, 29).fillRect(288, 168, 48, 29).fillRect(236, 201, 48, 29).fillRect(288, 201, 48, 29);
+    g.fillStyle(0x4a6460, 0.35).fillRect(288, 201, 48, 29);
+    g.fillStyle(0x8fb0a8, 0.25);
+    for (let y = 203; y < 229; y += 4) g.fillRect(290, y, 44, 1);
+    // 책상
+    g.fillStyle(0x5c4027).fillRect(210, 238, 160, 10);
+    g.fillStyle(0x3e2c1c).fillRect(216, 248, 6, 14).fillRect(358, 248, 6, 14);
+    g.fillStyle(0xc8b88a, 0.6).fillRect(300, 232, 26, 6);            // 펼쳐진 일지
+    // 열쇠함
+    g.fillStyle(0x6b6f73).fillRect(384, 172, 30, 38);
+    g.fillStyle(0x4f5357).fillRect(387, 175, 24, 32);
+    g.fillStyle(0xb0b4b8);
+    for (let i = 0; i < 4; i++) g.fillRect(390 + i * 5, 200, 3, 3);
+    // 철문 (작은 유리창)
+    g.fillStyle(0x2c3034).fillRect(430, 150, 44, 150);
+    g.fillStyle(0x0b0e14).fillRect(440, 166, 24, 30);
+    g.fillStyle(0x9aa3ab).fillRect(434, 230, 4, 8);
+  },
+};
+
+export class LockerView {
+  constructor(scene, view = 'corridor') {
+    this.s = scene;
+    this.scale = 0;
+    this.offset = 0;
+
+    const outside = scene.add.graphics();
+    (SCENERY[view] || SCENERY.corridor)(outside);
+    this.figure = this.makeFigure(scene);
+    const door = scene.add.graphics();
+    this.drawDoor(door);
+
+    this.view = scene.add.container(0, 0, [outside, this.figure, door]);
+    this.root = scene.add.container(0, 0, [
+      this.view,
+      scene.add.text(W / 2, H - 30, '사물함 안에 숨어 있다 — E: 나가기', textStyle(12, '#6f6878')).setOrigin(0.5),
+    ]).setScrollFactor(0).setDepth(90).setAlpha(0);
+
+    scene.tweens.add({ targets: this.root, alpha: 1, duration: 180 });
+    // 숨소리에 맞춰 시야가 천천히 오르내린다
+    this.breath = scene.tweens.add({ targets: this.view, y: 3, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
   makeFigure(scene) {
