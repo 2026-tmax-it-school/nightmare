@@ -179,6 +179,67 @@ export function makeTextures(scene) {
     for (let i = 0; i < 4; i++) g.fillRect(2 + i * 2, 2 + i * 7, T - 4 - i * 4, 5);
     g.fillStyle(0xd8cfb4).fillTriangle(16, 4, 10, 12, 22, 12);
   });
+  make('stairs_down', g => {
+    g.fillStyle(0x45454c);
+    for (let i = 0; i < 4; i++) g.fillRect(8 - i * 2, 2 + i * 7, T - 16 + i * 4, 5);
+    g.fillStyle(0xd8cfb4).fillTriangle(16, 28, 10, 20, 22, 20);
+  });
+
+  // 2층: 음악실 · 컴퓨터실 · 방송실
+  const piano = (g, left) => {
+    g.fillStyle(0x000000, 0.3).fillRect(0, 26, T, 4);
+    g.fillStyle(0x17110d).fillRect(0, 2, T, 25);
+    g.fillStyle(0x2a1f17).fillRect(0, 2, T, 4);
+    g.fillStyle(0xe6e0d0).fillRect(0, 17, T, 8);
+    g.fillStyle(0x8a8478);
+    for (let x = 3; x < T; x += 5) g.fillRect(x, 17, 1, 8);
+    g.fillStyle(0x0c0a08);
+    for (let x = 2; x < T; x += 5) if ((x / 5 | 0) % 7 !== 2) g.fillRect(x, 17, 3, 5);
+    if (left) g.fillStyle(0xd8cfb4).fillRect(18, 7, 12, 8).fillStyle(0x3a3020).fillRect(20, 9, 8, 1).fillRect(20, 12, 6, 1);
+  };
+  make('piano_l', g => piano(g, true));
+  make('piano_r', g => piano(g, false));
+  make('bench', g => {
+    g.fillStyle(0x000000, 0.25).fillRect(5, 24, 22, 4);
+    g.fillStyle(0x1f1612).fillRect(6, 20, 3, 8).fillRect(23, 20, 3, 8);
+    g.fillStyle(0x2e221a).fillRect(4, 11, 24, 10);
+    g.fillStyle(0x3d2e22).fillRect(4, 11, 24, 3);
+  });
+  make('stand', g => {
+    g.fillStyle(0x2a2a2e).fillRect(15, 14, 2, 15).fillRect(10, 28, 12, 2);
+    g.fillStyle(0x3a3a40).fillRect(7, 5, 18, 11);
+    g.fillStyle(0xd8cfb4, 0.5).fillRect(9, 7, 14, 7);
+  });
+  const pc = (g, on) => {
+    g.fillStyle(0x000000, 0.25).fillRect(3, 26, 26, 4);
+    g.fillStyle(0x6a6e72).fillRect(2, 17, 28, 10);
+    g.fillStyle(0xb8b4a8).fillRect(7, 3, 18, 14);
+    g.fillStyle(on ? 0x2a5a8a : 0x0d1014).fillRect(9, 5, 14, 10);
+    if (on) g.fillStyle(0xcfe2f2, 0.8).fillRect(11, 8, 10, 1).fillRect(11, 11, 6, 1);
+    g.fillStyle(0xb8b4a8).fillRect(13, 17, 6, 2);
+    g.fillStyle(0x2a2c30).fillRect(6, 21, 20, 3);
+  };
+  make('pc', g => pc(g, false));
+  make('pc_on', g => pc(g, true));
+  make('console', g => {
+    g.fillStyle(0x000000, 0.25).fillRect(2, 26, 28, 4);
+    g.fillStyle(0x2e3034).fillRect(1, 8, 30, 19);
+    g.fillStyle(0x45484e).fillRect(1, 8, 30, 3);
+    g.fillStyle(0x9aa3ab);
+    for (let x = 4; x < 30; x += 5) g.fillRect(x, 13, 2, 10);
+    g.fillStyle(0xd8d8d8);
+    for (let x = 3; x < 30; x += 5) g.fillRect(x, 15 + (x * 7) % 6, 4, 2);
+  });
+  make('tapedeck', g => {
+    g.fillStyle(0x000000, 0.25).fillRect(3, 26, 26, 4);
+    g.fillStyle(0x5c4027).fillRect(2, 18, 28, 9);
+    g.fillStyle(0x24262a).fillRect(4, 6, 24, 13);
+    g.fillStyle(0x0c0d0f).fillRect(7, 8, 18, 7);
+    g.fillStyle(0x6a6e72).fillCircle(12, 11, 2).fillCircle(20, 11, 2);
+    g.fillStyle(0xa02020).fillRect(24, 16, 3, 2);
+    g.fillStyle(0x8a8478);
+    for (let i = 0; i < 4; i++) g.fillRect(4 + i * 7, 21, 5, 4);
+  });
 
   // 인물
   for (const dir of ['down', 'up', 'left', 'right']) make('player_' + dir, g => person(g, { dir }));

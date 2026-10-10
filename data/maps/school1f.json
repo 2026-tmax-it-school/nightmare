@@ -59,7 +59,7 @@
   "triggers": [
     { "x": 24, "y": 10, "w": 3, "h": 1, "once": "near13", "script": "near13" },
     { "x": 21, "y": 1, "w": 9, "h": 8, "once": "enter13", "script": "enter13" },
-    { "x": 35, "y": 14, "w": 4, "h": 5, "once": "stairsTrigger", "script": "stairs" }
+    { "x": 37, "y": 15, "w": 1, "h": 1, "cond": { "notFlag": "pendingChase" }, "script": "stairs" }
   ],
   "objects": [
     { "x": 4, "y": 1, "tex": "board", "script": "board11" },
@@ -159,7 +159,7 @@
     { "x": 21, "y": 17, "tex": "stall", "script": "stall" },
     { "x": 21, "y": 18, "tex": "stall", "script": "stall" },
 
-    { "x": 37, "y": 15, "tex": "stairs_up" }
+    { "x": 37, "y": 15, "tex": "stairs_up", "solid": false }
   ],
   "scripts": {
     "near13": [
@@ -360,14 +360,37 @@
       { "t": "text", "who": "재민", "text": "방금 그건… 교복을 입고 있었어." },
       { "t": "text", "who": "재민", "text": "2층 열쇠가 생겼다. 계단실은 복도 동쪽 끝이었지." }
     ],
-    "mirror": [{ "t": "text", "text": "거울 속 내 얼굴이 낯설다. 오래 쳐다보고 싶지 않다." }],
+    "mirror": [
+      {
+        "t": "if", "cond": { "flag": "frag8" },
+        "then": [{ "t": "text", "text": "거울 속 내 얼굴. 이제는 조금, 마주 볼 수 있을 것 같다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "flag": "frag4" },
+            "then": [
+              { "t": "text", "text": "거울이 뿌옇게 흐려진다. 김 서린 유리 너머로, 무언가가 비친다." },
+              { "t": "text", "text": "피아노 앞에 나란히 앉은 두 아이. 중학교 교복이다." },
+              { "t": "memory", "lines": ["(서툰 피아노 소리, 두 사람의 웃음)", "“여기서 이렇게— 맞지?”", "“재민아, 고등학교 가서도 같이 치자.”", "“……당연하지. 약속.”"] },
+              { "t": "text", "who": "재민", "text": "……먼저 등을 돌린 건, 나였어." },
+              { "t": "flag", "key": "frag8" },
+              { "t": "fragment", "n": 8 }
+            ],
+            "else": [{ "t": "text", "text": "거울 속 내 얼굴이 낯설다. 오래 쳐다보고 싶지 않다." }]
+          }
+        ]
+      }
+    ],
     "stall": [{ "t": "text", "text": "칸막이 문이 조금 열려 있다. ……안은 비어 있다." }],
     "stairs": [
-      { "t": "text", "text": "2층으로 이어지는 계단. 위층은 아래보다 더 어둡다." },
-      { "t": "text", "who": "재민", "text": "……가야 해." },
-      { "t": "flag", "key": "pendingChase", "value": null },
-      { "t": "save" },
-      { "t": "goto", "scene": "Explore", "map": "school2f" }
+      {
+        "t": "if", "cond": { "notFlag": "went2f" },
+        "then": [
+          { "t": "text", "text": "2층으로 이어지는 계단. 위층은 아래보다 더 어둡다." },
+          { "t": "text", "who": "재민", "text": "……가야 해." },
+          { "t": "flag", "key": "went2f" }
+        ]
+      },
+      { "t": "goto", "scene": "Explore", "map": "school2f", "pos": { "x": 31, "y": 15, "dir": "left" } }
     ]
   }
 }

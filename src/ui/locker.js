@@ -91,6 +91,59 @@ const SCENERY = {
     g.fillStyle(0x0b0e14).fillRect(440, 166, 24, 30);
     g.fillStyle(0x9aa3ab).fillRect(434, 230, 4, 8);
   },
+
+  // 음악실: 깨진 창으로 드는 달빛, 업라이트 피아노, 보면대
+  music(g) {
+    g.fillStyle(0x000000).fillRect(0, 0, W, H);
+    g.fillStyle(0x1a1720).fillRect(110, 100, 420, 200);              // 벽
+    g.fillStyle(0x221a14).fillTriangle(0, H, W, H, VX, 300);         // 나무 바닥
+    g.fillRect(110, 300, 420, 6);
+    // 깨진 창문 + 달빛
+    g.fillStyle(0x24324c).fillRect(184, 150, 84, 90);
+    g.fillStyle(0x34466a, 0.6).fillRect(188, 154, 36, 40);
+    g.fillStyle(0x15161a).fillRect(224, 150, 4, 90).fillRect(184, 194, 84, 4);
+    g.lineStyle(1, 0x8fa6c8, 0.7);
+    g.lineBetween(232, 200, 262, 236).lineBetween(246, 214, 236, 238).lineBetween(246, 214, 266, 210);
+    g.fillStyle(0x6a82b0, 0.07).fillTriangle(184, 240, 268, 240, 330, H).fillTriangle(184, 240, 120, H, 330, H);
+    // 업라이트 피아노 (건반 뚜껑이 열려 있다)
+    g.fillStyle(0x0f0b09).fillRect(310, 178, 130, 72);
+    g.fillStyle(0x2a1f17).fillRect(310, 178, 130, 5);
+    g.fillStyle(0xd8d2c2).fillRect(314, 226, 122, 10);
+    g.fillStyle(0x0c0a08);
+    for (let x = 320; x < 432; x += 12) g.fillRect(x, 226, 5, 6);
+    g.fillStyle(0xd8cfb4, 0.7).fillRect(356, 190, 30, 20);           // 악보
+    // 보면대
+    g.fillStyle(0x2a2a2e).fillRect(452, 214, 3, 46).fillRect(444, 258, 20, 3);
+    g.fillStyle(0x3a3a40).fillRect(438, 196, 32, 20);
+  },
+
+  // 방송실: ON AIR 표시등, 방송 콘솔, 테이프 선반
+  broadcast(g) {
+    g.fillStyle(0x000000).fillRect(0, 0, W, H);
+    g.fillStyle(0x17191c).fillRect(110, 100, 420, 200);              // 흡음벽
+    g.fillStyle(0x1b1c20);
+    for (let x = 116; x < 524; x += 24) for (let y = 106; y < 296; y += 24) g.fillRect(x, y, 18, 18);
+    g.fillStyle(0x1e2021).fillTriangle(0, H, W, H, VX, 300);         // 바닥
+    g.fillRect(110, 300, 420, 6);
+    // ON AIR (꺼짐, 희미하게 붉다)
+    g.fillStyle(0x2a0d0d).fillRect(290, 156, 60, 18);
+    g.fillStyle(0x7a2020, 0.5).fillRect(294, 160, 52, 10);
+    // 테이프 선반
+    g.fillStyle(0x3a2c20).fillRect(178, 168, 90, 86);
+    const tc = [0x8a3a3a, 0x3a5a8a, 0x8a7a3a, 0x4a7a4a, 0x6a6a6a];
+    for (let r = 0; r < 3; r++) for (let i = 0; i < 9; i++) {
+      if (r === 1 && (i === 3 || i === 4 || i === 5 || i === 6)) continue; // 빠진 테이프 네 개
+      g.fillStyle(tc[(i + r) % 5]).fillRect(182 + i * 9, 172 + r * 28, 7, 22);
+    }
+    // 콘솔 + 마이크
+    g.fillStyle(0x2e3034).fillRect(300, 218, 170, 34);
+    g.fillStyle(0x9aa3ab);
+    for (let x = 308; x < 462; x += 14) g.fillRect(x, 224, 3, 20);
+    g.fillStyle(0xd8d8d8);
+    for (let x = 306; x < 462; x += 14) g.fillRect(x, 228 + (x * 7) % 12, 7, 3);
+    g.fillStyle(0x3a3a40).fillRect(388, 188, 3, 30);
+    g.fillStyle(0x50555a).fillEllipse(389, 184, 14, 18);
+  },
 };
 
 export class LockerView {

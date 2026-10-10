@@ -3,47 +3,327 @@
   "bgm": "drone",
   "dark": true,
   "legend": {
-    "#": "wall", ".": "floor_corridor", "L": "door_locked", "W": "window"
+    "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "r": "floor_room", "=": "floor_stairs",
+    "D": "door_open", "L": "door_locked", "W": "window"
   },
   "solid": ["#", "L", "W"],
   "grid": [
-    "###L###L###L###L####",
-    "#..................#",
-    "#..................W",
-    "####################"
+    "##################################",
+    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
+    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
+    "W,,,,,,,,,,,#__________#rrrrrrrrr#",
+    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
+    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
+    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
+    "######D###########D#########L#####",
+    "#................................#",
+    "#................................W",
+    "#................................#",
+    "#####D#####W##W##W##W##W#####D####",
+    "#_________#################======#",
+    "#_________#################======#",
+    "#_________#################======#",
+    "#_________#################======#",
+    "##################################"
   ],
-  "spawn": { "x": 2, "y": 2, "dir": "right" },
+  "spawn": { "x": 31, "y": 15, "dir": "left" },
   "areas": [
-    { "name": "2층 복도", "x": 0, "y": 0, "w": 21, "h": 4 }
+    { "name": "음악실", "x": 1, "y": 1, "w": 11, "h": 6 },
+    { "name": "컴퓨터실", "x": 13, "y": 1, "w": 10, "h": 6 },
+    { "name": "방송실", "x": 24, "y": 1, "w": 9, "h": 6 },
+    { "name": "2층 복도", "x": 1, "y": 8, "w": 32, "h": 3 },
+    { "name": "2층 화장실", "x": 1, "y": 12, "w": 9, "h": 4 },
+    { "name": "계단실", "x": 27, "y": 12, "w": 6, "h": 4 }
+  ],
+  "graffiti": [
+    { "x": 3.4, "y": 8.1, "text": "약속했잖아", "angle": -3, "cond": { "flag": "stage1" } },
+    { "x": 19.6, "y": 10.5, "text": "……응.", "angle": 4, "cond": { "flag": "stage1" } },
+    { "x": 25.6, "y": 9.15, "text": "다 봤어", "angle": -2, "cond": { "flag": "stage1" } },
+    { "x": 12.3, "y": 10.45, "text": "피아노 왕자 ㅋㅋ", "angle": 2, "cond": { "flag": "frag2" } }
   ],
   "onEnter": {
-    "once": "ch2f_enter",
+    "once": "ch2_start",
     "script": [
+      { "t": "chapter", "title": "2장", "sub": "2층" },
+      { "t": "save" },
       { "t": "text", "text": "2층. 공기가 한층 더 차갑다." },
-      { "t": "text", "who": "재민", "text": "……여기, 뭔가 더 있을 것 같은데." }
+      { "t": "text", "text": "……어디선가 피아노 건반 하나가 울린 것 같다." },
+      { "t": "text", "who": "재민", "text": "……음악실인가." }
     ]
   },
   "triggers": [
-    { "x": 16, "y": 1, "w": 3, "h": 2, "once": "stubEnd", "script": "stub_end" }
+    { "x": 32, "y": 15, "w": 1, "h": 1, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" }
   ],
   "objects": [
-    { "x": 3, "y": 0, "script": "door_music" },
-    { "x": 7, "y": 0, "script": "door_computer" },
-    { "x": 11, "y": 0, "script": "door_broadcast" },
-    { "x": 15, "y": 0, "script": "door_bathroom2f" }
+    { "x": 4, "y": 1, "tex": "board", "script": "board_music" },
+    { "x": 5, "y": 1, "tex": "board", "script": "board_music" },
+    { "x": 6, "y": 1, "tex": "board", "script": "board_music" },
+    { "x": 9, "y": 1, "tex": "piano_l", "script": "piano" },
+    { "x": 10, "y": 1, "tex": "piano_r", "script": "piano" },
+    { "x": 9, "y": 2, "tex": "bench", "script": "bench" },
+    { "x": 0, "y": 3, "script": "window_music" },
+    { "x": 3, "y": 4, "tex": "stand", "script": "stand" },
+    { "x": 5, "y": 4, "tex": "stand", "script": "stand" },
+    { "x": 7, "y": 4, "tex": "stand", "script": "stand" },
+    { "x": 11, "y": 6, "tex": "locker", "hide": true, "view": "music" },
+
+    { "x": 14, "y": 2, "tex": "pc", "script": "pc_off" },
+    { "x": 16, "y": 2, "tex": "pc", "script": "pc_off" },
+    { "x": 18, "y": 2, "tex": "pc", "script": "pc_off" },
+    { "x": 20, "y": 2, "tex": "pc", "script": "pc_off" },
+    { "x": 14, "y": 4, "tex": "pc", "script": "pc_off" },
+    { "x": 16, "y": 4, "tex": "pc", "script": "pc_off" },
+    { "x": 18, "y": 4, "tex": "pc_on", "script": "pc" },
+    { "x": 20, "y": 4, "tex": "pc", "script": "pc_off" },
+
+    { "x": 28, "y": 7, "door": "broadcast", "script": "door_broadcast" },
+    { "x": 24, "y": 1, "tex": "shelf", "script": "tapeshelf" },
+    { "x": 25, "y": 1, "tex": "shelf", "script": "tapeshelf" },
+    { "x": 27, "y": 1, "tex": "console", "script": "console" },
+    { "x": 28, "y": 1, "tex": "console", "script": "console" },
+    { "x": 30, "y": 1, "tex": "tapedeck", "script": "tapedeck" },
+    { "x": 32, "y": 6, "tex": "locker", "hide": true, "view": "broadcast" },
+
+    { "x": 11, "y": 8, "tex": "locker", "hide": true, "view": "corridor" },
+    { "x": 23, "y": 8, "tex": "locker", "hide": true, "view": "corridor" },
+
+    { "x": 2, "y": 12, "tex": "mirror", "script": "mirror" },
+    { "x": 3, "y": 12, "tex": "mirror", "script": "mirror" },
+    { "x": 9, "y": 13, "tex": "stall", "script": "stall" },
+    { "x": 9, "y": 14, "tex": "stall", "script": "stall" },
+    { "x": 9, "y": 15, "tex": "stall", "script": "stall" },
+
+    { "x": 32, "y": 12, "tex": "stairs_up", "script": "door_roof" },
+    { "x": 32, "y": 15, "tex": "stairs_down", "solid": false }
   ],
   "scripts": {
-    "door_music": [{ "t": "text", "text": "음악실. 문이 굳게 잠겨 있다." }],
-    "door_computer": [{ "t": "text", "text": "컴퓨터실. 문이 굳게 잠겨 있다." }],
-    "door_broadcast": [{ "t": "text", "text": "방송실. 문이 굳게 잠겨 있다." }],
-    "door_bathroom2f": [{ "t": "text", "text": "2층 화장실. 문이 잠겨 있다." }],
-    "stub_end": [
-      { "t": "text", "text": "복도 끝, 창문 너머로 어두운 운동장이 내려다보인다." },
-      { "t": "text", "who": "재민", "text": "……다른 문들은 전부 잠겨 있어." },
-      { "t": "text", "text": "오늘은 여기까지인 것 같다." },
-      { "t": "flag", "key": "demo_end" },
-      { "t": "save" },
-      { "t": "goto", "scene": "DemoEnd" }
+    "stairs_down": [
+      { "t": "goto", "scene": "Explore", "map": "school1f", "pos": { "x": 36, "y": 16, "dir": "left" } }
+    ],
+
+    "board_music": [
+      { "t": "text", "text": "칠판에 지워지다 만 판서가 남아 있다. 「1학기 수행평가 — 자작곡 발표」" },
+      { "t": "text", "text": "그 아래 계이름 한 줄. 대부분 지우개로 문질러져 있다.\n■  ■  라  ■  |  ■  레  ■  ■" },
+      { "t": "flag", "key": "read_board" },
+      { "t": "clue", "id": "board_music" },
+      {
+        "t": "if", "cond": { "clue": "score" },
+        "then": [{ "t": "text", "who": "재민", "text": "피아노 위 악보에서 지워진 자리랑… 위치가 겹친다." }]
+      }
+    ],
+    "piano": [
+      {
+        "t": "if", "cond": { "flag": "p3" },
+        "then": [{ "t": "text", "text": "건반 뚜껑이 열린 피아노. 손끝에 아까의 멜로디가 남아 있다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "notFlag": "read_score" },
+            "then": [
+              { "t": "text", "text": "먼지 쌓인 업라이트 피아노. 보면대에 손으로 그린 악보 한 장이 놓여 있다." },
+              { "t": "text", "text": "제목 ── 「약속」. 구석에 작은 글씨로 「생일 선물. 아직 반밖에 못 만듦」." },
+              { "t": "text", "text": "미  솔  ■  솔  |  미  ■  도  레\n두 군데가 검은 볼펜 낙서로 뭉개져 있다. 「피아노 왕자 ㅋㅋ」" },
+              { "t": "text", "who": "재민", "text": "……누가 일부러 지운 거야." },
+              { "t": "flag", "key": "read_score" },
+              { "t": "clue", "id": "score" }
+            ]
+          },
+          {
+            "t": "choice", "prompt": "악보대로 건반을 눌러 볼까?",
+            "options": [
+              {
+                "label": "쳐 본다",
+                "then": [
+                  {
+                    "t": "puzzle", "id": "piano",
+                    "success": [
+                      { "t": "flag", "key": "p3" },
+                      { "t": "sfx", "name": "chime" },
+                      { "t": "text", "text": "마지막 음이 어둠 속으로 번져 사라진다." },
+                      { "t": "text", "text": "덜컥. 피아노 의자 뚜껑이 저절로 들린다." }
+                    ]
+                  }
+                ]
+              },
+              { "label": "그만둔다", "then": [] }
+            ]
+          }
+        ]
+      }
+    ],
+    "bench": [
+      {
+        "t": "if", "cond": { "flag": "frag2" },
+        "then": [{ "t": "text", "text": "피아노 의자. 안은 이제 비어 있다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "notFlag": "p3" },
+            "then": [{ "t": "text", "text": "피아노 의자. 뚜껑이 무언가에 걸린 듯 열리지 않는다." }],
+            "else": [
+              { "t": "text", "text": "의자 안에 얇은 일기장 한 권이 들어 있다. 표지에 이름이 적혀 있다." },
+              { "t": "text", "text": "「한도윤」" },
+              { "t": "text", "who": "재민", "text": "한…도윤." },
+              { "t": "effect", "name": "shake", "ms": 300, "i": 0.006 },
+              { "t": "text", "text": "이름을 소리 내어 읽는 순간, 가슴 한쪽이 욱신거린다." },
+              { "t": "text", "text": "「3월 2일. 재민이랑 같은 반이 됐다. 재민이는 나를 못 본 척했다. 바쁜가 보다.」" },
+              { "t": "text", "text": "「3월 22일. 재민이 생일. 중학교 때 약속한 곡은 아직 반밖에 못 만들었다.\n컴퓨터실 내 비밀번호도 아직 그 날짜인데. 바보같이.」" },
+              { "t": "text", "text": "「7월 13일. 내일 방과후에 과학실로 오래. 재민이도 온대.」" },
+              { "t": "text", "text": "그 뒤로는 빈 페이지뿐이다." },
+              { "t": "clue", "id": "diary" },
+              { "t": "memory", "lines": ["(서툰 피아노 소리)", "“재민아, 이거 네 생일 선물이야. 아직 반밖에 못 만들었어.”", "“……완성되면 꼭 들려줘.”", "“응. 약속.”"] },
+              { "t": "text", "who": "재민", "text": "……도윤이. 그 애 이름은, 도윤이었어." },
+              { "t": "flag", "key": "frag2" },
+              { "t": "fragment", "n": 2 },
+              { "t": "text", "who": "재민", "text": "컴퓨터실 비밀번호가 「그 날짜」라고… 3월 22일. 내 생일." }
+            ]
+          }
+        ]
+      }
+    ],
+    "window_music": [
+      { "t": "text", "text": "깨진 유리창으로 찬바람이 들이친다." },
+      {
+        "t": "if", "cond": { "clue": "logbook" },
+        "then": [{ "t": "text", "text": "「7월 1일. 2층 음악실 창문 깨짐」 ── 순찰 일지에 있던 그 창문이다." }]
+      }
+    ],
+    "stand": [{ "t": "text", "text": "보면대. 빈 악보 집게만 덜렁 걸려 있다." }],
+
+    "pc_off": [{ "t": "text", "text": "꺼진 컴퓨터. 전원 버튼을 눌러도 반응이 없다." }],
+    "pc": [
+      {
+        "t": "if", "cond": { "flag": "p4" },
+        "then": [{ "t": "text", "text": "모니터는 이제 꺼져 있다. 까만 화면에 내 얼굴만 비친다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "flag": "pc_unlocked" },
+            "then": [{ "t": "call", "name": "pc_chat" }],
+            "else": [
+              { "t": "text", "text": "이 컴퓨터 한 대만 희미하게 켜져 있다. 전기도 끊긴 학교인데." },
+              { "t": "text", "text": "로그인 화면 ── 「1-3 12번」\n비밀번호 힌트: 약속한 날" },
+              {
+                "t": "puzzle", "id": "pc",
+                "success": [
+                  { "t": "flag", "key": "pc_unlocked" },
+                  { "t": "call", "name": "pc_chat" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "pc_chat": [
+      { "t": "text", "text": "바탕화면에 폴더 하나 ── 「증거」." },
+      { "t": "text", "text": "안에는 메신저 캡처가 날짜순으로 쌓여 있다. 12번, 그 아이가 모아 둔 것이다." },
+      { "t": "text", "text": "마지막 캡처의 날짜는 7월 14일." },
+      { "t": "text", "who": "재민", "text": "닉네임만 있어. 누가 누군지… 3반 자리 배치도의 이름들이랑 맞춰 볼 수 있을까." },
+      {
+        "t": "puzzle", "id": "chat",
+        "success": [
+          { "t": "flag", "key": "p4" },
+          { "t": "clue", "id": "chatlog" },
+          { "t": "text", "who": "재민", "text": "「…」는, 나였어." },
+          { "t": "memory", "lines": ["(휴대폰 진동)", "「너도 웃기지?」", "(한참 동안 깜빡이는 커서)", "「응」"] },
+          { "t": "fragment", "n": 3 },
+          { "t": "text", "text": "마지막 줄의 「입력하는 중…」이, 아직도 깜빡이고 있다." },
+          { "t": "sfx", "name": "glitch" },
+          { "t": "text", "text": "툭. 모니터가 꺼진다." },
+          { "t": "sfx", "name": "follow", "wait": true },
+          { "t": "text", "who": "재민", "text": "……또 그 발소리." },
+          { "t": "text", "text": "복도 저편에서 무언가가 다가온다. 숨을 곳을 찾아야 한다." },
+          { "t": "chase", "id": "chase2", "spawn": { "x": 32, "y": 9 }, "after": "afterChase2" }
+        ]
+      }
+    ],
+    "afterChase2": [
+      { "t": "text", "text": "……발소리가 멀어졌다." },
+      { "t": "sfx", "name": "creak" },
+      { "t": "openDoor", "id": "broadcast" },
+      { "t": "text", "text": "복도 어딘가에서 철컥, 하고 문이 열리는 소리가 들렸다." },
+      { "t": "text", "who": "재민", "text": "방송실 쪽이었어." }
+    ],
+
+    "door_broadcast": [{ "t": "text", "text": "방송실. 문이 잠겨 있다. 안에서 지직거리는 소리가 새어 나온다." }],
+    "tapeshelf": [{ "t": "text", "text": "카세트테이프가 빼곡하다. 「졸업식」 「체육대회」 「합창대회」… 가운데 칸 네 개만 비어 있다." }],
+    "console": [{ "t": "text", "text": "방송 콘솔. 「ON AIR」 표시등은 꺼져 있는데, 스피커에서 희미한 잡음이 흘러나온다." }],
+    "tapedeck": [
+      {
+        "t": "if", "cond": { "flag": "p5" },
+        "then": [{ "t": "text", "text": "테이프 데크. 그날 오후가 녹음된 테이프 네 개가 나란히 놓여 있다." }],
+        "else": [
+          { "t": "text", "text": "테이프 데크 옆에 라벨이 뜯겨 나간 테이프 네 개가 놓여 있다." },
+          { "t": "text", "text": "케이스마다 똑같은 메모 ── 「7/14 방과후. 교내 마이크 자동 녹음」." },
+          {
+            "t": "if", "cond": { "clue": "chatlog" },
+            "then": [{ "t": "text", "who": "재민", "text": "7월 14일 방과후… 단톡방 캡처에 시각이 찍혀 있었지." }]
+          },
+          {
+            "t": "choice", "prompt": "테이프를 들어 볼까?",
+            "options": [
+              {
+                "label": "듣는다",
+                "then": [
+                  {
+                    "t": "puzzle", "id": "tapes",
+                    "success": [
+                      { "t": "flag", "key": "p5" },
+                      { "t": "memory", "lines": ["(낄낄거리는 웃음소리)", "(유리병이 깨지는 소리, 기침)", "(화재 경보)", "(쾅, 쾅— 문을 두드리는 소리)", "(멀어지는 발소리)"] },
+                      { "t": "text", "who": "재민", "text": "……누군가 문을 두드리고 있었어. 그리고 누군가는, 달아났고." },
+                      { "t": "clue", "id": "sound714" },
+                      { "t": "text", "text": "마지막 테이프 케이스 안쪽에 열쇠 하나가 테이프로 붙어 있다. 「옥상」." },
+                      { "t": "item", "id": "keyRoof" }
+                    ]
+                  }
+                ]
+              },
+              { "label": "그만둔다", "then": [] }
+            ]
+          }
+        ]
+      }
+    ],
+
+    "mirror": [
+      {
+        "t": "if", "cond": { "flag": "frag4" },
+        "then": [{ "t": "text", "text": "금이 간 거울. 이제는 지금의 내 얼굴만 비친다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "notFlag": "p4" },
+            "then": [{ "t": "text", "text": "물때 낀 거울. 내 얼굴이 흐릿하게 비친다." }],
+            "else": [
+              { "t": "text", "text": "거울에 비친 얼굴이… 어리다." },
+              { "t": "text", "text": "교복. 앳된 얼굴. 열일곱 살의 나." },
+              { "t": "effect", "name": "glitch" },
+              { "t": "text", "text": "거울 속의 내가, 천천히 입을 움직인다." },
+              { "t": "text", "who": "거울 속의 재민", "text": "너는 기억하고 있어." },
+              { "t": "effect", "name": "crack" },
+              { "t": "memory", "lines": ["“재민아, 너도 웃기지?”", "“……응.”", "(타는 냄새)", "“재민아… 거기 있지?”"] },
+              { "t": "text", "who": "재민", "text": "……아니야. 난 몰라. 난……" },
+              { "t": "flag", "key": "frag4" },
+              { "t": "fragment", "n": 4 },
+              { "t": "text", "who": "재민", "text": "거울… 1층 화장실에도 거울이 있었지." }
+            ]
+          }
+        ]
+      }
+    ],
+    "stall": [{ "t": "text", "text": "칸막이 안은 비어 있다. 문 안쪽에 「피아노 왕자 전용 ㅋ」이라는 낙서." }],
+
+    "door_roof": [
+      {
+        "t": "if", "cond": { "item": "keyRoof" },
+        "then": [
+          { "t": "sfx", "name": "unlock" },
+          { "t": "text", "text": "옥상 열쇠를 돌리자, 녹슨 철문이 바람에 밀려 열린다." },
+          { "t": "text", "text": "차가운 밤공기. 위에서 누군가 기다리고 있는 것 같다." },
+          { "t": "text", "who": "재민", "text": "……올라가자." },
+          { "t": "flag", "key": "demo_end" },
+          { "t": "save" },
+          { "t": "goto", "scene": "DemoEnd" }
+        ],
+        "else": [{ "t": "text", "text": "옥상으로 이어지는 계단. 꼭대기 철문이 잠겨 있다. 「옥상 출입 금지」" }]
+      }
     ]
   }
 }
