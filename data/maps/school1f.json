@@ -57,30 +57,51 @@
   },
   "triggers": [
     { "x": 24, "y": 9, "w": 3, "h": 1, "once": "near13", "script": "near13" },
-    { "x": 21, "y": 1, "w": 9, "h": 7, "once": "enter13", "script": "enter13" }
+    { "x": 21, "y": 1, "w": 9, "h": 7, "once": "enter13", "script": "enter13" },
+    { "x": 35, "y": 13, "w": 4, "h": 5, "once": "stairsTrigger", "script": "stairs" }
   ],
   "objects": [
     { "x": 4, "y": 1, "tex": "board", "script": "board11" },
     { "x": 5, "y": 1, "tex": "board", "script": "board11" },
     { "x": 6, "y": 1, "tex": "board", "script": "board11" },
-    { "x": 3, "y": 4, "tex": "desk", "script": "desk" },
-    { "x": 5, "y": 4, "tex": "desk", "script": "desk" },
-    { "x": 7, "y": 4, "tex": "desk", "script": "desk" },
-    { "x": 3, "y": 6, "tex": "desk", "script": "desk" },
-    { "x": 5, "y": 6, "tex": "desk", "script": "desk" },
-    { "x": 7, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 2, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 4, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 6, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 8, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 2, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 4, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 6, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 8, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 2, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 4, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 6, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 8, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 2, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 4, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 6, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 8, "y": 6, "tex": "desk", "script": "desk" },
     { "x": 1, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
     { "x": 9, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
 
     { "x": 14, "y": 1, "tex": "board", "script": "board12" },
     { "x": 15, "y": 1, "tex": "board", "script": "board12" },
     { "x": 16, "y": 1, "tex": "board", "script": "board12" },
-    { "x": 13, "y": 4, "tex": "desk", "script": "desk" },
-    { "x": 15, "y": 4, "tex": "desk", "script": "desk" },
-    { "x": 17, "y": 4, "tex": "desk", "script": "desk" },
-    { "x": 13, "y": 6, "tex": "desk", "script": "desk" },
-    { "x": 15, "y": 6, "tex": "desk", "script": "desk_piano" },
-    { "x": 17, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 12, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 14, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 16, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 18, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 12, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 14, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 16, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 18, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 12, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 14, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 16, "y": 5, "tex": "desk", "script": "desk_piano" },
+    { "x": 18, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 12, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 14, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 16, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 18, "y": 6, "tex": "desk", "script": "desk" },
     { "x": 11, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
 
     { "x": 22, "y": 1, "tex": "notice", "script": "notice" },
@@ -135,7 +156,7 @@
     { "x": 21, "y": 16, "tex": "stall", "script": "stall" },
     { "x": 21, "y": 17, "tex": "stall", "script": "stall" },
 
-    { "x": 37, "y": 14, "tex": "stairs_up", "script": "stairs" }
+    { "x": 37, "y": 14, "tex": "stairs_up" }
   ],
   "scripts": {
     "near13": [
@@ -342,9 +363,8 @@
       { "t": "text", "text": "2층으로 이어지는 계단. 위층은 아래보다 더 어둡다." },
       { "t": "text", "who": "재민", "text": "……가야 해." },
       { "t": "flag", "key": "pendingChase", "value": null },
-      { "t": "flag", "key": "demo_end" },
       { "t": "save" },
-      { "t": "goto", "scene": "DemoEnd" }
+      { "t": "goto", "scene": "Explore", "map": "school2f" }
     ]
   }
 }
