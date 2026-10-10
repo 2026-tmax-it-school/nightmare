@@ -4,8 +4,10 @@ import { DB } from '../db.js';
 import { state, addDenial } from '../state.js';
 import { sfx, playNote } from '../audio.js';
 
+// pixelArt 캔버스가 창 크기에 맞춰 최근접 필터로 확대되면, 해상도가 낮은 작은 글자는
+// 가는 획이 샘플링에서 통째로 빠져 다른 글자처럼 깨져 보인다 → 텍스트를 더 높은 해상도로 미리 그려 둔다
 export const textStyle = (size = 15, color = '#e8e2d6', extra = {}) => ({
-  fontFamily: FONT, fontSize: `${size}px`, color, lineSpacing: 6, resolution: 2, ...extra,
+  fontFamily: FONT, fontSize: `${size}px`, color, lineSpacing: 6, resolution: 3, ...extra,
 });
 
 const CONFIRM = ['KeyE', 'Space', 'Enter', 'NumpadEnter'];
