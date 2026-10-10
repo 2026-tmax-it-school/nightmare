@@ -60,7 +60,8 @@ export default class Explore extends Phaser.Scene {
     const cam = this.cameras.main;
     const mw = this.cols * TILE, mh = this.rows * TILE;
     if (mw <= W && mh <= H) cam.centerOn(mw / 2, mh / 2);
-    else { cam.setBounds(0, 0, mw, mh); cam.startFollow(this.player, true, 0.2, 0.2); }
+    // lerp 1: 카메라가 늦게 따라오면 멈춘 뒤에도 화면이 미끄러져 한 발 더 가는 것처럼 느껴진다
+    else { cam.setBounds(0, 0, mw, mh); cam.startFollow(this.player, true, 1, 1); }
 
     if (m.ambient) {
       this.add.rectangle(0, 0, mw, mh, Phaser.Display.Color.HexStringToColor(m.ambient.color).color, m.ambient.alpha).setOrigin(0).setDepth(9);
@@ -189,7 +190,8 @@ export default class Explore extends Phaser.Scene {
   onKey(e) {
     if (this.busy || this.moving || this.over) return;
     const dir = dirOf(e);
-    if (dir) { if (!this.hidden) this.tryMove(dir); return; }
+    // 키를 누르고 있는 동안의 이동은 update()가 맡는다. OS 키 반복까지 받으면 뗀 직후 한 칸 더 갈 수 있다.
+    if (dir) { if (!this.hidden && !e.repeat) this.tryMove(dir); return; }
     if (isConfirm(e)) {
       if (this.hidden) return this.exitLocker();
       const o = this.frontObj();
