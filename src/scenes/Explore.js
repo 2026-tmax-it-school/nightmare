@@ -194,7 +194,7 @@ export default class Explore extends Phaser.Scene {
       if (this.hidden) return this.exitLocker();
       const o = this.frontObj();
       if (!this.interactable(o)) return;
-      if (o.hide) return this.enterLocker();
+      if (o.hide) return this.enterLocker(o);
       this.run(this.resolve(o.script));
     } else if (e.code === 'Escape' && !this.hidden && !this.chase) {
       this.openNotebook();
@@ -269,12 +269,12 @@ export default class Explore extends Phaser.Scene {
   }
 
   // ── 사물함 ──
-  enterLocker() {
+  enterLocker(o) {
     this.hidden = true;
     sfx('locker');
     this.player.setVisible(false);
     this.promptTxt.setVisible(false);
-    this.lockerView = new LockerView(this);
+    this.lockerView = new LockerView(this, o.view);
   }
 
   exitLocker() {
