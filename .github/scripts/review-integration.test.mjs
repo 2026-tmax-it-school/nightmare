@@ -8,7 +8,7 @@ const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 const review = await read('../workflows/openai-review.yml');
 const checks = await read('../workflows/review-integration-checks.yml');
 const docs = await read('../../docs/openai-review.md');
-const pin = 'baf0e15fe0889fc5a3b22a5e2777070a2ef49190';
+const pin = 'c67bf2fd543117fddcc8d3041916dae73db4850b';
 
 test('review listener and supplied CI identity match the actual check workflow', () => {
   const name = /^name: (.+)$/m.exec(checks)?.[1];
