@@ -235,7 +235,7 @@ export class UI {
   seatPuzzle(p) {
     return new Promise(resolve => {
       const pw = 520, ph = 420;
-      const cw = 96, ch = 46, gx = 60, gy = 76, gapX = 12, gapY = 10;
+      const cw = 96, ch = 46, gx = 60, gy = 90, gapX = 12, gapY = 10;
       const c = this.fixed(this.s.add.container(W / 2 - pw / 2, H / 2 - ph / 2), 170);
       c.add([
         this.s.add.rectangle(0, 0, pw, ph, 0xd9cfb4).setOrigin(0).setStrokeStyle(2, 0x3a2e20),
@@ -244,6 +244,8 @@ export class UI {
         this.s.add.text(24, gy + 70, '창\n가', textStyle(13, '#5a4a36')),
       ]);
       for (let col = 0; col < p.cols; col++) {
+        const start = col * p.rows + 1, end = start + p.rows - 1;
+        c.add(this.s.add.text(gx + col * (cw + gapX) + cw / 2, gy - 14, `${start}~${end}번`, textStyle(12, '#6a5a44')).setOrigin(0.5, 1));
         for (let row = 0; row < p.rows; row++) {
           const x = gx + col * (cw + gapX), y = gy + row * (ch + gapY);
           c.add(this.s.add.rectangle(x, y, cw, ch, 0xc8bb98).setOrigin(0).setStrokeStyle(1, 0x6a5a44));
@@ -277,7 +279,7 @@ export class UI {
           } else {
             wrong++; sfx('error');
             this.s.tweens.add({ targets: c, x: c.x + 6, duration: 40, yoyo: true, repeat: 2 });
-            hint.setText(wrong >= 2 && p.hint ? p.hint : '……아니야. 이 자리가 아니다.');
+            hint.setText(wrong >= 1 && p.hint ? p.hint : '……아니야. 이 자리가 아니다.');
           }
         } else if (e.code === 'Escape') { off(); c.destroy(); resolve(false); }
       });

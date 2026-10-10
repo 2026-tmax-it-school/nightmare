@@ -1,0 +1,49 @@
+{
+  "id": "school2f",
+  "bgm": "drone",
+  "dark": true,
+  "legend": {
+    "#": "wall", ".": "floor_corridor", "L": "door_locked", "W": "window"
+  },
+  "solid": ["#", "L", "W"],
+  "grid": [
+    "###L###L###L###L####",
+    "#..................#",
+    "#..................W",
+    "####################"
+  ],
+  "spawn": { "x": 2, "y": 2, "dir": "right" },
+  "areas": [
+    { "name": "2층 복도", "x": 0, "y": 0, "w": 21, "h": 4 }
+  ],
+  "onEnter": {
+    "once": "ch2f_enter",
+    "script": [
+      { "t": "text", "text": "2층. 공기가 한층 더 차갑다." },
+      { "t": "text", "who": "재민", "text": "……여기, 뭔가 더 있을 것 같은데." }
+    ]
+  },
+  "triggers": [
+    { "x": 16, "y": 1, "w": 3, "h": 2, "once": "stubEnd", "script": "stub_end" }
+  ],
+  "objects": [
+    { "x": 3, "y": 0, "script": "door_music" },
+    { "x": 7, "y": 0, "script": "door_computer" },
+    { "x": 11, "y": 0, "script": "door_broadcast" },
+    { "x": 15, "y": 0, "script": "door_bathroom2f" }
+  ],
+  "scripts": {
+    "door_music": [{ "t": "text", "text": "음악실. 문이 굳게 잠겨 있다." }],
+    "door_computer": [{ "t": "text", "text": "컴퓨터실. 문이 굳게 잠겨 있다." }],
+    "door_broadcast": [{ "t": "text", "text": "방송실. 문이 굳게 잠겨 있다." }],
+    "door_bathroom2f": [{ "t": "text", "text": "2층 화장실. 문이 잠겨 있다." }],
+    "stub_end": [
+      { "t": "text", "text": "복도 끝, 창문 너머로 어두운 운동장이 내려다보인다." },
+      { "t": "text", "who": "재민", "text": "……다른 문들은 전부 잠겨 있어." },
+      { "t": "text", "text": "오늘은 여기까지인 것 같다." },
+      { "t": "flag", "key": "demo_end" },
+      { "t": "save" },
+      { "t": "goto", "scene": "DemoEnd" }
+    ]
+  }
+}
