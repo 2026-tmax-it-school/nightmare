@@ -3,7 +3,7 @@
 - 작업 전 반드시 `docs/GDD.md`를 읽는다. 기획의 단일 기준이다.
 - 기획 결정이 바뀌면 코드보다 GDD를 먼저 갱신한다. 미해결 항목은 GDD 9장에 둔다.
 - 사용자와 한국어로 소통한다.
-- 학생 팀 작업은 `docs/team-workflow.md`와 `.agents/skills/team-common.md`를 따른다. team 스킬 본문은 `.agents/skills/`에 있다.
+- 학생 팀 작업은 `docs/team-workflow.md`와 `.agents/skills/team-common.md`를 따른다. .agents/skills/의 team-start(시작)·team-submit(제출)·team-verify(QA 확인)를 사용한다. team 스킬 본문은 `.agents/skills/`에 있다.
 - 팀 작업의 사용자 안내는 `docs/team-protocol.md`를 읽고 현재 단계·실제 결과·다음 행동을 설명한다. 설명 요청만으로 배정·제출·종료를 시작하지 않는다.
 - 팀 작업 설명은 학생(개발·QA)의 작업 방식과 관리자의 작업 방식을 나누고, 각 역할의 시점·행동·사용 스킬을 안내한다.
 - 1인 개발 공모전 작품이므로 범위를 작게 유지한다 (플레이 약 20분).

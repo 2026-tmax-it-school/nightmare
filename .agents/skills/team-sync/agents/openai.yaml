@@ -1,3 +1,0 @@
-interface:
-  display_name: "작업 준비"
-  short_description: "내 브랜치와 최신 main을 안전하게 동기화하고 충돌을 해결합니다."

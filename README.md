@@ -28,7 +28,7 @@ python tools/serve.py
 
 ## 문서
 
-- [학생·관리자 팀 작업 안내](docs/team-workflow.md) — 역할별 순서·이슈 작성법·칸반·PR·QA
+- [학생·관리자 팀 작업 안내](docs/team-workflow.md) — 3개 스킬·역할별 순서·이슈 작성법·칸반
 - [AI 안내 프로토콜](docs/team-protocol.md) — 역할별 설명·완료 조건·다음 행동·예외 처리
 
 - [기획서 (GDD)](docs/GDD.md)

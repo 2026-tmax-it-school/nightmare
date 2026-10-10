@@ -1,0 +1,3 @@
+interface:
+  display_name: "작업 시작"
+  short_description: "내 브랜치 동기화부터 작업 선택과 선점까지 한 흐름으로 진행합니다."
