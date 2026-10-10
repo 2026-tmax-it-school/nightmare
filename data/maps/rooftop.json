@@ -1,0 +1,158 @@
+{
+  "id": "rooftop",
+  "bgm": "wind",
+  "dark": true,
+  "legend": {
+    "F": "fence", "r": "floor_roof", "#": "wall", "=": "floor_stairs"
+  },
+  "solid": ["F", "#"],
+  "grid": [
+    "FFFFFFFFFFFFFFFFFFFF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "FrrrrrrrrrrrrrrrrrrF",
+    "#########=##########"
+  ],
+  "spawn": { "x": 9, "y": 11, "dir": "up" },
+  "areas": [
+    { "name": "옥상", "x": 0, "y": 0, "w": 20, "h": 13 }
+  ],
+  "graffiti": [
+    { "x": 6.2, "y": 7.3, "text": "내일 과학실 ㄱ", "angle": -6, "cond": { "flag": "stage1" } }
+  ],
+  "onEnter": {
+    "once": "ch3_start",
+    "script": [
+      { "t": "chapter", "title": "3장", "sub": "옥상" },
+      { "t": "save" },
+      { "t": "text", "text": "옥상. 차가운 바람이 분다." },
+      { "t": "text", "text": "녹슨 펜스 너머로 불 꺼진 마을이 내려다보인다." },
+      { "t": "text", "who": "재민", "text": "……여기, 와 본 적 있어. 누군가랑 같이." }
+    ]
+  },
+  "triggers": [
+    { "x": 9, "y": 12, "w": 1, "h": 1, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" }
+  ],
+  "objects": [
+    { "x": 3, "y": 2, "tex": "tank", "script": "tank" },
+    { "x": 4, "y": 2, "tex": "tank", "script": "tank" },
+    { "x": 5, "y": 2, "tex": "butts", "script": "clue_butts" },
+    { "x": 10, "y": 1, "tex": "ball", "script": "clue_ball" },
+    { "x": 15, "y": 6, "tex": "roofbench", "script": "bench" },
+    { "x": 16, "y": 6, "tex": "comic", "script": "clue_comic" },
+    { "x": 7, "y": 11, "tex": "tag", "script": "clue_tag" },
+    { "x": 11, "y": 11, "tex": "extbox", "script": "extbox" },
+    { "x": 13, "y": 0, "script": "carving" }
+  ],
+  "scripts": {
+    "stairs_down": [
+      { "t": "goto", "scene": "Explore", "map": "school2f", "pos": { "x": 32, "y": 13, "dir": "down" } }
+    ],
+
+    "tank": [{ "t": "text", "text": "녹슨 물탱크. 두드리면 텅 빈 소리가 난다." }],
+    "bench": [{ "t": "text", "text": "페인트가 벗겨진 벤치. 앉았던 자국만 남아 있다." }],
+    "clue_butts": [
+      { "t": "text", "text": "물탱크 그늘에 짓밟힌 담배꽁초가 수북하다. 학생이 피울 만한 자리다." },
+      { "t": "text", "text": "꽁초 사이에 찢어진 출석 카드 한 장 ── 「1번」." },
+      { "t": "clue", "id": "roof_butts" },
+      { "t": "text", "who": "재민", "text": "출석 1번… 단톡방의 「일등」." }
+    ],
+    "clue_ball": [
+      { "t": "text", "text": "펜스 앞에 바람 빠진 축구공이 굴러다닌다." },
+      { "t": "text", "text": "매직으로 큼직하게 쓴 숫자 ── 「7」." },
+      { "t": "clue", "id": "roof_ball" },
+      { "t": "text", "who": "재민", "text": "7… 「럭키7」. 펜스에 기대서, 아래를 내려다보곤 했었나." }
+    ],
+    "clue_comic": [
+      { "t": "text", "text": "벤치 위에 비에 젖었다 마른 만화책 한 권." },
+      { "t": "text", "text": "표지 안쪽에 ── 「10번 거. 손대지 마.」" },
+      { "t": "clue", "id": "roof_comic" },
+      { "t": "text", "who": "재민", "text": "10번, 「텐」. 늘 벤치에 드러누워 있었지." }
+    ],
+    "clue_tag": [
+      { "t": "text", "text": "출입문 바로 앞에 명찰 하나가 떨어져 있다." },
+      { "t": "text", "text": "「윤재민」" },
+      { "t": "clue", "id": "roof_tag" },
+      { "t": "text", "who": "재민", "text": "……나는 문 앞에 서 있었어. 언제든 내려갈 수 있는 자리에." }
+    ],
+    "carving": [
+      {
+        "t": "if", "cond": { "flag": "p6" },
+        "then": [{ "t": "text", "text": "난간의 낙서 「7.13 작전회의 ㅋ」. 이제는 그날이 또렷하게 보인다." }],
+        "else": [
+          { "t": "text", "text": "녹슨 난간에 칼로 새긴 글씨 ── 「7.13 작전회의 ㅋ」" },
+          {
+            "t": "if", "cond": { "clue": ["roof_butts", "roof_ball", "roof_comic", "roof_tag"] },
+            "then": [
+              { "t": "text", "who": "재민", "text": "7월 13일. 그 일이 있기 하루 전." },
+              {
+                "t": "choice", "prompt": "그날 옥상을 떠올려 볼까?",
+                "options": [
+                  {
+                    "label": "떠올린다",
+                    "then": [
+                      {
+                        "t": "puzzle", "id": "p6",
+                        "success": [
+                          { "t": "flag", "key": "p6" },
+                          { "t": "memory", "lines": ["“내일 방과후 과학실 ㄱ. 피아노왕자 불러.”", "“걔가 오겠냐?”", "“……내가 데려올게.”", "“걔, 내 말은 들어.”", "(낄낄거리는 웃음소리)"] },
+                          { "t": "clue", "id": "plan713" },
+                          { "t": "text", "who": "재민", "text": "도윤이 그날 과학실에 온 건……" },
+                          { "t": "text", "who": "재민", "text": "내가 불렀기 때문이야." },
+                          { "t": "effect", "name": "glitch" },
+                          { "t": "text", "who": "재민", "text": "……내가 한 건가?" },
+                          { "t": "fragment", "n": 5 },
+                          { "t": "sfx", "name": "creak" },
+                          { "t": "text", "text": "덜컹── 출입문 옆 소화기함 문이 저절로 열린다." }
+                        ]
+                      }
+                    ]
+                  },
+                  { "label": "그만둔다", "then": [] }
+                ]
+              }
+            ],
+            "else": [
+              { "t": "text", "who": "재민", "text": "7월 13일… 여기서 누군가랑 있었어. 누가, 어디에 서 있었지?" },
+              { "t": "text", "who": "재민", "text": "옥상을 더 둘러보자. 그날의 흔적이 남아 있을지도." }
+            ]
+          }
+        ]
+      }
+    ],
+    "extbox": [
+      {
+        "t": "if", "cond": { "item": "keyOffice" },
+        "then": [{ "t": "text", "text": "텅 빈 소화기함." }],
+        "else": [
+          {
+            "t": "if", "cond": { "notFlag": "p6" },
+            "then": [{ "t": "text", "text": "소화기함. 문이 녹슬어 꿈쩍도 하지 않는다." }],
+            "else": [
+              { "t": "text", "text": "소화기 뒤에 열쇠 꾸러미가 테이프로 붙어 있다. 꼬리표 ── 「교무실 — 담임」." },
+              { "t": "item", "id": "keyOffice" },
+              { "t": "text", "who": "재민", "text": "담임이… 이걸 여기 숨겨 뒀다고? 왜?" },
+              { "t": "wait", "ms": 400 },
+              { "t": "sfx", "name": "slam" },
+              { "t": "effect", "name": "shake", "ms": 600, "i": 0.012 },
+              { "t": "text", "text": "발밑 깊은 곳에서 무언가 무너지는 소리가 울린다." },
+              { "t": "stage", "n": 2 },
+              { "t": "effect", "name": "glitch", "ms": 700 },
+              { "t": "text", "text": "바람에 탄내가 섞여 있다. ……아래층에서." },
+              { "t": "text", "who": "재민", "text": "내려가야 해." },
+              { "t": "goto", "scene": "Explore", "map": "school1f", "pos": { "x": 36, "y": 16, "dir": "left" } }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -185,6 +185,65 @@ export function makeTextures(scene) {
     g.fillStyle(0xd8cfb4).fillTriangle(16, 28, 10, 20, 22, 20);
   });
 
+  // 옥상
+  make('floor_roof', g => {
+    g.fillStyle(0x3b3d40).fillRect(0, 0, T, T);
+    g.fillStyle(0x34363a).fillRect(0, 0, T, 1).fillRect(0, 0, 1, T);
+    g.fillStyle(0x2c2e31).fillRect(7, 12, 9, 1).fillRect(15, 13, 1, 6).fillRect(22, 25, 6, 1);
+  });
+  make('fence', g => {
+    g.fillStyle(0x101114).fillRect(0, 0, T, T);
+    g.fillStyle(0x1b1d22).fillRect(0, 22, T, 10);
+    g.lineStyle(1, 0x6a707a, 0.8);
+    for (let i = -T; i < T; i += 6) { g.lineBetween(i, 0, i + 22, 22); g.lineBetween(i + 22, 0, i, 22); }
+    g.fillStyle(0x7a808a).fillRect(0, 0, T, 2).fillRect(0, 20, T, 2);
+  });
+  make('tank', g => {
+    g.fillStyle(0x000000, 0.3).fillRect(2, 26, 28, 5);
+    g.fillStyle(0x4d6a7a).fillRect(2, 4, 28, 23);
+    g.fillStyle(0x5f8090).fillRect(2, 4, 28, 4);
+    g.fillStyle(0x3d5664).fillRect(2, 14, 28, 2);
+    g.fillStyle(0x2a2c30).fillRect(5, 26, 3, 5).fillRect(24, 26, 3, 5);
+  });
+  make('roofbench', g => {
+    g.fillStyle(0x000000, 0.25).fillRect(1, 24, 30, 4);
+    g.fillStyle(0x2a2c30).fillRect(3, 20, 3, 8).fillRect(26, 20, 3, 8);
+    g.fillStyle(0x5a4632).fillRect(0, 12, T, 4).fillRect(0, 17, T, 4);
+  });
+  make('butts', g => {
+    g.fillStyle(0xd8d0c0);
+    g.fillRect(9, 18, 5, 2).fillRect(16, 21, 4, 2).fillRect(20, 16, 5, 2);
+    g.fillStyle(0xb06a30).fillRect(9, 18, 1, 2).fillRect(20, 16, 1, 2);
+    g.fillStyle(0xc8c0a8).fillRect(12, 23, 6, 4);
+  });
+  make('ball', g => {
+    g.fillStyle(0x000000, 0.3).fillEllipse(16, 26, 16, 4);
+    g.fillStyle(0xe6e0d0).fillCircle(16, 18, 8);
+    g.fillStyle(0x1a1a1a).fillCircle(16, 18, 3).fillCircle(10, 15, 2).fillCircle(21, 23, 2);
+  });
+  make('comic', g => {
+    g.fillStyle(0x000000, 0.25).fillRect(1, 24, 30, 4);
+    g.fillStyle(0x2a2c30).fillRect(3, 20, 3, 8).fillRect(26, 20, 3, 8);
+    g.fillStyle(0x5a4632).fillRect(0, 12, T, 4).fillRect(0, 17, T, 4);
+    g.fillStyle(0xc04a3a).fillRect(10, 9, 12, 8);
+    g.fillStyle(0xe8d8b0).fillRect(12, 11, 8, 2);
+  });
+  make('tag', g => {
+    g.fillStyle(0x2a3a6a).fillRect(10, 16, 13, 6);
+    g.fillStyle(0xe8e2d6).fillRect(12, 18, 9, 2);
+  });
+  make('extbox', g => {
+    g.fillStyle(0x000000, 0.3).fillRect(6, 27, 20, 4);
+    g.fillStyle(0x8a2020).fillRect(6, 3, 20, 25);
+    g.fillStyle(0x5a1414).fillRect(8, 5, 16, 21);
+    g.fillStyle(0xd8d0c0).fillRect(10, 8, 12, 3);
+  });
+  make('scorch', g => {
+    g.fillStyle(0x050403, 0.45).fillEllipse(16, 17, 28, 20);
+    g.fillStyle(0x050403, 0.4).fillEllipse(10, 12, 12, 9).fillEllipse(23, 22, 12, 8);
+    g.fillStyle(0x3a1408, 0.25).fillEllipse(16, 17, 12, 8);
+  });
+
   // 2층: 음악실 · 컴퓨터실 · 방송실
   const piano = (g, left) => {
     g.fillStyle(0x000000, 0.3).fillRect(0, 26, T, 4);

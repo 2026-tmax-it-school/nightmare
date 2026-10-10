@@ -2,8 +2,8 @@
 import { W, H, DEV_START } from '../constants.js';
 import { DB } from '../db.js';
 import { findCheckpoint, applyCheckpoint } from '../dev.js';
-import { initAudio, stopAllLoops } from '../audio.js';
-import { UI, textStyle } from '../ui/ui.js';
+import { initAudio, stopAllLoops, sfx } from '../audio.js';
+import { UI, textStyle, dirOf, isConfirm } from '../ui/ui.js';
 
 let autoStarted = false;
 
@@ -37,15 +37,33 @@ export default class Dev extends Phaser.Scene {
     this.input.on('pointerdown', go);
   }
 
-  async menu() {
+  // 체크포인트가 화면보다 많으면 커서를 따라 목록이 스크롤된다
+  menu() {
     const cps = DB.checkpoints;
     const labels = [...cps.map(c => `${c.label}  (${c.id})`), '타이틀 화면 (일반 시작)'];
-    const box = this.add.container(70, 56);
-    // 체크포인트가 늘어도 화면 안에 들어오도록 간격을 줄인다
-    const gap = Math.min(27, Math.floor((H - 100) / labels.length));
-    const i = await this.ui.select(box, 0, 0, labels, { size: gap < 22 ? 12 : 14, gap });
-    if (i === cps.length) { initAudio(); return this.scene.start('Title'); }
-    this.launch(cps[i].id);
+    const gap = 24, top = 56, rows = Math.floor((H - top - 40) / gap);
+    const items = Array.from({ length: Math.min(rows, labels.length) }, (_, r) => this.add.text(92, top + r * gap, '', textStyle(14)));
+    const cursor = this.add.text(70, 0, '▶', textStyle(12, '#c9a46a'));
+    const more = this.add.text(W - 40, top, '', textStyle(11, '#6d6875')).setOrigin(1, 0);
+    let idx = 0, first = 0;
+    const draw = () => {
+      first = Phaser.Math.Clamp(first, idx - rows + 1, idx);
+      items.forEach((t, r) => t.setText(labels[first + r] || '').setColor(first + r === idx ? '#ffffff' : '#8f8996'));
+      cursor.setY(top + (idx - first) * gap + 2);
+      more.setText(labels.length > rows ? `${idx + 1} / ${labels.length}` : '');
+    };
+    const off = this.ui.listen(e => {
+      const d = dirOf(e);
+      if (d === 'up') { idx = (idx + labels.length - 1) % labels.length; sfx('tick'); }
+      else if (d === 'down') { idx = (idx + 1) % labels.length; sfx('tick'); }
+      else if (isConfirm(e)) {
+        off();
+        if (idx === cps.length) { initAudio(); return this.scene.start('Title'); }
+        return this.launch(cps[idx].id);
+      }
+      draw();
+    });
+    draw();
   }
 
   launch(id) {
