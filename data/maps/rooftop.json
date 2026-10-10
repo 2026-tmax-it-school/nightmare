@@ -148,7 +148,7 @@
               { "t": "effect", "name": "glitch", "ms": 700 },
               { "t": "text", "text": "바람에 탄내가 섞여 있다. ……아래층에서." },
               { "t": "text", "who": "재민", "text": "내려가야 해." },
-              { "t": "goto", "scene": "Explore", "map": "school1f", "pos": { "x": 36, "y": 15, "dir": "left" } }
+              { "t": "goto", "scene": "Explore", "map": "school1f", "pos": { "x": 36, "y": 16, "dir": "left" } }
             ]
           }
         ]

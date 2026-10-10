@@ -107,7 +107,7 @@
   ],
   "scripts": {
     "stairs_down": [
-      { "t": "goto", "scene": "Explore", "map": "school1f", "pos": { "x": 36, "y": 15, "dir": "left" } }
+      { "t": "goto", "scene": "Explore", "map": "school1f", "pos": { "x": 36, "y": 16, "dir": "left" } }
     ],
 
     "board_music": [

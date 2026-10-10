@@ -18,23 +18,23 @@
     {
       "id": "frag1", "label": "1장 — 조각 1 (12번 책상 앞)", "from": "p1", "scene": "Explore", "map": "school1f",
       "flags": ["p1"],
-      "pos": { "x": 26, "y": 7, "dir": "up" }
+      "pos": { "x": 26, "y": 8, "dir": "up" }
     },
     {
       "id": "p2", "label": "1장 — P2 열쇠함 앞", "from": "frag1", "scene": "Explore", "map": "school1f",
       "flags": ["frag1", "read_logbook"], "clues": ["notebook", "logbook"], "fragments": [1],
-      "pos": { "x": 15, "y": 14, "dir": "up" }
+      "pos": { "x": 15, "y": 15, "dir": "up" }
     },
     {
       "id": "chase1", "label": "1장 — 첫 추격 (사물함 앞)", "from": "p2", "scene": "Explore", "map": "school1f",
       "flags": ["p2", "stage1"], "items": ["key2f"],
-      "set": { "pendingChase": { "id": "chase1", "spawn": { "x": 38, "y": 10 }, "after": "afterChase1" } },
-      "pos": { "x": 20, "y": 10, "dir": "up" }
+      "set": { "pendingChase": { "id": "chase1", "spawn": { "x": 38, "y": 11 }, "after": "afterChase1" } },
+      "pos": { "x": 20, "y": 11, "dir": "up" }
     },
     {
       "id": "stairs", "label": "1장 — 추격 후 계단실 앞", "from": "p2", "scene": "Explore", "map": "school1f",
       "flags": ["p2", "stage1", "chase1_done"], "items": ["key2f"],
-      "pos": { "x": 36, "y": 11, "dir": "down" }
+      "pos": { "x": 36, "y": 12, "dir": "down" }
     },
     {
       "id": "2f", "label": "2장 — 2층 진입", "from": "stairs", "scene": "Explore", "map": "school2f",
@@ -74,7 +74,7 @@
     {
       "id": "frag8", "label": "2장 — 숨겨진 조각 8 (1층 화장실 거울 앞)", "from": "mirror2f", "scene": "Explore", "map": "school1f",
       "flags": ["frag4"], "fragments": [4],
-      "pos": { "x": 18, "y": 14, "dir": "up" }
+      "pos": { "x": 18, "y": 15, "dir": "up" }
     },
     {
       "id": "roof", "label": "2장 — 옥상 계단 앞", "from": "mirror2f", "scene": "Explore", "map": "school2f",
@@ -98,7 +98,7 @@
     {
       "id": "office", "label": "3장 — 1층 귀환 후 교무실 문 앞 (데모 끝)", "from": "frag5", "scene": "Explore", "map": "school1f",
       "flags": ["stage2", "ret1f"], "items": ["keyOffice"],
-      "pos": { "x": 35, "y": 9, "dir": "up" }
+      "pos": { "x": 35, "y": 10, "dir": "up" }
     },
     {
       "id": "haunt", "label": "테스트 — 부정 수치 65 (환각·그림자 환영)", "from": "2f", "scene": "Explore", "map": "school2f",
