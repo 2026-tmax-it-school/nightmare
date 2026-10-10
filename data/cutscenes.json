@@ -1,0 +1,63 @@
+{
+  "dream": [
+    { "t": "bg", "color": "#000000" },
+    { "t": "wait", "ms": 1200 },
+    { "t": "sfx", "name": "run" },
+    { "t": "caption", "text": "— 복도를 달리는 발소리", "ms": 2000 },
+    { "t": "sfx", "name": "sob" },
+    { "t": "caption", "text": "— 누군가의 흐느끼는 소리", "ms": 2400 },
+    { "t": "sfx", "name": "follow" },
+    { "t": "caption", "text": "— 뒤에서 따라오는 발소리", "ms": 2600 },
+    { "t": "sfx", "name": "doorClose" },
+    { "t": "caption", "text": "— 교실 문이 닫히는 소리", "ms": 1800 },
+    { "t": "wait", "ms": 800 },
+    { "t": "sfx", "name": "call" },
+    { "t": "text", "who": "???", "text": "……재민아." },
+    { "t": "effect", "name": "crack" },
+    { "t": "goto", "scene": "Explore", "map": "bedroom" }
+  ],
+  "shaman": [
+    { "t": "bg", "color": "#1a0f0a", "label": "[CG] 무당집 — 촛불과 오방색 천" },
+    { "t": "text", "text": "명함에 적힌 주소에는 오래된 점집이 있었다." },
+    { "t": "text", "who": "무당", "text": "네가 잊어버린 게 있구나." },
+    { "t": "text", "who": "재민", "text": "……제가 뭘 잊었다는 거죠?" },
+    { "t": "text", "text": "처음 보는 사람이다. 그런데 이상하게, 눈을 마주치기가 불편하다." },
+    { "t": "text", "who": "무당", "text": "네가 기억을 잃은 게 아니라… 네가 기억하지 못하게 된 거야." },
+    { "t": "text", "who": "재민", "text": "무슨 말씀이신지…" },
+    { "t": "text", "text": "무당은 대답 대신 접힌 지도 한 장과 부적을 내밀었다." },
+    { "t": "item", "id": "map" },
+    { "t": "item", "id": "talisman" },
+    { "t": "text", "who": "무당", "text": "부적은 꼭 지니고 있어라. 그곳에서 너를… 지켜줄 테니." },
+    { "t": "text", "who": "무당", "text": "거기에 네 기억이 남아 있어." },
+    { "t": "text", "text": "지도에는 산골 마을의 학교 하나에 붉은 동그라미가 그려져 있었다." },
+    { "t": "goto", "scene": "Cutscene", "id": "front" }
+  ],
+  "front": [
+    { "t": "bg", "color": "#0b0d14", "label": "[CG] 비 내리는 밤, 폐교 정문" },
+    { "t": "rain" },
+    { "t": "text", "text": "버스가 끊긴 산길을 한참 걸었다." },
+    { "t": "text", "text": "녹슨 교문에 낡은 명판이 붙어 있다. ── IT희망학교" },
+    { "t": "text", "who": "재민", "text": "여기가… 내가 다니던 학교였나?" },
+    { "t": "text", "text": "처음 보는 건물이다. 그런데, 이상할 정도로 익숙하다." },
+    { "t": "goto", "scene": "Cutscene", "id": "enter" }
+  ],
+  "enter": [
+    { "t": "bg", "color": "#08080a", "label": "[CG] 반쯤 열린 현관문" },
+    { "t": "rain" },
+    { "t": "text", "text": "현관문이 반쯤 열려 있다." },
+    { "t": "sfx", "name": "creak" },
+    { "t": "caption", "text": "끼이익——", "ms": 1600 },
+    { "t": "text", "text": "낡은 복도와 어두운 교실이 보인다." },
+    { "t": "text", "who": "재민", "text": "아무도 없는 것 같은데…" },
+    { "t": "rain", "stop": true },
+    { "t": "sfx", "name": "slam" },
+    { "t": "effect", "name": "shake", "ms": 400, "i": 0.02 },
+    { "t": "caption", "text": "쾅.", "ms": 1200 },
+    { "t": "text", "text": "뒤에서 문이 닫혔다. 돌아보지만, 아무도 없다." },
+    { "t": "effect", "name": "glow" },
+    { "t": "text", "text": "주머니 속 부적이 희미하게 빛났다가, 꺼진다." },
+    { "t": "text", "who": "재민", "text": "……뭐야." },
+    { "t": "text", "text": "휴대폰을 꺼낸다. 화면에는 「서비스 없음」." },
+    { "t": "goto", "scene": "Explore", "map": "school1f" }
+  ]
+}

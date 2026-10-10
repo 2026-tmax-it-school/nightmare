@@ -1,0 +1,350 @@
+{
+  "id": "school1f",
+  "bgm": "drone",
+  "dark": true,
+  "legend": {
+    "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "=": "floor_stairs",
+    "D": "door_open", "L": "door_locked", "X": "exit_door"
+  },
+  "solid": ["#", "L", "X"],
+  "grid": [
+    "########################################",
+    "#,,,,,,,,,#,,,,,,,,,#,,,,,,,,,#,,,,,,,,#",
+    "#,,,,,,,,,#,,,,,,,,,#,,,,,,,,,#,,,,,,,,#",
+    "#,,,,,,,,,#,,,,,,,,,#,,,,,,,,,#,,,,,,,,#",
+    "#,,,,,,,,,#,,,,,,,,,#,,,,,,,,,#,,,,,,,,#",
+    "#,,,,,,,,,#,,,,,,,,,#,,,,,,,,,#,,,,,,,,#",
+    "#,,,,,,,,,#,,,,,,,,,#,,,,,,,,,#,,,,,,,,#",
+    "#,,,,,,,,,#,,,,,,,,,#,,,,,,,,,#,,,,,,,,#",
+    "#####D#########D#########D#########L####",
+    "#......................................#",
+    "#......................................#",
+    "#......................................#",
+    "#.......####D######D########L#######L###",
+    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
+    "####X###################################"
+  ],
+  "spawn": { "x": 4, "y": 17, "dir": "up" },
+  "areas": [
+    { "name": "1학년 1반", "x": 1, "y": 1, "w": 9, "h": 7 },
+    { "name": "1학년 2반", "x": 11, "y": 1, "w": 9, "h": 7 },
+    { "name": "1학년 3반", "x": 21, "y": 1, "w": 9, "h": 7 },
+    { "name": "교무실", "x": 31, "y": 1, "w": 8, "h": 7 },
+    { "name": "1층 복도", "x": 1, "y": 9, "w": 38, "h": 3 },
+    { "name": "현관", "x": 1, "y": 12, "w": 7, "h": 6 },
+    { "name": "경비실", "x": 9, "y": 13, "w": 7, "h": 5 },
+    { "name": "1층 화장실", "x": 17, "y": 13, "w": 5, "h": 5 },
+    { "name": "과학실", "x": 23, "y": 13, "w": 11, "h": 5 },
+    { "name": "계단실", "x": 35, "y": 13, "w": 4, "h": 5 }
+  ],
+  "graffiti": [
+    { "x": 11.3, "y": 9.15, "text": "왜 모른 척했어", "angle": -4, "cond": { "flag": "stage1" } },
+    { "x": 26.4, "y": 10.55, "text": "피아노 왕자 ㅋㅋ", "angle": 3, "cond": { "flag": "stage1" } },
+    { "x": 33.2, "y": 9.2, "text": "기억해", "angle": -2, "cond": { "flag": "stage1" } },
+    { "x": 2.2, "y": 15.4, "text": "너도 웃었잖아", "angle": 5, "cond": { "flag": "stage1" } }
+  ],
+  "onEnter": {
+    "once": "ch1_start",
+    "script": [
+      { "t": "chapter", "title": "1장", "sub": "첫 번째 교실" },
+      { "t": "save" },
+      { "t": "text", "who": "재민", "text": "……일단 둘러보자. 나갈 길도 찾아야 해." }
+    ]
+  },
+  "triggers": [
+    { "x": 24, "y": 9, "w": 3, "h": 1, "once": "near13", "script": "near13" },
+    { "x": 21, "y": 1, "w": 9, "h": 7, "once": "enter13", "script": "enter13" }
+  ],
+  "objects": [
+    { "x": 4, "y": 1, "tex": "board", "script": "board11" },
+    { "x": 5, "y": 1, "tex": "board", "script": "board11" },
+    { "x": 6, "y": 1, "tex": "board", "script": "board11" },
+    { "x": 3, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 5, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 7, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 3, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 5, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 7, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 1, "y": 1, "tex": "locker", "hide": true },
+    { "x": 9, "y": 1, "tex": "locker", "hide": true },
+
+    { "x": 14, "y": 1, "tex": "board", "script": "board12" },
+    { "x": 15, "y": 1, "tex": "board", "script": "board12" },
+    { "x": 16, "y": 1, "tex": "board", "script": "board12" },
+    { "x": 13, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 15, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 17, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 13, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 15, "y": 6, "tex": "desk", "script": "desk_piano" },
+    { "x": 17, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 11, "y": 1, "tex": "locker", "hide": true },
+
+    { "x": 22, "y": 1, "tex": "notice", "script": "notice" },
+    { "x": 24, "y": 1, "tex": "board", "script": "board13" },
+    { "x": 25, "y": 1, "tex": "board", "script": "board13" },
+    { "x": 26, "y": 1, "tex": "board", "script": "board13" },
+    { "x": 29, "y": 1, "tex": "locker", "hide": true },
+    { "x": 25, "y": 2, "tex": "lectern", "script": "lectern" },
+    { "x": 22, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 24, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 26, "y": 3, "tex": "desk", "script": "desk" },
+    { "x": 28, "y": 3, "tex": "desk", "script": "desk13" },
+    { "x": 22, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 24, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 26, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 28, "y": 4, "tex": "desk", "script": "desk" },
+    { "x": 22, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 24, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 26, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 28, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 22, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 24, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 26, "y": 6, "tex": "desk", "script": "desk12" },
+    { "x": 28, "y": 6, "tex": "desk", "script": "desk" },
+
+    { "x": 33, "y": 3, "tex": "desk" },
+    { "x": 35, "y": 3, "tex": "desk" },
+    { "x": 33, "y": 5, "tex": "desk" },
+    { "x": 35, "y": 5, "tex": "desk" },
+
+    { "x": 35, "y": 8, "door": "staff", "script": "door_staff" },
+    { "x": 28, "y": 12, "door": "science", "script": "door_science" },
+    { "x": 36, "y": 12, "door": "stairs", "script": "door_stairs" },
+    { "x": 4, "y": 18, "script": "exit" },
+
+    { "x": 10, "y": 9, "tex": "locker", "hide": true },
+    { "x": 20, "y": 9, "tex": "locker", "hide": true },
+    { "x": 30, "y": 9, "tex": "locker", "hide": true },
+
+    { "x": 1, "y": 13, "tex": "cabinet", "script": "shoebox" },
+    { "x": 1, "y": 14, "tex": "cabinet", "script": "shoebox" },
+    { "x": 7, "y": 14, "tex": "notice", "script": "hallnotice" },
+
+    { "x": 9, "y": 13, "tex": "cabinet", "script": "cabinet" },
+    { "x": 13, "y": 13, "tex": "monitor", "script": "monitor" },
+    { "x": 15, "y": 13, "tex": "keybox", "script": "keybox" },
+    { "x": 10, "y": 15, "tex": "logdesk", "script": "logdesk" },
+    { "x": 9, "y": 17, "tex": "locker", "hide": true },
+
+    { "x": 18, "y": 13, "tex": "mirror", "script": "mirror" },
+    { "x": 20, "y": 13, "tex": "mirror", "script": "mirror" },
+    { "x": 21, "y": 16, "tex": "stall", "script": "stall" },
+    { "x": 21, "y": 17, "tex": "stall", "script": "stall" },
+
+    { "x": 37, "y": 14, "tex": "stairs_up", "script": "stairs" }
+  ],
+  "scripts": {
+    "near13": [
+      { "t": "text", "text": "복도 양쪽으로 교실들이 늘어서 있다. 그중 한 교실 앞에서 발걸음이 멈춘다." },
+      { "t": "text", "text": "교실 문은 반쯤 열려 있다." },
+      { "t": "text", "who": "재민", "text": "여긴…" },
+      { "t": "text", "text": "이상하게도, 다른 교실보다 익숙한 느낌이 든다." }
+    ],
+    "enter13": [
+      { "t": "text", "text": "오래된 책상과 의자. 칠판에는 지워진 글씨의 흔적이 남아 있다." },
+      { "t": "text", "text": "한쪽 벽에는 학급 게시판이, 교탁 위에는 무언가가 놓여 있다." }
+    ],
+    "lectern": [
+      {
+        "t": "if", "cond": { "notFlag": "read_attendance" },
+        "then": [
+          { "t": "text", "text": "교탁 위에 낡은 출석부가 놓여 있다." },
+          { "t": "text", "text": "펼쳐 보니 한 학생의 이름만 빨간 줄로 지워져 있다." },
+          { "t": "text", "text": "12번 ── (빨간 줄로 지워져 읽을 수 없다)\n13번 ── 윤재민" },
+          { "t": "text", "who": "재민", "text": "내 이름이… 왜 여기 있어?" },
+          { "t": "text", "text": "마지막 장을 넘긴다. 7월 14일 이후로는 출석 기록이 없다." },
+          { "t": "text", "text": "그날, 12번 칸에만 아무 표시도 없다." },
+          { "t": "flag", "key": "read_attendance" },
+          { "t": "clue", "id": "attendance" },
+          { "t": "clue", "id": "date714" }
+        ],
+        "else": [{ "t": "text", "text": "출석부. 12번은 빨간 줄로 지워져 있고, 13번이 내 이름이다. 마지막 출석일은 7월 14일." }]
+      }
+    ],
+    "notice": [
+      {
+        "t": "if", "cond": { "notFlag": "read_seatchart" },
+        "then": [
+          { "t": "text", "text": "빛바랜 학급 사진 몇 장이 붙어 있다. 너무 오래되어 얼굴을 알아보기 어렵다." },
+          { "t": "text", "who": "재민", "text": "……왜 이렇게 익숙하지?" },
+          { "t": "text", "who": "재민", "text": "여기… 내가 있었던 곳인가?" },
+          { "t": "text", "text": "기억을 떠올리려 하지만, 아무것도 생각나지 않는다." },
+          { "t": "text", "text": "사진 옆에 찢어진 자리 배치도가 붙어 있다. 이름은 대부분 바래 있다." },
+          { "t": "text", "text": "구석에 연필 메모 ── 「번호순. 창가 분단 맨 앞자리부터 뒤로.」" },
+          { "t": "flag", "key": "read_seatchart" },
+          { "t": "clue", "id": "photo" },
+          { "t": "clue", "id": "seatchart" }
+        ]
+      },
+      {
+        "t": "if", "cond": { "flag": "p1" },
+        "then": [{ "t": "text", "text": "자리 배치도. 창가에서 세 번째 분단, 맨 뒷자리가 12번이었다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "notFlag": "read_attendance" },
+            "then": [{ "t": "text", "who": "재민", "text": "누가 몇 번이었는지 알 수 있는 게 있으면 좋을 텐데…" }],
+            "else": [
+              {
+                "t": "choice", "prompt": "배치도에서 지워진 12번의 자리를 찾아볼까?",
+                "options": [
+                  {
+                    "label": "찾아본다",
+                    "then": [
+                      {
+                        "t": "puzzle", "id": "seat1",
+                        "success": [
+                          { "t": "flag", "key": "p1" },
+                          { "t": "text", "text": "창가에서 세 번째 분단, 맨 뒷자리." },
+                          { "t": "text", "who": "재민", "text": "……저 자리다." }
+                        ]
+                      }
+                    ]
+                  },
+                  { "label": "그만둔다", "then": [] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "board11": [{ "t": "text", "text": "칠판 구석에 「졸업 축하해!」 …폐교 전 마지막 졸업식이었을까." }],
+    "board12": [{ "t": "text", "text": "칠판은 깨끗하게 지워져 있다. 너무 깨끗하다." }],
+    "board13": [
+      {
+        "t": "if", "cond": { "flag": "frag1" },
+        "then": [
+          { "t": "sfx", "name": "glitch" },
+          { "t": "text", "text": "칠판에 하얀 글씨가 떠올라 있다." },
+          { "t": "text", "text": "「기억해.」" }
+        ],
+        "else": [{ "t": "text", "text": "지워진 글씨의 흔적이 남아 있다. 알아볼 수는 없다." }]
+      }
+    ],
+    "desk": [{ "t": "text", "text": "낡은 책상. 서랍은 비어 있다." }],
+    "desk_piano": [{ "t": "text", "text": "책상 위에 볼펜으로 그린 피아노 건반이 남아 있다. 손가락으로 연습이라도 한 것처럼 닳아 있다." }],
+    "desk13": [
+      { "t": "text", "text": "책상 귀퉁이에 「윤재민」이라고 새겨져 있다." },
+      { "t": "text", "who": "재민", "text": "……내 글씨다." }
+    ],
+    "desk12": [
+      {
+        "t": "if", "cond": { "flag": "frag1" },
+        "then": [{ "t": "text", "text": "12번의 책상. 서랍은 이제 비어 있다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "notFlag": "p1" },
+            "then": [{ "t": "text", "text": "낡은 책상이다. 서랍이 뻑뻑해서 열리지 않는다." }],
+            "else": [
+              { "t": "text", "text": "힘을 주어 서랍을 당기자, 깊숙이 끼어 있던 공책 한 권이 빠져나온다." },
+              { "t": "clue", "id": "notebook" },
+              { "t": "text", "text": "공책은 낙서로 가득하다. 「피아노 왕자 ㅋㅋ」 「냄새나」 「꺼져」" },
+              { "t": "text", "text": "그 사이에, 작고 반듯한 글씨가 있다." },
+              { "t": "text", "text": "「재민이는 중학교 때 내 유일한 친구였는데.」" },
+              { "t": "memory", "lines": ["(낄낄거리는 웃음소리)", "“야, 피아노 왕자. 한 곡 쳐 봐.”", "(누군가 흐느끼는 소리)", "“재민아, 너도 웃기지?”", "“……응.”"] },
+              { "t": "text", "who": "재민", "text": "……방금 뭐였지?" },
+              { "t": "flag", "key": "frag1" },
+              { "t": "fragment", "n": 1 },
+              { "t": "deduction", "id": "d1" },
+              { "t": "text", "who": "재민", "text": "7월 14일… 그날 무슨 일이 있었던 거지." },
+              { "t": "text", "who": "재민", "text": "학교 기록이 남아 있을 만한 곳… 입구 쪽에 경비실이 있었다." }
+            ]
+          }
+        ]
+      }
+    ],
+    "door_staff": [{ "t": "text", "text": "교무실. 잠겨 있다. 유리창 너머로 서류 더미가 보인다." }],
+    "door_science": [
+      {
+        "t": "if", "cond": { "flag": "stage1" },
+        "then": [{ "t": "text", "text": "과학실. 문틈에서 희미하게 탄 냄새가 난다…" }],
+        "else": [{ "t": "text", "text": "과학실. 문이 단단히 잠겨 있다." }]
+      }
+    ],
+    "door_stairs": [
+      {
+        "t": "if", "cond": { "item": "key2f" },
+        "then": [
+          { "t": "openDoor", "id": "stairs" },
+          { "t": "text", "text": "2층 열쇠를 꽂자, 계단실 문이 끼익 열린다." }
+        ],
+        "else": [{ "t": "text", "text": "계단실 문이다. 잠겨 있다. 「2층 — 관계자 외 출입 금지」" }]
+      }
+    ],
+    "exit": [
+      { "t": "text", "text": "현관문은 꿈쩍도 하지 않는다." },
+      { "t": "text", "who": "재민", "text": "휴대폰은… 여전히 「서비스 없음」이다." }
+    ],
+    "shoebox": [{ "t": "text", "text": "신발장. 이름표가 붙은 칸이 몇 개 남아 있다. 다 바래서 읽을 수 없다." }],
+    "hallnotice": [{ "t": "text", "text": "「교훈 — 꿈과 희망을 품은 사람」 글자가 반쯤 떨어져 나갔다." }],
+    "cabinet": [{ "t": "text", "text": "낡은 캐비닛. 서랍은 전부 비어 있다." }],
+    "monitor": [
+      {
+        "t": "if", "cond": { "flag": "stage1" },
+        "then": [{ "t": "text", "text": "꺼진 모니터에 내 얼굴이 비친다. ……뒤에 누군가 서 있었던 것 같다." }],
+        "else": [{ "t": "text", "text": "꺼진 CCTV 모니터. 먼지가 두껍게 쌓여 있다." }]
+      }
+    ],
+    "logdesk": [
+      { "t": "text", "text": "책상 위에 순찰 일지가 펼쳐져 있다. 군데군데 물에 젖어 번져 있다." },
+      { "t": "text", "text": "「6월 2일. 열쇠함 고장. 수리함.」" },
+      { "t": "text", "text": "「7월 1일. 2층 음악실 창문 깨짐.」" },
+      { "t": "text", "text": "「(날짜가 번져 읽을 수 없다) ……그날 이후, 열쇠함 번호를 그날의 날짜로 바꿨다. 다시는 잊지 않으려고.」" },
+      { "t": "flag", "key": "read_logbook" },
+      { "t": "clue", "id": "logbook" },
+      {
+        "t": "if", "cond": { "clue": "date714" },
+        "then": [{ "t": "text", "who": "재민", "text": "그날… 출석부가 끊긴 날짜. 7월 14일?" }],
+        "else": [{ "t": "text", "who": "재민", "text": "그날이 언제였는지 알 수 있다면…" }]
+      }
+    ],
+    "keybox": [
+      {
+        "t": "if", "cond": { "flag": "p2" },
+        "then": [{ "t": "text", "text": "열쇠함은 비어 있다." }],
+        "else": [
+          { "t": "text", "text": "벽에 4자리 번호 자물쇠가 달린 열쇠함이 걸려 있다." },
+          {
+            "t": "puzzle", "id": "keybox",
+            "success": [
+              { "t": "flag", "key": "p2" },
+              { "t": "text", "text": "열쇠함 안에 「2층」이라 적힌 열쇠가 걸려 있다." },
+              { "t": "item", "id": "key2f" },
+              { "t": "call", "name": "stage1" }
+            ]
+          }
+        ]
+      }
+    ],
+    "stage1": [
+      { "t": "wait", "ms": 500 },
+      { "t": "sfx", "name": "laugh" },
+      { "t": "stage", "n": 1 },
+      { "t": "effect", "name": "glitch" },
+      { "t": "text", "text": "……어디선가 낄낄거리는 웃음소리가 들린 것 같다." },
+      { "t": "sfx", "name": "follow", "wait": true },
+      { "t": "text", "who": "재민", "text": "……발소리?" },
+      { "t": "text", "text": "복도 저편에서 무언가가 이쪽으로 오고 있다. 숨을 곳을 찾아야 한다." },
+      { "t": "chase", "id": "chase1", "spawn": { "x": 38, "y": 10 }, "after": "afterChase1" }
+    ],
+    "afterChase1": [
+      { "t": "text", "text": "……발소리가 멀어졌다." },
+      { "t": "text", "who": "재민", "text": "방금 그건… 교복을 입고 있었어." },
+      { "t": "text", "who": "재민", "text": "2층 열쇠가 생겼다. 계단실은 복도 동쪽 끝이었지." }
+    ],
+    "mirror": [{ "t": "text", "text": "거울 속 내 얼굴이 낯설다. 오래 쳐다보고 싶지 않다." }],
+    "stall": [{ "t": "text", "text": "칸막이 문이 조금 열려 있다. ……안은 비어 있다." }],
+    "stairs": [
+      { "t": "text", "text": "2층으로 이어지는 계단. 위층은 아래보다 더 어둡다." },
+      { "t": "text", "who": "재민", "text": "……가야 해." },
+      { "t": "flag", "key": "pendingChase", "value": null },
+      { "t": "flag", "key": "demo_end" },
+      { "t": "save" },
+      { "t": "goto", "scene": "DemoEnd" }
+    ]
+  }
+}

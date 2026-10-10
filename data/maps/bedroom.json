@@ -1,0 +1,71 @@
+{
+  "id": "bedroom",
+  "bgm": "rain",
+  "ambient": { "color": "#0a1020", "alpha": 0.35 },
+  "legend": { "#": "wall", "b": "floor_room", "H": "homedoor" },
+  "solid": ["#", "H"],
+  "grid": [
+    "############",
+    "#bbbbbbbbbb#",
+    "#bbbbbbbbbb#",
+    "#bbbbbbbbbb#",
+    "#bbbbbbbbbb#",
+    "#bbbbbbbbbb#",
+    "#bbbbbbbbbb#",
+    "#bbbbbbbbbb#",
+    "#########H##"
+  ],
+  "spawn": { "x": 2, "y": 2, "dir": "down" },
+  "areas": [{ "name": "재민의 방", "x": 1, "y": 1, "w": 10, "h": 7 }],
+  "onEnter": {
+    "once": "woke",
+    "script": [
+      { "t": "text", "who": "재민", "text": "……또 그 꿈인가…" },
+      { "t": "text", "text": "꿈의 내용은 기억나지 않는다. 학교였다는 것만 남아 있다." },
+      { "t": "text", "who": "재민", "text": "내가 왜 계속 학교 꿈을 꾸는 거지?" },
+      { "t": "text", "text": "[ 이동: WASD / 방향키    조사: E / Space    기억 노트: ESC ]" }
+    ]
+  },
+  "objects": [
+    { "x": 1, "y": 1, "tex": "bed_top", "script": "bed" },
+    { "x": 1, "y": 2, "tex": "bed_bottom", "script": "bed" },
+    { "x": 4, "y": 0, "tex": "window", "script": "window" },
+    { "x": 7, "y": 0, "tex": "window", "script": "window" },
+    { "x": 5, "y": 1, "tex": "desk", "script": "desk" },
+    { "x": 9, "y": 1, "tex": "shelf", "script": "shelf" },
+    { "x": 10, "y": 7, "tex": "mailbox", "script": "mailbox" },
+    { "x": 9, "y": 8, "script": "homedoor" }
+  ],
+  "scripts": {
+    "bed": [{ "t": "text", "text": "이불이 식은땀에 젖어 있다." }],
+    "window": [{ "t": "text", "text": "창밖에 비가 내리고 있다." }],
+    "desk": [{ "t": "text", "text": "회사 서류가 쌓여 있다. 며칠째 제대로 잠을 못 잤다." }],
+    "shelf": [
+      { "t": "text", "text": "책장에 중학교 졸업앨범이 꽂혀 있다. 고등학교 앨범은… 없다." },
+      { "t": "text", "who": "재민", "text": "전학을 갔으니까. ……그랬던가?" }
+    ],
+    "mailbox": [
+      {
+        "t": "if", "cond": { "noClue": "card" },
+        "then": [
+          { "t": "text", "text": "현관 우편함에 명함 한 장이 꽂혀 있다." },
+          { "t": "text", "text": "「꿈이 당신을 부른다면 — 한서진」 그 아래에 작은 글씨로 주소가 적혀 있다." },
+          { "t": "clue", "id": "card" },
+          { "t": "text", "who": "재민", "text": "언제 꽂힌 거지…? 꿈… 이라니." }
+        ],
+        "else": [{ "t": "text", "text": "우편함은 비어 있다." }]
+      }
+    ],
+    "homedoor": [
+      {
+        "t": "if", "cond": { "clue": "card" },
+        "then": [
+          { "t": "text", "who": "재민", "text": "……밑져야 본전이다." },
+          { "t": "sfx", "name": "doorClose" },
+          { "t": "goto", "scene": "Cutscene", "id": "shaman" }
+        ],
+        "else": [{ "t": "text", "text": "딱히 나갈 일은 없다. …우편함에 뭔가 꽂혀 있는 것 같은데." }]
+      }
+    ]
+  }
+}

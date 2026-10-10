@@ -1,0 +1,17 @@
+{
+  "bedroom": [
+    { "cond": { "noClue": "card" }, "text": "현관 옆 우편함에 뭔가 꽂혀 있었던 것 같다." },
+    { "cond": {}, "text": "명함에 적힌 곳에 가 볼까. 현관문은 방 아래쪽이다." }
+  ],
+  "school1f": [
+    { "cond": { "notFlag": "enter13" }, "text": "복도를 따라가 보자. 유난히 익숙한 교실이 있었다." },
+    { "cond": { "notFlag": "read_attendance" }, "text": "1학년 3반… 교탁 위에 뭔가 놓여 있었다." },
+    { "cond": { "notFlag": "read_seatchart" }, "text": "교실 게시판에 사진이 붙어 있었지." },
+    { "cond": { "notFlag": "p1" }, "text": "출석부에서 지워진 번호와 배치도의 메모를 같이 보면, 그 자리를 알 수 있을지도." },
+    { "cond": { "notFlag": "frag1" }, "text": "배치도에서 찾은 자리… 창가에서 세 번째 분단, 맨 뒤. 그 책상을 살펴보자." },
+    { "cond": { "notFlag": "read_logbook" }, "text": "학교 기록이 남아 있을 만한 곳. 입구 근처에 경비실이 있었다." },
+    { "cond": { "notFlag": "p2" }, "text": "일지에 적힌 「그날」. 출석부의 마지막 날짜가 떠오른다." },
+    { "cond": { "notFlag": "chase1_done" }, "text": "숨어야 해. 사물함 같은 곳에…" },
+    { "cond": {}, "text": "2층 열쇠가 생겼다. 계단실은 복도 동쪽 끝이었다." }
+  ]
+}
