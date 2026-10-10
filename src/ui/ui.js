@@ -402,7 +402,7 @@ export class UI {
         this.s.add.rectangle(0, 0, W, H, 0x060608, 0.95).setOrigin(0),
         this.s.add.text(28, 20, '기억 노트', textStyle(20, '#c9a46a')),
         this.s.add.text(W - 28, 26, `기억 조각 ${state.fragments.length} / 8`, textStyle(13, '#8f8996')).setOrigin(1, 0),
-        this.s.add.text(W / 2, H - 24, '←→ 탭   ↑↓ 선택   ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5),
+        this.s.add.text(W / 2, H - 24, '←→ 탭   ↑↓ 선택   ESC 닫기', textStyle(13, '#9a94a3')).setOrigin(0.5),
         this.s.add.rectangle(230, 104, 1, 300, 0x2e2b34).setOrigin(0),
       ]);
       const tabTexts = tabs.map((t, i) => {
