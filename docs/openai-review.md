@@ -21,7 +21,7 @@
 - GitHub 자체의 외부 기여자 Actions 실행 승인 정책은 그대로 적용됩니다. 그 승인이 필요한 경우 CI부터 시작되어야 합니다. 이 변경은 승인 정책이나 브랜치 보호를 바꾸지 않습니다.
 - 권한을 가진 리뷰 작업은 TMAXyoungkk의 고정된 중앙 코드만 실행합니다. nightmare의 PR 코드·의존성·artifact·cache를 실행하지 않습니다. 외부 fork의 diff는 고정 base/head SHA 비교 API에서 데이터로만 읽습니다.
 - 외부 fork PR을 저장소 ID·브랜치·전체 SHA·base 정보로 유일하게 연결하며, 상태를 API 호출 전후 다시 확인합니다. 제목·본문은 모델에 보내지 않습니다.
-- 중앙 reusable workflow: `2026-tmax-it-school/TMAXyoungkk/.github/workflows/openai-review-reusable.yml@baf0e15fe0889fc5a3b22a5e2777070a2ef49190`
+- 중앙 reusable workflow: `2026-tmax-it-school/TMAXyoungkk/.github/workflows/openai-review-reusable.yml@c67bf2fd543117fddcc8d3041916dae73db4850b`
 - 해당 workflow의 리뷰 코드 pin: `dfd7d49ab5c4bb666679289914eb713c28c11868`. 불변 SHA이므로 중앙 저장소 업데이트가 자동 반영되지 않습니다. 업데이트할 때 코드/워크플로를 검토하고 pin을 함께 변경합니다.
 - 한 PR/head SHA당 최대 1회 API 요청, 최대 20개 파일/32,000바이트 diff, 출력 최대 2,000토큰, high/medium 발견사항 최대 5개입니다. `gpt-6-luna`, Responses API, `store:false`, 모델 도구 없음 조건을 그대로 사용합니다.
 - 같은 저장소는 최대 3,000개, fork는 불변 비교 API의 최대 300개 파일 목록에서 부분 검토합니다. 제외·미조회 수가 결과에 표시됩니다. 숨김/비밀 관련 경로, lockfile, 생성물 등은 제외하지만 모든 비밀을 탐지하는 시스템은 아닙니다.
