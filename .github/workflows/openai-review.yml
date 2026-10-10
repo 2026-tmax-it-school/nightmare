@@ -17,7 +17,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       vars.OPENAI_REVIEW_ENABLED == 'true' &&
       vars.OPENAI_REVIEW_BUDGET_CONFIRMED == 'true'
-    uses: 2026-tmax-it-school/TMAXyoungkk/.github/workflows/openai-review-reusable.yml@baf0e15fe0889fc5a3b22a5e2777070a2ef49190
+    uses: 2026-tmax-it-school/TMAXyoungkk/.github/workflows/openai-review-reusable.yml@c67bf2fd543117fddcc8d3041916dae73db4850b
     with:
       ci-name: Review integration checks
       ci-path: .github/workflows/review-integration-checks.yml
