@@ -28,7 +28,7 @@ python tools/serve.py
 
 ## 문서
 
-- [학생 팀 작업 순서](docs/team-workflow.md) — 준비·선점·PR 제출·QA 스킬
+- [학생 팀 작업 순서](docs/team-workflow.md) — 세 칸 칸반·선점·PR 제출·QA 스킬
 - [AI 안내 프로토콜](docs/team-protocol.md) — 단계별 설명·완료 조건·다음 행동·예외 처리
 
 - [기획서 (GDD)](docs/GDD.md)
