@@ -5,6 +5,7 @@ import { state, flag, setFlag, saveGame, checkCond } from '../state.js';
 import { runScript } from '../script.js';
 import { UI, textStyle, isConfirm, dirOf } from '../ui/ui.js';
 import { sfx, startLoop, stopLoop, stopAllLoops } from '../audio.js';
+import { LockerView } from '../ui/locker.js';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const key = (x, y) => `${x},${y}`;
@@ -91,6 +92,7 @@ export default class Explore extends Phaser.Scene {
 
   update() {
     if (this.dark) this.drawDark();
+    this.lockerView?.update(this.chase, this.tx, this.ty);
     if (this.promptTxt.visible) this.promptTxt.setPosition(this.player.x, this.player.y - 26);
     if (this.busy || this.moving || this.hidden || this.over) return;
     const k = this.keys;
@@ -272,14 +274,7 @@ export default class Explore extends Phaser.Scene {
     sfx('locker');
     this.player.setVisible(false);
     this.promptTxt.setVisible(false);
-    const g = this.add.graphics();
-    g.fillStyle(0x000000, 0.85).fillRect(0, 0, W, H * 0.42).fillRect(0, H * 0.58, W, H * 0.42);
-    g.fillStyle(0x000000, 0.6);
-    for (let y = H * 0.42 + 6; y < H * 0.58; y += 12) g.fillRect(0, y, W, 5);
-    this.lockerView = this.add.container(0, 0, [
-      g,
-      this.add.text(W / 2, H - 30, '사물함 안에 숨어 있다 — E: 나가기', textStyle(12, '#8d8696')).setOrigin(0.5),
-    ]).setScrollFactor(0).setDepth(90);
+    this.lockerView = new LockerView(this);
   }
 
   exitLocker() {
