@@ -1,6 +1,6 @@
 ---
 name: team-submit
-description: nightmare 학생이 완료한 작업 제출을 요청할 때 관련 변경 검증·커밋·개인 브랜치 push·main 대상 PR 생성 또는 갱신을 수행한다. 동기화 충돌도 해결한다. PR 병합과 이슈 종료는 하지 않는다.
+description: nightmare 학생이 완료한 작업 제출을 요청할 때 관련 변경 검증·커밋·개인 브랜치 push·main 대상 PR 생성 또는 갱신을 수행한다. 동기화 충돌도 해결한다. PR은 자동 병합하지 않으며, 이슈는 main 병합 시 GitHub가 자동 종료하도록 연결한다.
 ---
 
 # 공통 본문 실행
