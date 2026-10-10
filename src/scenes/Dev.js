@@ -40,8 +40,10 @@ export default class Dev extends Phaser.Scene {
   async menu() {
     const cps = DB.checkpoints;
     const labels = [...cps.map(c => `${c.label}  (${c.id})`), '타이틀 화면 (일반 시작)'];
-    const box = this.add.container(70, 62);
-    const i = await this.ui.select(box, 0, 0, labels, { size: 14, gap: 27 });
+    const box = this.add.container(70, 56);
+    // 체크포인트가 늘어도 화면 안에 들어오도록 간격을 줄인다
+    const gap = Math.min(27, Math.floor((H - 100) / labels.length));
+    const i = await this.ui.select(box, 0, 0, labels, { size: gap < 22 ? 12 : 14, gap });
     if (i === cps.length) { initAudio(); return this.scene.start('Title'); }
     this.launch(cps[i].id);
   }

@@ -18,7 +18,11 @@ const CHASE_GIVE_UP_MS = 4500;
 export default class Explore extends Phaser.Scene {
   constructor() { super('Explore'); }
 
-  init(data) { this.mapId = data.map || state.map; }
+  // data.pos: 층 이동 등으로 다른 맵에서 넘어올 때의 도착 칸 ({ x, y, dir })
+  init(data) {
+    this.mapId = data.map || state.map;
+    this.arrive = data.pos || null;
+  }
 
   create() {
     const m = this.map = DB.maps[this.mapId];
@@ -51,10 +55,13 @@ export default class Explore extends Phaser.Scene {
       return t;
     });
 
-    const pos = resume ? state.pos : m.spawn;
+    const pos = this.arrive || (resume ? state.pos : m.spawn);
     this.tx = pos.x;
     this.ty = pos.y;
-    this.dir = (resume ? state.dir : m.spawn.dir) || 'down';
+    this.dir = (this.arrive ? this.arrive.dir : resume ? state.dir : m.spawn.dir) || 'down';
+    // 도착 직후 저장해도 이전 맵의 좌표가 남지 않도록 바로 기록
+    state.pos = { x: this.tx, y: this.ty };
+    state.dir = this.dir;
     this.player = this.add.image(cx(this.tx), cx(this.ty), 'player_' + this.dir).setDepth(3);
 
     const cam = this.cameras.main;
@@ -155,8 +162,9 @@ export default class Explore extends Phaser.Scene {
     this.updateArea();
     for (const t of this.map.triggers || []) {
       const inside = this.tx >= t.x && this.tx < t.x + t.w && this.ty >= t.y && this.ty < t.y + t.h;
-      if (inside && !flag(t.once) && checkCond(t.cond)) {
-        setFlag(t.once);
+      // once가 없는 트리거(계단 등)는 그 칸에 들어설 때마다 실행된다
+      if (inside && !(t.once && flag(t.once)) && checkCond(t.cond)) {
+        if (t.once) setFlag(t.once);
         this.run(this.resolve(t.script));
         break;
       }
