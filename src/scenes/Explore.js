@@ -88,6 +88,15 @@ export default class Explore extends Phaser.Scene {
     this.tint = this.add.rectangle(0, 0, W, H, 0x5a0000, 0).setOrigin(0).setScrollFactor(0).setDepth(11);
     this.promptTxt = this.add.text(0, 0, 'E', textStyle(11, '#111111', { backgroundColor: '#d8cfb4', padding: { x: 4, y: 1 } }))
       .setOrigin(0.5).setDepth(12).setVisible(false);
+    // 조사 대상 칸 표시: 모서리 괄호 테두리가 은은하게 깜빡인다
+    this.focus = this.add.graphics().setDepth(4).setVisible(false);
+    this.focus.lineStyle(2, 0xd8cfb4, 1);
+    const h = TILE / 2, l = 9;
+    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      this.focus.lineBetween(sx * h, sy * h, sx * (h - l), sy * h);
+      this.focus.lineBetween(sx * h, sy * h, sx * h, sy * (h - l));
+    }
+    this.tweens.add({ targets: this.focus, alpha: 0.4, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     this.areaTxt = this.add.text(14, 12, '', textStyle(13, '#a8a1b0', { backgroundColor: 'rgba(0,0,0,0.55)', padding: { x: 8, y: 4 } }))
       .setScrollFactor(0).setDepth(95).setAlpha(0);
 
@@ -114,7 +123,11 @@ export default class Explore extends Phaser.Scene {
   update() {
     if (this.dark) this.drawDark();
     this.lockerView?.update(this.chase, this.tx, this.ty);
-    if (this.promptTxt.visible) this.promptTxt.setPosition(this.player.x, this.player.y - 26);
+    // 위를 볼 때는 머리 위 E가 조사 대상을 가리므로 대상 칸 위로 올린다
+    if (this.promptTxt.visible) {
+      if (this.dir === 'up') this.promptTxt.setPosition(this.focus.x, this.focus.y - 26);
+      else this.promptTxt.setPosition(this.player.x, this.player.y - 26);
+    }
     if (this.busy || this.moving || this.hidden || this.over) return;
     const k = this.keys;
     const dir = (k.UP.isDown || k.W.isDown) ? 'up'
@@ -149,6 +162,7 @@ export default class Explore extends Phaser.Scene {
     this.moving = true;
     this.tx = nx;
     this.ty = ny;
+    this.updatePrompt();
     this.steps = (this.steps || 0) + 1;
     if (this.steps % 2 === 0) sfx('step');
     this.tweens.add({
@@ -205,7 +219,11 @@ export default class Explore extends Phaser.Scene {
   }
 
   updatePrompt() {
-    this.promptTxt.setVisible(!this.hidden && !this.busy && this.interactable(this.frontObj()));
+    const o = this.frontObj();
+    const on = !this.hidden && !this.busy && this.interactable(o);
+    this.promptTxt.setVisible(on);
+    this.focus.setVisible(on);
+    if (on) this.focus.setPosition(cx(o.x), cx(o.y));
   }
 
   onKey(e) {
@@ -229,7 +247,7 @@ export default class Explore extends Phaser.Scene {
 
   async run(list) {
     this.busy = true;
-    this.promptTxt.setVisible(false);
+    this.updatePrompt();
     if ((await runScript(this, list)) === 'stop') return;
     this.ui.hideDialog();
     this.busy = false;
@@ -250,7 +268,7 @@ export default class Explore extends Phaser.Scene {
 
   async openNotebook() {
     this.busy = true;
-    this.promptTxt.setVisible(false);
+    this.updatePrompt();
     sfx('beep');
     await this.ui.notebook(this.hint());
     this.busy = false;
@@ -340,7 +358,7 @@ export default class Explore extends Phaser.Scene {
     this.hidden = true;
     sfx('locker');
     this.player.setVisible(false);
-    this.promptTxt.setVisible(false);
+    this.updatePrompt();
     this.lockerView = new LockerView(this, o.view);
   }
 
