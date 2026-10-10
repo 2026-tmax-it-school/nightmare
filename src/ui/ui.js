@@ -2,7 +2,7 @@
 import { W, H, FONT } from '../constants.js';
 import { DB } from '../db.js';
 import { state, addDenial } from '../state.js';
-import { sfx } from '../audio.js';
+import { sfx, playNote } from '../audio.js';
 
 export const textStyle = (size = 15, color = '#e8e2d6', extra = {}) => ({
   fontFamily: FONT, fontSize: `${size}px`, color, lineSpacing: 6, resolution: 2, ...extra,
@@ -232,7 +232,8 @@ export class UI {
   puzzle(id) {
     this.hideDialog();
     const p = DB.puzzles[id];
-    return p.type === 'seat' ? this.seatPuzzle(p) : this.keypad(p);
+    const fn = { seat: this.seatPuzzle, keypad: this.keypad, piano: this.piano, match: this.match, order: this.order }[p.type];
+    return fn.call(this, p);
   }
 
   seatPuzzle(p) {
@@ -336,6 +337,210 @@ export class UI {
     });
   }
 
+  // 피아노: 악보대로 건반을 누른다 (p.melody: 1=도 … 7=시)
+  piano(p) {
+    return new Promise(resolve => {
+      const NOTES = ['도', '레', '미', '파', '솔', '라', '시'];
+      const pw = 470, ph = 330, kw = 56, kh = 116, ky = 116;
+      const kx = pw / 2 - (NOTES.length * kw) / 2;
+      const c = this.fixed(this.s.add.container(W / 2 - pw / 2, H / 2 - ph / 2), 170);
+      c.add([
+        this.s.add.rectangle(0, 0, pw, ph, 0x17110d).setOrigin(0).setStrokeStyle(2, 0x5a4632),
+        this.s.add.text(pw / 2, 14, p.title, textStyle(17, '#d8cfb4')).setOrigin(0.5, 0),
+        this.s.add.text(pw / 2, 44, `악보 — ${p.score}`, textStyle(14, '#a99f8e')).setOrigin(0.5, 0),
+      ]);
+      const played = this.s.add.text(pw / 2, 76, '', textStyle(16, '#e8e2d6')).setOrigin(0.5, 0);
+      const keys = NOTES.map((n, i) => {
+        const k = this.s.add.rectangle(kx + i * kw, ky, kw - 2, kh, 0xe6e0d0).setOrigin(0).setStrokeStyle(2, 0x3a2e22);
+        c.add([k, this.s.add.text(kx + i * kw + kw / 2 - 1, ky + kh - 30, `${n}\n${i + 1}`, textStyle(12, '#3a2e22', { align: 'center' })).setOrigin(0.5, 0.5)]);
+        return k;
+      });
+      for (const i of [0, 1, 3, 4, 5]) c.add(this.s.add.rectangle(kx + (i + 1) * kw - 1, ky, 30, 66, 0x0c0a08).setOrigin(0.5, 0));
+      const cursor = this.s.add.rectangle(0, ky + kh + 8, kw - 10, 4, 0xc9a46a).setOrigin(0);
+      const msg = this.s.add.text(pw / 2, ky + kh + 20, '', textStyle(13, '#c06060')).setOrigin(0.5, 0);
+      const hint = this.s.add.text(pw / 2, ky + kh + 42, '', textStyle(12, '#a99f8e', { wordWrap: { width: pw - 40, useAdvancedWrap: true }, align: 'center' })).setOrigin(0.5, 0);
+      c.add([played, cursor, msg, hint, this.s.add.text(pw / 2, ph - 20, '←→ 건반  E 누르기  숫자 1~7 바로 누르기  Backspace 지우기  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5)]);
+
+      let idx = 0, wrong = 0, locked = false;
+      const seq = [];
+      const draw = () => {
+        cursor.setX(kx + idx * kw + 4);
+        played.setText(seq.map(n => NOTES[n - 1]).join(' ') || '…');
+      };
+      const press = i => {
+        playNote(i + 1);
+        keys[i].setFillStyle(0xc9a46a);
+        this.s.time.delayedCall(140, () => keys[i].setFillStyle(0xe6e0d0));
+        seq.push(i + 1);
+        msg.setText('');
+        if (seq.length < p.melody.length) return;
+        locked = true;
+        if (seq.join() === p.melody.join()) {
+          off(); msg.setColor('#7ac080').setText('……이 곡이다.');
+          this.wait(900).then(() => { c.destroy(); resolve(true); });
+          return;
+        }
+        wrong++;
+        this.wait(500).then(() => {
+          sfx('error');
+          msg.setColor('#c06060').setText('……어딘가 음이 틀렸다.');
+          if (wrong >= 2 && p.hint) hint.setText(p.hint);
+          seq.length = 0;
+          locked = false;
+          draw();
+        });
+      };
+      const off = this.listen(e => {
+        if (locked) return;
+        const d = dirOf(e);
+        const digit = /^(Digit|Numpad)([1-7])$/.exec(e.code);
+        if (digit) { idx = Number(digit[2]) - 1; press(idx); }
+        else if (d === 'left') { idx = Math.max(0, idx - 1); sfx('tick'); }
+        else if (d === 'right') { idx = Math.min(NOTES.length - 1, idx + 1); sfx('tick'); }
+        else if (isConfirm(e)) press(idx);
+        else if (e.code === 'Backspace') seq.pop();
+        else if (e.code === 'Escape') { off(); c.destroy(); resolve(false); return; }
+        draw();
+      });
+      draw();
+    });
+  }
+
+  // 대화 로그를 보며 닉네임마다 실제 인물을 고른다. row.distortion이면 오답이 곧 왜곡 선택이다.
+  async match(p) {
+    this.hideDialog();
+    const c = this.fixed(this.s.add.container(0, 0), 170);
+    c.add([
+      this.s.add.rectangle(0, 0, W, H, 0x07070a, 0.96).setOrigin(0),
+      this.s.add.text(W / 2, 16, p.title, textStyle(18, '#c9a46a')).setOrigin(0.5, 0),
+      this.s.add.rectangle(20, 52, 360, 300, 0x10141a).setOrigin(0).setStrokeStyle(2, 0x2e3a48),
+      this.s.add.text(32, 60, p.log.join('\n'), textStyle(13, '#b8c4d0', { lineSpacing: 9, wordWrap: { width: 336, useAdvancedWrap: true } })),
+      this.s.add.text(400, 58, '닉네임은 누구였을까', textStyle(13, '#77707f')),
+    ]);
+    const rowText = (r, name = '＿＿＿') => `「${r.nick}」 → ${name}`;
+    const rows = p.rows.map((r, i) => {
+      const t = this.s.add.text(400, 88 + i * 30, rowText(r), textStyle(15, '#4a4652'));
+      c.add(t);
+      return t;
+    });
+    const msg = this.s.add.text(20, 366, '', textStyle(14, '#b08080', { wordWrap: { width: W - 40, useAdvancedWrap: true } }));
+    c.add(msg);
+
+    for (let i = 0; i < p.rows.length; i++) {
+      const r = p.rows[i];
+      rows[i].setColor('#e8e2d6');
+      for (;;) {
+        const opt = this.s.add.container(0, 0);
+        c.add(opt);
+        const pick = await this.select(opt, 400, 222, p.people, { cancel: true, size: 14, gap: 30 });
+        opt.destroy();
+        if (pick === -1) { c.destroy(); return false; }
+        if (pick === r.answer) { sfx('ok'); msg.setText(''); break; }
+        if (r.distortion) {
+          rows[i].setText(rowText(r, p.people[pick])).setColor('#a03030');
+          await this.distortion(msg, r.evidence);
+          break;
+        }
+        sfx('error');
+        msg.setColor('#b08080').setText('……대화 내용과 맞지 않는다.');
+      }
+      rows[i].setText(rowText(r, p.people[r.answer])).setColor('#d8c09a');
+    }
+    await this.wait(600);
+    c.add(this.s.add.text(W / 2, H - 30, 'E: 계속', textStyle(12, '#77707f')).setOrigin(0.5));
+    await this.waitConfirm();
+    c.destroy();
+    return true;
+  }
+
+  // 순서 맞추기: 항목을 골라 순서대로 넣는다. 넣을 때 그 소리를 재생한다.
+  order(p) {
+    return new Promise(resolve => {
+      const pw = 500, ph = 360, n = p.tapes.length;
+      const c = this.fixed(this.s.add.container(W / 2 - pw / 2, H / 2 - ph / 2), 170);
+      c.add([
+        this.s.add.rectangle(0, 0, pw, ph, 0x15171a).setOrigin(0).setStrokeStyle(2, 0x4a4f56),
+        this.s.add.text(pw / 2, 14, p.title, textStyle(17, '#d8d8d8')).setOrigin(0.5, 0),
+        this.s.add.text(pw / 2, 42, p.memo, textStyle(12, '#8f8996')).setOrigin(0.5, 0),
+      ]);
+      const list = p.tapes.map((t, i) => {
+        const tx = this.s.add.text(40, 78 + i * 28, t.label, textStyle(15));
+        c.add(tx);
+        return tx;
+      });
+      const desc = this.s.add.text(200, 78, '', textStyle(13, '#c8c0b0', { wordWrap: { width: 270, useAdvancedWrap: true } }));
+      const slots = Array.from({ length: n }, (_, i) => {
+        const x = pw / 2 - (n * 104) / 2 + i * 104;
+        c.add([
+          this.s.add.rectangle(x, 206, 96, 44, 0x0c0d0f).setOrigin(0).setStrokeStyle(2, 0x4a4f56),
+          this.s.add.text(x + 4, 190, `${i + 1}`, textStyle(11, '#6d6875')),
+        ]);
+        const t = this.s.add.text(x + 48, 228, '', textStyle(13, '#e8e2d6')).setOrigin(0.5);
+        c.add(t);
+        return t;
+      });
+      const msg = this.s.add.text(pw / 2, 262, '', textStyle(13, '#c06060')).setOrigin(0.5, 0);
+      const hint = this.s.add.text(pw / 2, 284, '', textStyle(12, '#a99f8e', { wordWrap: { width: pw - 40, useAdvancedWrap: true }, align: 'center' })).setOrigin(0.5, 0);
+      c.add([desc, msg, hint, this.s.add.text(pw / 2, ph - 18, '↑↓ 고르기  E 듣고 순서에 넣기  Backspace 빼기  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5)]);
+
+      let idx = 0, wrong = 0, locked = false;
+      const seq = [];
+      const draw = () => {
+        list.forEach((t, i) => t.setColor(seq.includes(i) ? '#4a4652' : i === idx ? '#ffffff' : '#8f8996').setText((i === idx ? '▶ ' : '   ') + p.tapes[i].label));
+        desc.setText(p.tapes[idx].desc);
+        slots.forEach((t, i) => t.setText(seq[i] != null ? p.tapes[seq[i]].label : ''));
+      };
+      const off = this.listen(e => {
+        if (locked) return;
+        const d = dirOf(e);
+        if (d === 'up') { idx = (idx + n - 1) % n; sfx('tick'); }
+        else if (d === 'down') { idx = (idx + 1) % n; sfx('tick'); }
+        else if (e.code === 'Backspace') seq.pop();
+        else if (e.code === 'Escape') { off(); c.destroy(); resolve(false); return; }
+        else if (isConfirm(e)) {
+          if (seq.includes(idx)) { sfx('error'); return; }
+          seq.push(idx);
+          msg.setText('');
+          locked = true;
+          // 소리가 끝날 때까지 다음 입력을 막는다
+          const dur = sfx(p.tapes[idx].sfx) || 0.3;
+          draw();
+          this.wait(dur * 1000 + 150).then(() => {
+            if (seq.length < n) { locked = false; return; }
+            if (seq.join() === p.answer.join()) {
+              off(); sfx('ok'); msg.setColor('#7ac080').setText('……그날 오후가 이어진다.');
+              this.wait(900).then(() => { c.destroy(); resolve(true); });
+              return;
+            }
+            wrong++; sfx('error');
+            msg.setColor('#c06060').setText('……이 순서가 아니다.');
+            if (p.hint) hint.setText(p.hint);
+            seq.length = 0;
+            locked = false;
+            draw();
+          });
+          return;
+        }
+        draw();
+      });
+      draw();
+    });
+  }
+
+  // 왜곡된 기억: 부정 수치 상승 → 증거로 깨진다
+  async distortion(msg, evidence) {
+    addDenial(15);
+    this.s.events.emit('denial');
+    await this.glitch(500);
+    msg.setColor('#b08080').setText('……기억이 일그러진다.');
+    await this.wait(1000);
+    msg.setColor('#d8c09a').setText(`[증거] ${evidence.name}\n${evidence.quote}`);
+    await this.wait(2400);
+    msg.setColor('#b08080').setText('……아니야.');
+    await this.wait(1000);
+    msg.setText('');
+  }
+
   // ── 기억 재구성 (추리) ──
   async deduction(id) {
     this.hideDialog();
@@ -366,18 +571,8 @@ export class UI {
         opt.destroy();
         if (o.correct) { sfx('ok'); msg.setText(''); break; }
         if (o.distortion) {
-          // 왜곡된 기억: 부정 수치 상승 → 증거로 깨진다
-          addDenial(15);
-          this.s.events.emit('denial');
           lines[i].setText(blankText(b, o.label)).setColor('#a03030');
-          await this.glitch(500);
-          msg.setColor('#b08080').setText('……기억이 일그러진다.');
-          await this.wait(1000);
-          msg.setColor('#d8c09a').setText(`[증거] ${b.evidence.name}\n${b.evidence.quote}`);
-          await this.wait(2400);
-          msg.setColor('#b08080').setText('……아니야.');
-          await this.wait(1000);
-          msg.setText('');
+          await this.distortion(msg, b.evidence);
           break;
         }
         sfx('error');
