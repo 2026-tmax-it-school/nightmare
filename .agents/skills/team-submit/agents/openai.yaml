@@ -1,0 +1,3 @@
+interface:
+  display_name: "작업 제출"
+  short_description: "작업을 검증하고 커밋과 push 후 이슈를 연결한 main 대상 PR을 제출합니다."

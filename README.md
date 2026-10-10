@@ -28,6 +28,8 @@ python tools/serve.py
 
 ## 문서
 
+- [학생 팀 작업 순서](docs/team-workflow.md) — 준비·선점·PR 제출·QA 스킬
+
 - [기획서 (GDD)](docs/GDD.md)
 - [원본 스토리](docs/원본_스토리.md)
 - [개발자 모드](docs/개발자_모드.md) — 원하는 시점부터 바로 시작 (`?dev`)

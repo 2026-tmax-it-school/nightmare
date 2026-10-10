@@ -1,0 +1,3 @@
+interface:
+  display_name: "할 일 보기"
+  short_description: "GitHub 이슈에서 작업 가능한 미할당 목록과 내 작업을 확인합니다."

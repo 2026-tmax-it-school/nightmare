@@ -3,6 +3,7 @@
 - 작업 전 반드시 `docs/GDD.md`를 읽는다. 기획의 단일 기준이다.
 - 기획 결정이 바뀌면 코드보다 GDD를 먼저 갱신한다. 미해결 항목은 GDD 9장에 둔다.
 - 사용자와 한국어로 소통한다.
+- 학생 팀 작업은 `docs/team-workflow.md`와 `.agents/skills/team-common.md`를 따른다. team 스킬 본문은 `.agents/skills/`에 있다.
 - 1인 개발 공모전 작품이므로 범위를 작게 유지한다 (플레이 약 20분).
 
 ## 실행
