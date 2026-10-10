@@ -1,4 +1,7 @@
-const SAVE_KEY = 'ithope_save_v1';
+import { DEV } from './constants.js';
+
+// 개발자 모드는 별도 슬롯에 저장해 실제 플레이 저장을 건드리지 않는다
+const SAVE_KEY = 'ithope_save_v1' + (DEV ? '_dev' : '');
 
 function fresh() {
   return { flags: {}, clues: [], items: [], fragments: [], denial: 0, map: null, pos: null, dir: 'down' };

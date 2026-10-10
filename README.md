@@ -12,6 +12,8 @@ python tools/serve.py
 
 브라우저에서 http://localhost:8123 접속. (빌드 과정 없음 · Phaser 3 CDN 사용)
 
+테스트할 때는 http://localhost:8123/?dev 로 원하는 시점부터 시작할 수 있습니다. → [개발자 모드](docs/개발자_모드.md)
+
 ## 조작
 
 | 키 | 기능 |
@@ -28,3 +30,4 @@ python tools/serve.py
 
 - [기획서 (GDD)](docs/GDD.md)
 - [원본 스토리](docs/원본_스토리.md)
+- [개발자 모드](docs/개발자_모드.md) — 원하는 시점부터 바로 시작 (`?dev`)

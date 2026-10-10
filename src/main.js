@@ -1,4 +1,6 @@
-import { W, H } from './constants.js';
+import { W, H, DEV } from './constants.js';
+import { installDevHotkey } from './dev.js';
+import Dev from './scenes/Dev.js';
 import Boot from './scenes/Boot.js';
 import Title from './scenes/Title.js';
 import Cutscene from './scenes/Cutscene.js';
@@ -18,7 +20,8 @@ const game = new Phaser.Game({
   pixelArt: true,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   fps: debug ? { forceSetTimeOut: true, target: 60 } : undefined,
-  scene: [Boot, Title, Cutscene, Explore, GameOver, DemoEnd],
+  scene: [Boot, Title, Cutscene, Explore, GameOver, DemoEnd, Dev],
 });
 
-if (debug) window.__game = game;
+if (debug || DEV) window.__game = game;
+if (DEV) installDevHotkey(game);

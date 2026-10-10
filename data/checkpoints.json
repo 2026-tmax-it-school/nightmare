@@ -1,0 +1,42 @@
+{
+  "_comment": "개발자 모드(?dev) 체크포인트. from: 앞 체크포인트의 상태를 이어받아 덧붙인다. pos가 있으면 그 칸에서 dir 방향을 보고 시작.",
+  "checkpoints": [
+    { "id": "dream", "label": "프롤로그 — 꿈", "scene": "Cutscene", "cutscene": "dream" },
+    { "id": "bedroom", "label": "프롤로그 — 침실", "scene": "Explore", "map": "bedroom" },
+    {
+      "id": "shaman", "label": "프롤로그 — 무당집", "scene": "Cutscene", "cutscene": "shaman",
+      "flags": ["woke"], "clues": ["card"]
+    },
+    { "id": "front", "label": "프롤로그 — 폐교 앞", "from": "shaman", "scene": "Cutscene", "cutscene": "front", "items": ["map", "talisman"] },
+    { "id": "school", "label": "1장 — 1층 진입", "from": "front", "scene": "Explore", "map": "school1f" },
+    {
+      "id": "p1", "label": "1장 — P1 자리 배치도 앞", "from": "school", "scene": "Explore", "map": "school1f",
+      "flags": ["ch1_start", "near13", "enter13", "read_attendance", "read_seatchart"],
+      "clues": ["attendance", "date714", "photo", "seatchart"],
+      "pos": { "x": 22, "y": 2, "dir": "up" }
+    },
+    {
+      "id": "frag1", "label": "1장 — 조각 1 (12번 책상 앞)", "from": "p1", "scene": "Explore", "map": "school1f",
+      "flags": ["p1"],
+      "pos": { "x": 26, "y": 7, "dir": "up" }
+    },
+    {
+      "id": "p2", "label": "1장 — P2 열쇠함 앞", "from": "frag1", "scene": "Explore", "map": "school1f",
+      "flags": ["frag1", "read_logbook"], "clues": ["notebook", "logbook"], "fragments": [1],
+      "pos": { "x": 15, "y": 14, "dir": "up" }
+    },
+    {
+      "id": "chase1", "label": "1장 — 첫 추격 (사물함 앞)", "from": "p2", "scene": "Explore", "map": "school1f",
+      "flags": ["p2", "stage1"], "items": ["key2f"],
+      "set": { "pendingChase": { "id": "chase1", "spawn": { "x": 38, "y": 10 }, "after": "afterChase1" } },
+      "pos": { "x": 20, "y": 10, "dir": "up" }
+    },
+    {
+      "id": "stairs", "label": "1장 — 추격 후 계단실 앞", "from": "p2", "scene": "Explore", "map": "school1f",
+      "flags": ["p2", "stage1", "chase1_done"], "items": ["key2f"],
+      "pos": { "x": 36, "y": 11, "dir": "down" }
+    },
+    { "id": "gameover", "label": "화면 — 게임오버", "scene": "GameOver" },
+    { "id": "demoend", "label": "화면 — 데모 끝", "from": "stairs", "scene": "DemoEnd" }
+  ]
+}
