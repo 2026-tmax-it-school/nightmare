@@ -16,6 +16,8 @@ export default class GameOver extends Phaser.Scene {
     this.time.delayedCall(900, async () => {
       const i = await this.ui.select(menu, 0, 0, ['추격 직전부터 다시', '타이틀로']);
       const [scene, data] = i === 0 && loadGame() ? ['Explore', { map: state.map }] : ['Title', {}];
+      // 부정 수치 최대치로 저장돼 있으면 다시 시작하자마자 붙잡히므로 한 단계 낮춘다
+      if (state.denial >= 100) state.denial = 85;
       this.cameras.main.fadeOut(500);
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(scene, data));
     });

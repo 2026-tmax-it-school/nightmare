@@ -77,11 +77,40 @@
       "pos": { "x": 18, "y": 14, "dir": "up" }
     },
     {
-      "id": "roof", "label": "2장 — 옥상 계단 앞 (데모 끝)", "from": "mirror2f", "scene": "Explore", "map": "school2f",
+      "id": "roof", "label": "2장 — 옥상 계단 앞", "from": "mirror2f", "scene": "Explore", "map": "school2f",
       "flags": ["frag4"], "fragments": [4],
       "pos": { "x": 32, "y": 13, "dir": "up" }
     },
+    {
+      "id": "rooftop", "label": "3장 — 옥상 도착", "from": "roof", "scene": "Explore", "map": "rooftop",
+      "flags": ["open_roof"]
+    },
+    {
+      "id": "p6", "label": "3장 — P6 난간 낙서 앞 (단서 4개 확보)", "from": "rooftop", "scene": "Explore", "map": "rooftop",
+      "flags": ["ch3_start"], "clues": ["roof_butts", "roof_ball", "roof_comic", "roof_tag"],
+      "pos": { "x": 13, "y": 1, "dir": "up" }
+    },
+    {
+      "id": "frag5", "label": "3장 — 조각 5 이후 (소화기함 앞)", "from": "p6", "scene": "Explore", "map": "rooftop",
+      "flags": ["p6"], "clues": ["plan713"], "fragments": [5],
+      "pos": { "x": 11, "y": 10, "dir": "down" }
+    },
+    {
+      "id": "office", "label": "3장 — 1층 귀환 후 교무실 문 앞 (데모 끝)", "from": "frag5", "scene": "Explore", "map": "school1f",
+      "flags": ["stage2", "ret1f"], "items": ["keyOffice"],
+      "pos": { "x": 35, "y": 9, "dir": "up" }
+    },
+    {
+      "id": "haunt", "label": "테스트 — 부정 수치 65 (환각·그림자 환영)", "from": "2f", "scene": "Explore", "map": "school2f",
+      "flags": ["ch2_start"], "denial": 65,
+      "pos": { "x": 16, "y": 9, "dir": "down" }
+    },
+    {
+      "id": "denialmax", "label": "테스트 — 부정 수치 100 (붙잡힘)", "from": "2f", "scene": "Explore", "map": "school2f",
+      "flags": ["ch2_start"], "denial": 100,
+      "pos": { "x": 16, "y": 9, "dir": "down" }
+    },
     { "id": "gameover", "label": "화면 — 게임오버", "scene": "GameOver" },
-    { "id": "demoend", "label": "화면 — 데모 끝", "from": "roof", "scene": "DemoEnd" }
+    { "id": "demoend", "label": "화면 — 데모 끝", "from": "office", "scene": "DemoEnd" }
   ]
 }

@@ -232,7 +232,7 @@ export class UI {
   puzzle(id) {
     this.hideDialog();
     const p = DB.puzzles[id];
-    const fn = { seat: this.seatPuzzle, keypad: this.keypad, piano: this.piano, match: this.match, order: this.order }[p.type];
+    const fn = { seat: this.seatPuzzle, keypad: this.keypad, piano: this.piano, match: this.match, order: this.order, silhouette: this.silhouette }[p.type];
     return fn.call(this, p);
   }
 
@@ -417,37 +417,105 @@ export class UI {
       this.s.add.text(32, 60, p.log.join('\n'), textStyle(13, '#b8c4d0', { lineSpacing: 9, wordWrap: { width: 336, useAdvancedWrap: true } })),
       this.s.add.text(400, 58, '닉네임은 누구였을까', textStyle(13, '#77707f')),
     ]);
-    const rowText = (r, name = '＿＿＿') => `「${r.nick}」 → ${name}`;
-    const rows = p.rows.map((r, i) => {
-      const t = this.s.add.text(400, 88 + i * 30, rowText(r), textStyle(15, '#4a4652'));
+    const msg = this.s.add.text(20, 366, '', textStyle(14, '#b08080', { wordWrap: { width: W - 40, useAdvancedWrap: true } }));
+    c.add(msg);
+    const ok = await this.pickRows(c, p.rows, {
+      choices: p.people, rowX: 400, rowY: 88, rowGap: 30, optX: 400, optY: 222, msg, wrong: '……대화 내용과 맞지 않는다.',
+    });
+    if (!ok) { c.destroy(); return false; }
+    await this.wait(600);
+    c.add(this.s.add.text(W / 2, H - 30, 'E: 계속', textStyle(12, '#77707f')).setOrigin(0.5));
+    await this.waitConfirm();
+    c.destroy();
+    return true;
+  }
+
+  // 행마다 보기 하나를 고른다 (행에 options가 없으면 공통 choices). distortion 행의 오답은 왜곡 선택.
+  // 성공하면 행 텍스트 배열, ESC로 닫으면 false.
+  async pickRows(c, rows, { choices, rowX, rowY, rowGap, rowWidth = W - rowX - 16, optX, optY, optGap = 30, msg, wrong = '……맞지 않는다.', onPick }) {
+    const label = (r, v = '＿＿＿') => `「${r.nick}」 → ${v}`;
+    const texts = rows.map((r, i) => {
+      const t = this.s.add.text(rowX, rowY + i * rowGap, label(r), textStyle(15, '#4a4652', { wordWrap: { width: rowWidth, useAdvancedWrap: true } }));
       c.add(t);
       return t;
     });
-    const msg = this.s.add.text(20, 366, '', textStyle(14, '#b08080', { wordWrap: { width: W - 40, useAdvancedWrap: true } }));
-    c.add(msg);
-
-    for (let i = 0; i < p.rows.length; i++) {
-      const r = p.rows[i];
-      rows[i].setColor('#e8e2d6');
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const opts = r.options || choices;
+      texts[i].setColor('#e8e2d6');
       for (;;) {
         const opt = this.s.add.container(0, 0);
         c.add(opt);
-        const pick = await this.select(opt, 400, 222, p.people, { cancel: true, size: 14, gap: 30 });
+        const pick = await this.select(opt, optX, optY, opts, { cancel: true, size: 14, gap: optGap });
         opt.destroy();
-        if (pick === -1) { c.destroy(); return false; }
+        if (pick === -1) return false;
         if (pick === r.answer) { sfx('ok'); msg.setText(''); break; }
         if (r.distortion) {
-          rows[i].setText(rowText(r, p.people[pick])).setColor('#a03030');
+          texts[i].setText(label(r, opts[pick])).setColor('#a03030');
           await this.distortion(msg, r.evidence);
           break;
         }
         sfx('error');
-        msg.setColor('#b08080').setText('……대화 내용과 맞지 않는다.');
+        msg.setColor('#b08080').setText(wrong);
       }
-      rows[i].setText(rowText(r, p.people[r.answer])).setColor('#d8c09a');
+      texts[i].setText(label(r, opts[r.answer])).setColor('#d8c09a');
+      onPick?.(i);
     }
+    return texts;
+  }
+
+  // 실루엣 재구성: 1) 약도의 자리마다 인물 배치  2) 인물마다 그날의 대사
+  async silhouette(p) {
+    this.hideDialog();
+    const c = this.fixed(this.s.add.container(0, 0), 170);
+    const mx = 20, my = 52, mw = 300, mh = 230;
+    c.add([
+      this.s.add.rectangle(0, 0, W, H, 0x07070a, 0.96).setOrigin(0),
+      this.s.add.text(W / 2, 14, p.title, textStyle(18, '#c9a46a')).setOrigin(0.5, 0),
+      this.s.add.rectangle(mx, my, mw, mh, 0x15161b).setOrigin(0).setStrokeStyle(2, 0x3a3d48),
+    ]);
+    // 옥상 약도: 펜스(위), 물탱크(왼쪽 위), 벤치(오른쪽), 출입문(아래)
+    const g = this.s.add.graphics();
+    g.lineStyle(1, 0x5d6170, 0.8);
+    for (let x = mx + 8; x < mx + mw - 4; x += 10) g.lineBetween(x, my + 6, x + 5, my + 14);
+    g.fillStyle(0x30343c).fillRect(mx + 22, my + 28, 52, 40);
+    g.fillStyle(0x3d2e22).fillRect(mx + mw - 58, my + 100, 40, 14);
+    g.fillStyle(0x2b241c).fillRect(mx + mw / 2 - 18, my + mh - 8, 36, 8);
+    c.add(g);
+    const at = s => [mx + s.x * mw, my + s.y * mh];
+    for (const s of p.spots) {
+      const [x, y] = at(s);
+      c.add([
+        this.s.add.circle(x, y, 13).setStrokeStyle(2, 0x6d6875),
+        this.s.add.text(x, y + 26, s.nick, textStyle(11, '#77707f')).setOrigin(0.5, 0),
+      ]);
+    }
+    const figure = (s, name) => {
+      const [x, y] = at(s);
+      const f = this.s.add.graphics();
+      f.fillStyle(0x000000, 0.95).fillCircle(x, y - 10, 7).fillRoundedRect(x - 9, y - 3, 18, 18, 4);
+      c.add([f, this.s.add.text(x, y - 32, name, textStyle(12, '#d8c09a')).setOrigin(0.5, 0)]);
+      sfx('whisper');
+    };
+    const msg = this.s.add.text(20, 398, '', textStyle(14, '#b08080', { wordWrap: { width: W - 40, useAdvancedWrap: true } }));
+    const head = this.s.add.text(340, 56, p.placeTitle, textStyle(13, '#77707f'));
+    c.add([msg, head]);
+
+    const placed = await this.pickRows(c, p.spots, {
+      choices: p.people, rowX: 340, rowY: 84, rowGap: 30, optX: 40, optY: 296, optGap: 24, msg,
+      wrong: '……그 자리가 아니었다.', onPick: i => figure(p.spots[i], p.people[p.spots[i].answer]),
+    });
+    if (!placed) { c.destroy(); return false; }
+    await this.wait(700);
+    placed.forEach(t => t.destroy());
+    head.setText(p.lineTitle);
+    const said = await this.pickRows(c, p.lines, {
+      choices: p.sayings, rowX: 340, rowY: 84, rowGap: 50, optX: 40, optY: 296, optGap: 24, msg,
+      wrong: '……그 사람이 한 말이 아니다.',
+    });
+    if (!said) { c.destroy(); return false; }
     await this.wait(600);
-    c.add(this.s.add.text(W / 2, H - 30, 'E: 계속', textStyle(12, '#77707f')).setOrigin(0.5));
+    c.add(this.s.add.text(W / 2, H - 22, 'E: 계속', textStyle(12, '#77707f')).setOrigin(0.5));
     await this.waitConfirm();
     c.destroy();
     return true;

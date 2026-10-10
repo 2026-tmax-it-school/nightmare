@@ -39,7 +39,16 @@
     { "x": 3.4, "y": 8.1, "text": "약속했잖아", "angle": -3, "cond": { "flag": "stage1" } },
     { "x": 19.6, "y": 10.5, "text": "……응.", "angle": 4, "cond": { "flag": "stage1" } },
     { "x": 25.6, "y": 9.15, "text": "다 봤어", "angle": -2, "cond": { "flag": "stage1" } },
-    { "x": 12.3, "y": 10.45, "text": "피아노 왕자 ㅋㅋ", "angle": 2, "cond": { "flag": "frag2" } }
+    { "x": 12.3, "y": 10.45, "text": "피아노 왕자 ㅋㅋ", "angle": 2, "cond": { "flag": "frag2" } },
+    { "x": 7.4, "y": 9.35, "text": "재민이도 온대", "angle": -4, "cond": { "flag": "stage2" } },
+    { "x": 29.3, "y": 10.4, "text": "뜨거워", "angle": 6, "cond": { "flag": "stage2" } }
+  ],
+  "decor": [
+    { "x": 5, "y": 10, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 17, "y": 9, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 18, "y": 10, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 26, "y": 8, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 30, "y": 13, "tex": "scorch", "cond": { "flag": "stage2" } }
   ],
   "onEnter": {
     "once": "ch2_start",
@@ -314,13 +323,17 @@
       {
         "t": "if", "cond": { "item": "keyRoof" },
         "then": [
-          { "t": "sfx", "name": "unlock" },
-          { "t": "text", "text": "옥상 열쇠를 돌리자, 녹슨 철문이 바람에 밀려 열린다." },
-          { "t": "text", "text": "차가운 밤공기. 위에서 누군가 기다리고 있는 것 같다." },
-          { "t": "text", "who": "재민", "text": "……올라가자." },
-          { "t": "flag", "key": "demo_end" },
-          { "t": "save" },
-          { "t": "goto", "scene": "DemoEnd" }
+          {
+            "t": "if", "cond": { "notFlag": "open_roof" },
+            "then": [
+              { "t": "sfx", "name": "unlock" },
+              { "t": "text", "text": "옥상 열쇠를 돌리자, 녹슨 철문이 바람에 밀려 열린다." },
+              { "t": "text", "text": "차가운 밤공기. 위에서 누군가 기다리고 있는 것 같다." },
+              { "t": "text", "who": "재민", "text": "……올라가자." },
+              { "t": "flag", "key": "open_roof" }
+            ]
+          },
+          { "t": "goto", "scene": "Explore", "map": "rooftop", "pos": { "x": 9, "y": 11, "dir": "up" } }
         ],
         "else": [{ "t": "text", "text": "옥상으로 이어지는 계단. 꼭대기 철문이 잠겨 있다. 「옥상 출입 금지」" }]
       }

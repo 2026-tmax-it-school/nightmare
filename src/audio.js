@@ -163,6 +163,7 @@ export function startLoop(name) {
 
   if (name === 'rain') { hiss(1400, 0.14); hiss(5000, 0.02, 'highpass'); }
   else if (name === 'drone') { osc(55, 'sine', 0.05); osc(55.6, 'sine', 0.05); hiss(200, 0.04); }
+  else if (name === 'wind') { hiss(500, 0.09, 'bandpass'); hiss(180, 0.06); osc(48, 'sine', 0.03); }
   else if (name === 'chase') { osc(41, 'sawtooth', 0.025); sfx('heart'); timer = setInterval(() => sfx('heart'), 520); }
 
   loops[name] = { out, nodes, timer };
