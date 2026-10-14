@@ -6,7 +6,7 @@ import Title from './scenes/Title.js';
 import Cutscene from './scenes/Cutscene.js';
 import Explore from './scenes/Explore.js';
 import GameOver from './scenes/GameOver.js';
-import DemoEnd from './scenes/DemoEnd.js';
+import Ending from './scenes/Ending.js';
 
 // ?debug: 화면이 가려져도 루프가 돌도록 타이머 사용 + 콘솔에서 window.__game 접근
 const debug = new URLSearchParams(location.search).has('debug');
@@ -38,7 +38,7 @@ const game = new Phaser.Game({
   pixelArt: true,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   fps: debug ? { forceSetTimeOut: true, target: 60 } : undefined,
-  scene: [Boot, Title, Cutscene, Explore, GameOver, DemoEnd, Dev],
+  scene: [Boot, Title, Cutscene, Explore, GameOver, Ending, Dev],
 });
 
 if (debug || DEV) window.__game = game;

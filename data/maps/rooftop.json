@@ -41,6 +41,22 @@
   "triggers": [
     { "x": 9, "y": 12, "w": 1, "h": 1, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" }
   ],
+  "past": [
+    {
+      "id": "roof", "x": 1, "y": 1, "w": 18, "h": 11, "flag": "past_roof",
+      "figures": [
+        { "x": 5, "y": 3, "label": "일등" }, { "x": 10, "y": 2, "label": "럭키7" },
+        { "x": 15, "y": 7, "label": "텐" }, { "x": 9, "y": 11, "label": "재민" }
+      ],
+      "script": [
+        { "t": "text", "text": "7월 13일, 방과후의 옥상이 겹쳐 보인다." },
+        { "t": "text", "text": "셋이 낄낄거린다. 나는 문 앞에서 휴대폰만 들여다보고 있다." },
+        { "t": "text", "who": "일등", "text": "내일 방과후 과학실 ㄱ. 근데 걔가 오겠냐?" },
+        { "t": "text", "who": "재민", "text": "내가 데려올게. 걔 내 말은 들어." },
+        { "t": "text", "text": "……아무도 나에게 시키지 않았다. 내가 먼저 말했다." }
+      ]
+    }
+  ],
   "objects": [
     { "x": 3, "y": 2, "tex": "tank", "script": "tank" },
     { "x": 4, "y": 2, "tex": "tank", "script": "tank" },

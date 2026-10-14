@@ -23,6 +23,9 @@ export default class Boot extends Phaser.Scene {
     Object.assign(DB.clues, clues.clues);
     Object.assign(DB.items, clues.items);
     Object.assign(DB.fragments, clues.fragments);
+    DB.people = clues.people;
+    DB.timeline = clues.timeline;
+    Object.assign(DB.endings, clues.endings);
     const puzzles = json('puzzles');
     Object.assign(DB.puzzles, puzzles.puzzles);
     Object.assign(DB.deductions, puzzles.deductions);

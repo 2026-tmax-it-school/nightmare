@@ -1,6 +1,6 @@
 // 데이터(JSON) 스크립트 실행기. 씬(host)은 ui, getScript(), goto(), action() 을 제공한다.
 import { DB } from './db.js';
-import { setFlag, addClue, addItem, addFragment, addDenial, saveGame, checkCond } from './state.js';
+import { setFlag, addClue, addItem, removeItem, addFragment, addDenial, saveGame, checkCond } from './state.js';
 import { sfx, startLoop, stopLoop } from './audio.js';
 
 const delay = (h, ms) => new Promise(r => h.time.delayedCall(ms, r));
@@ -23,6 +23,9 @@ async function exec(h, a) {
       return;
     case 'item':
       if (addItem(a.id)) { sfx('item'); h.ui.toast(`소지품 획득 — ${DB.items[a.id].name}`); }
+      return;
+    case 'take': // 소지품을 잃는다 (버리기, 부서짐 등)
+      if (removeItem(a.id) && a.toast !== false) h.ui.toast(`소지품 잃음 — ${DB.items[a.id].name}`);
       return;
     case 'fragment':
       if (addFragment(a.n)) { sfx('chime'); await h.ui.banner(`기억 조각 ${a.n} / 8`, DB.fragments[a.n].name); }

@@ -1,7 +1,7 @@
 export const TILE = 32;
 export const W = 640;
 export const H = 480;
-export const GAME_TITLE = '잊힌 교실'; // 가제
+export const GAME_TITLE = '잊힌 교실'; // 2026-10-14 확정
 export const FONT = '"Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
 export const MAPS = ['bedroom', 'school1f', 'school2f', 'rooftop'];
 

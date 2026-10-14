@@ -1,8 +1,8 @@
 // 화면 고정 UI: 대화창, 선택지, 알림, 연출, 퍼즐, 추리, 기억 노트
 import { W, H, FONT } from '../constants.js';
 import { DB } from '../db.js';
-import { state, addDenial } from '../state.js';
-import { sfx, playNote } from '../audio.js';
+import { state, addDenial, checkCond } from '../state.js';
+import { sfx, playNote, getVolume, setVolume } from '../audio.js';
 
 // pixelArt 캔버스가 창 크기에 맞춰 최근접 필터로 확대되면, 해상도가 낮은 작은 글자는
 // 가는 획이 샘플링에서 통째로 빠져 다른 글자처럼 깨져 보인다 → 텍스트를 더 높은 해상도로 미리 그려 둔다
@@ -18,6 +18,7 @@ const DIR_KEYS = {
 export const isConfirm = e => CONFIRM.includes(e.code) && !e.repeat;
 export const dirOf = e => DIR_KEYS[e.code];
 
+const blankText = (b, v = '＿＿＿') => b.text.replace('{}', v);
 const tweenP = (scene, cfg) => new Promise(r => scene.tweens.add({ ...cfg, onComplete: r }));
 
 export class UI {
@@ -234,7 +235,7 @@ export class UI {
   puzzle(id) {
     this.hideDialog();
     const p = DB.puzzles[id];
-    const fn = { seat: this.seatPuzzle, keypad: this.keypad, piano: this.piano, match: this.match, order: this.order, silhouette: this.silhouette }[p.type];
+    const fn = { seat: this.seatPuzzle, keypad: this.keypad, piano: this.piano, match: this.match, order: this.order, silhouette: this.silhouette, compare: this.compare, timeline: this.timeline }[p.type];
     return fn.call(this, p);
   }
 
@@ -597,6 +598,82 @@ export class UI {
     });
   }
 
+  // 타임라인: 사건 카드를 시간 순서대로 놓는다. distortion 카드를 놓으면 왜곡 선택 → 증거로 깨지고 카드가 사라진다.
+  timeline(p) {
+    return new Promise(resolve => {
+      const n = p.answer.length;
+      const wrap = w => ({ wordWrap: { width: w, useAdvancedWrap: true } });
+      const c = this.fixed(this.s.add.container(0, 0), 170);
+      c.add([
+        this.s.add.rectangle(0, 0, W, H, 0x07070a, 0.96).setOrigin(0),
+        this.s.add.text(W / 2, 12, p.title, textStyle(18, '#c9a46a')).setOrigin(0.5, 0),
+        this.s.add.text(24, 44, '그날의 장면들', textStyle(12, '#77707f')),
+        this.s.add.text(338, 44, '일어난 순서', textStyle(12, '#77707f')),
+        this.s.add.rectangle(326, 64, 298, n * 36 + 12, 0x101014).setOrigin(0).setStrokeStyle(2, 0x2e2b34),
+      ]);
+      const cards = p.cards.map((card, i) => {
+        const t = this.s.add.text(24, 70 + i * 36, '', textStyle(13, '#8f8996', wrap(290)));
+        c.add(t);
+        return t;
+      });
+      const slots = Array.from({ length: n }, (_, i) => {
+        const t = this.s.add.text(338, 72 + i * 36, '', textStyle(13, '#d8c09a', wrap(276)));
+        c.add(t);
+        return t;
+      });
+      const msg = this.s.add.text(24, 70 + p.cards.length * 36 + 8, '', textStyle(13, '#b08080', wrap(W - 48)));
+      const hint = this.s.add.text(24, H - 70, '', textStyle(12, '#a99f8e', wrap(W - 48)));
+      c.add([msg, hint, this.s.add.text(W / 2, H - 20, '↑↓ 고르기  E 순서에 놓기  Backspace 빼기  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5)]);
+
+      let idx = 0, locked = false;
+      const placed = [], gone = new Set();
+      const draw = () => {
+        cards.forEach((t, i) => {
+          const used = placed.includes(i) || gone.has(i);
+          t.setText((i === idx ? '▶ ' : '   ') + p.cards[i].text).setColor(gone.has(i) ? '#3a3640' : used ? '#4a4652' : i === idx ? '#ffffff' : '#8f8996');
+        });
+        slots.forEach((t, i) => t.setText(`${i + 1}. ${placed[i] != null ? p.cards[placed[i]].text : '＿＿＿'}`));
+      };
+      const off = this.listen(async e => {
+        if (locked) return;
+        const d = dirOf(e);
+        if (d === 'up') { idx = (idx + p.cards.length - 1) % p.cards.length; sfx('tick'); }
+        else if (d === 'down') { idx = (idx + 1) % p.cards.length; sfx('tick'); }
+        else if (e.code === 'Backspace') placed.pop();
+        else if (e.code === 'Escape') { off(); c.destroy(); resolve(false); return; }
+        else if (isConfirm(e)) {
+          if (placed.includes(idx) || gone.has(idx)) { sfx('error'); return; }
+          if (p.cards[idx].distortion) {
+            locked = true;
+            cards[idx].setColor('#a03030');
+            await this.distortion(msg, p.evidence);
+            gone.add(idx);
+            locked = false;
+            draw();
+            return;
+          }
+          placed.push(idx);
+          msg.setText('');
+          sfx('tick');
+          if (placed.length === n) {
+            if (placed.join() === p.answer.join()) {
+              off(); draw(); sfx('ok');
+              msg.setColor('#7ac080').setText('……그날이, 처음부터 끝까지 이어진다.');
+              this.wait(1200).then(() => { c.destroy(); resolve(true); });
+              return;
+            }
+            sfx('error');
+            msg.setColor('#c06060').setText('……이 순서가 아니다.');
+            if (p.hint) hint.setText(p.hint);
+            placed.length = 0;
+          }
+        }
+        draw();
+      });
+      draw();
+    });
+  }
+
   // 왜곡된 기억: 부정 수치 상승 → 증거로 깨진다
   async distortion(msg, evidence) {
     addDenial(15);
@@ -611,33 +688,15 @@ export class UI {
     msg.setText('');
   }
 
-  // ── 기억 재구성 (추리) ──
-  async deduction(id) {
-    this.hideDialog();
-    const d = DB.deductions[id];
-    const c = this.fixed(this.s.add.container(0, 0), 170);
-    c.add([
-      this.s.add.rectangle(0, 0, W, H, 0x07070a, 0.96).setOrigin(0),
-      this.s.add.text(W / 2, 26, d.title, textStyle(20, '#c9a46a')).setOrigin(0.5, 0),
-      this.s.add.text(W / 2, 58, '단서를 떠올려 빈칸을 채운다', textStyle(12, '#77707f')).setOrigin(0.5, 0),
-    ]);
-    const blankText = (b, v = '＿＿＿') => b.text.replace('{}', v);
-    const lines = d.blanks.map((b, i) => {
-      const t = this.s.add.text(48, 100 + i * 34, blankText(b), textStyle(16, '#4a4652'));
-      c.add(t);
-      return t;
-    });
-    const msgY = 100 + d.blanks.length * 34 + 12;
-    const msg = this.s.add.text(48, msgY, '', textStyle(14, '#b08080', { wordWrap: { width: W - 96, useAdvancedWrap: true } }));
-    c.add(msg);
-
-    for (let i = 0; i < d.blanks.length; i++) {
-      const b = d.blanks[i];
-      lines[i].setColor('#e8e2d6');
+  // 빈칸마다 보기를 고른다. 왜곡 보기는 증거로 깨진 뒤 정답으로 채워진다.
+  async fillBlanks(c, blanks, lines, msg, { optX, optY, size = 15, gap = 28, active = '#e8e2d6', done = '#d8c09a' }) {
+    for (let i = 0; i < blanks.length; i++) {
+      const b = blanks[i];
+      lines[i].setColor(active);
       for (;;) {
         const opt = this.s.add.container(0, 0);
         c.add(opt);
-        const o = b.options[await this.select(opt, 64, 320, b.options.map(x => x.label))];
+        const o = b.options[await this.select(opt, optX, optY, b.options.map(x => x.label), { size, gap })];
         opt.destroy();
         if (o.correct) { sfx('ok'); msg.setText(''); break; }
         if (o.distortion) {
@@ -648,8 +707,66 @@ export class UI {
         sfx('error');
         msg.setColor('#b08080').setText('……맞지 않는다.');
       }
-      lines[i].setText(blankText(b, b.options.find(x => x.correct).label)).setColor('#d8c09a');
+      lines[i].setText(blankText(b, b.options.find(x => x.correct).label)).setColor(done);
     }
+  }
+
+  // 문서 대조: 왼쪽 원본을 보며 오른쪽 먹칠된 문서의 빈칸을 채운다
+  async compare(p) {
+    const c = this.fixed(this.s.add.container(0, 0), 170);
+    const ink = '■■■■■■';
+    const wrap = { wordWrap: { width: 276, useAdvancedWrap: true } };
+    c.add([
+      this.s.add.rectangle(0, 0, W, H, 0x07070a, 0.96).setOrigin(0),
+      this.s.add.text(W / 2, 12, p.title, textStyle(18, '#c9a46a')).setOrigin(0.5, 0),
+      this.s.add.rectangle(16, 46, 296, 300, 0xd9cfb4).setOrigin(0).setStrokeStyle(2, 0x3a2e20),
+      this.s.add.text(28, 54, p.sourceTitle, textStyle(13, '#5a4a36')),
+      this.s.add.text(28, 80, p.source.join('\n'), textStyle(12, '#2a2016', { ...wrap, lineSpacing: 7 })),
+      this.s.add.rectangle(328, 46, 296, 300, 0xe8e4da).setOrigin(0).setStrokeStyle(2, 0x5a5f66),
+      this.s.add.text(340, 54, p.reportTitle, textStyle(13, '#4a4f56')),
+    ]);
+    const lines = p.blanks.map((b, i) => {
+      const t = this.s.add.text(340, 86 + i * 62, blankText(b, ink), textStyle(14, '#8a8690', wrap));
+      c.add(t);
+      return t;
+    });
+    const msg = this.s.add.text(340, 356, '', textStyle(13, '#b08080', wrap));
+    c.add(msg);
+    await this.fillBlanks(c, p.blanks, lines, msg, {
+      optX: 24, optY: 360, size: 14, gap: 26, active: '#16161c', done: '#6a4a14', // 밝은 종이 위라 어두운 글자
+    });
+
+    let y = 362;
+    for (const line of p.outro || []) {
+      await this.wait(700);
+      c.add(this.s.add.text(28, y, line, textStyle(14, '#9a94a0')));
+      y += 26;
+    }
+    c.add(this.s.add.text(W / 2, H - 18, 'E: 계속', textStyle(12, '#77707f')).setOrigin(0.5));
+    await this.waitConfirm();
+    c.destroy();
+    return true;
+  }
+
+  // ── 기억 재구성 (추리) ──
+  async deduction(id) {
+    this.hideDialog();
+    const d = DB.deductions[id];
+    const c = this.fixed(this.s.add.container(0, 0), 170);
+    c.add([
+      this.s.add.rectangle(0, 0, W, H, 0x07070a, 0.96).setOrigin(0),
+      this.s.add.text(W / 2, 26, d.title, textStyle(20, '#c9a46a')).setOrigin(0.5, 0),
+      this.s.add.text(W / 2, 58, '단서를 떠올려 빈칸을 채운다', textStyle(12, '#77707f')).setOrigin(0.5, 0),
+    ]);
+    const lines = d.blanks.map((b, i) => {
+      const t = this.s.add.text(48, 100 + i * 34, blankText(b), textStyle(16, '#4a4652'));
+      c.add(t);
+      return t;
+    });
+    const msgY = 100 + d.blanks.length * 34 + 12;
+    const msg = this.s.add.text(48, msgY, '', textStyle(14, '#b08080', { wordWrap: { width: W - 96, useAdvancedWrap: true } }));
+    c.add(msg);
+    await this.fillBlanks(c, d.blanks, lines, msg, { optX: 64, optY: 320 });
 
     let y = msgY;
     for (const line of d.outro || []) {
@@ -665,7 +782,8 @@ export class UI {
   // ── 기억 노트 (ESC) ──
   notebook(hintText) {
     return new Promise(resolve => {
-      const tabs = ['소지품', '단서', '기억 조각', '생각하기'];
+      const tabs = ['소지품', '단서', '기억 조각', '인물', '타임라인', '생각하기', '설정'];
+      const SETTINGS = tabs.length - 1;
       // 목록은 구분선(y 104~404) 안에 ROWS줄만 보이고, 커서를 따라 스크롤된다
       const ROWS = 11;
       let tab = 0, idx = 0, first = 0;
@@ -674,14 +792,15 @@ export class UI {
         this.s.add.rectangle(0, 0, W, H, 0x060608, 0.95).setOrigin(0),
         this.s.add.text(28, 20, '기억 노트', textStyle(20, '#c9a46a')),
         this.s.add.text(W - 28, 26, `기억 조각 ${state.fragments.length} / 8`, textStyle(13, '#8f8996')).setOrigin(1, 0),
-        this.s.add.text(W / 2, H - 24, '←→ 탭   ↑↓ 선택   ESC 닫기', textStyle(13, '#9a94a3')).setOrigin(0.5),
         this.s.add.rectangle(230, 104, 1, 300, 0x2e2b34).setOrigin(0),
       ]);
       const tabTexts = tabs.map((t, i) => {
-        const tx = this.s.add.text(28 + i * 110, 66, t, textStyle(14));
+        const tx = this.s.add.text(28 + i * 84, 66, t, textStyle(14));
         c.add(tx);
         return tx;
       });
+      const keys = this.s.add.text(W / 2, H - 24, '', textStyle(13, '#9a94a3')).setOrigin(0.5);
+      c.add(keys);
       const list = this.s.add.container(0, 0);
       const detail = this.s.add.text(250, 110, '', textStyle(14, '#d8d0c0', { wordWrap: { width: W - 290, useAdvancedWrap: true } }));
       const more = this.s.add.text(222, 410, '', textStyle(11, '#6d6875')).setOrigin(1, 0);
@@ -690,11 +809,16 @@ export class UI {
       const entries = () => {
         if (tab === 0) return state.items.map(id => DB.items[id]);
         if (tab === 1) return state.clues.map(id => DB.clues[id]);
-        if (tab === 2) return state.fragments.map(n => ({ name: `조각 ${n} — ${DB.fragments[n].name}`, desc: DB.fragments[n].desc }));
+        if (tab === 2) return [...state.fragments].sort((a, b) => a - b).map(n => ({ name: `조각 ${n} — ${DB.fragments[n].name}`, desc: DB.fragments[n].desc }));
+        // 인물·타임라인: 관련 단서·플래그를 얻으면 나타난다 (data/clues.json)
+        if (tab === 3) return DB.people.filter(e => checkCond(e.cond));
+        if (tab === 4) return DB.timeline.filter(e => checkCond(e.cond));
+        if (tab === SETTINGS) return [{ name: `전체 볼륨  ${Math.round(getVolume() * 100)}%`, desc: '↑↓ 로 볼륨을 조절합니다.\n바꾼 값은 이 브라우저에 기억됩니다.' }];
         return [{ name: '지금 할 일', desc: hintText }];
       };
       const draw = () => {
         tabTexts.forEach((t, i) => t.setColor(i === tab ? '#ffffff' : '#6d6875'));
+        keys.setText(tab === SETTINGS ? '←→ 탭   ↑↓ 볼륨   ESC 닫기' : '←→ 탭   ↑↓ 선택   ESC 닫기');
         list.removeAll(true);
         const es = entries();
         idx = Math.min(idx, Math.max(0, es.length - 1));
@@ -712,6 +836,7 @@ export class UI {
         const last = entries().length - 1;
         if (d === 'left') { tab = (tab + tabs.length - 1) % tabs.length; idx = first = 0; sfx('tick'); }
         else if (d === 'right') { tab = (tab + 1) % tabs.length; idx = first = 0; sfx('tick'); }
+        else if (tab === SETTINGS && (d === 'up' || d === 'down')) { setVolume(getVolume() + (d === 'up' ? 0.1 : -0.1)); sfx('tick'); }
         else if (d === 'up') { if (idx > 0) { idx--; sfx('tick'); } }
         else if (d === 'down') { if (idx < last) { idx++; sfx('tick'); } }
         else if (e.code === 'Escape') { off(); c.destroy(); resolve(); return; }

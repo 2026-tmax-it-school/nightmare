@@ -22,11 +22,11 @@
     "#......................................#",
     "#......................................#",
     "#.......####D######D########L#######L###",
-    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
-    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
-    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
-    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
-    "#.......#,,,,,,,#_____#,,,,,,,,,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,#,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,#,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,L,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,#,,,#====#",
+    "#.......#,,,,,,,#_____#,,,,,,,#,,,#====#",
     "####X###################################"
   ],
   "spawn": { "x": 4, "y": 18, "dir": "up" },
@@ -39,7 +39,8 @@
     { "name": "현관", "x": 1, "y": 13, "w": 7, "h": 6 },
     { "name": "경비실", "x": 9, "y": 14, "w": 7, "h": 5 },
     { "name": "1층 화장실", "x": 17, "y": 14, "w": 5, "h": 5 },
-    { "name": "과학실", "x": 23, "y": 14, "w": 11, "h": 5 },
+    { "name": "과학실", "x": 23, "y": 14, "w": 7, "h": 5 },
+    { "name": "준비실", "x": 31, "y": 14, "w": 3, "h": 5 },
     { "name": "계단실", "x": 35, "y": 14, "w": 4, "h": 5 }
   ],
   "graffiti": [
@@ -51,6 +52,11 @@
     { "x": 31.2, "y": 12.35, "text": "뜨거워", "angle": 5, "cond": { "flag": "stage2" } }
   ],
   "decor": [
+    { "x": 24, "y": 16, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 27, "y": 16, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 28, "y": 17, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 29, "y": 16, "tex": "scorch", "cond": { "flag": "stage2" } },
+    { "x": 32, "y": 15, "tex": "scorch", "cond": { "flag": "stage2" } },
     { "x": 12, "y": 12, "tex": "scorch", "cond": { "flag": "stage2" } },
     { "x": 20, "y": 11, "tex": "scorch", "cond": { "flag": "stage2" } },
     { "x": 25, "y": 10, "tex": "scorch", "cond": { "flag": "stage2" } },
@@ -84,7 +90,52 @@
   "triggers": [
     { "x": 24, "y": 10, "w": 3, "h": 1, "once": "near13", "script": "near13" },
     { "x": 21, "y": 1, "w": 9, "h": 8, "once": "enter13", "script": "enter13" },
-    { "x": 37, "y": 15, "w": 1, "h": 1, "cond": { "notFlag": "pendingChase" }, "script": "stairs" }
+    { "x": 37, "y": 15, "w": 1, "h": 1, "cond": { "notFlag": "pendingChase" }, "script": "stairs" },
+    { "x": 35, "y": 10, "w": 1, "h": 1, "once": "chase3_start", "cond": { "flag": "frag6" }, "script": "chase3" },
+    { "x": 28, "y": 14, "w": 1, "h": 1, "once": "lab_enter", "script": "lab_enter" }
+  ],
+  "past": [
+    {
+      "id": "c13", "x": 21, "y": 1, "w": 9, "h": 8, "flag": "past_13",
+      "figures": [
+        { "x": 22, "y": 4, "label": "일등" }, { "x": 24, "y": 6, "label": "럭키7" }, { "x": 26, "y": 5, "label": "텐" },
+        { "x": 26, "y": 7, "label": "도윤" }, { "x": 27, "y": 7, "label": "재민" }
+      ],
+      "script": [
+        { "t": "text", "text": "7월 14일, 종례 직전의 교실이 겹쳐 보인다." },
+        { "t": "text", "who": "일등", "text": "방과후 과학실 ㄱ. 피아노왕자 데려와." },
+        { "t": "text", "text": "나는 12번 자리로 걸어간다." },
+        { "t": "text", "who": "재민", "text": "도윤아, 잠깐 과학실 좀 가자." },
+        { "t": "text", "text": "도윤이 고개를 들고, 웃는다. ……나를 믿고 있었다." }
+      ]
+    },
+    {
+      "id": "office", "x": 31, "y": 1, "w": 8, "h": 8, "flag": "past_office",
+      "figures": [{ "x": 36, "y": 3, "label": "담임" }, { "x": 36, "y": 5, "label": "도윤" }],
+      "script": [
+        { "t": "text", "text": "7월 13일, 방과후의 교무실이 겹쳐 보인다." },
+        { "t": "text", "who": "도윤", "text": "선생님, 내일 방과후에 과학실로 오래요. 재민이도… 온대요." },
+        { "t": "text", "who": "담임", "text": "알았다, 내가 가 보마." },
+        { "t": "text", "text": "담임은 서류에서 눈을 떼지 않는다." },
+        { "t": "text", "text": "도윤이 나간 뒤, 담임은 상담 기록을 서랍 깊숙이 밀어 넣는다." }
+      ]
+    },
+    {
+      "id": "prep", "x": 28, "y": 15, "w": 2, "h": 3, "flag": "past_prep",
+      "figures": [{ "x": 29, "y": 15, "label": "럭키7" }, { "x": 28, "y": 16, "label": "재민" }, { "x": 31, "y": 16, "label": "도윤" }],
+      "script": [
+        { "t": "sfx", "name": "glass" },
+        { "t": "text", "text": "유리 깨지는 소리. 매캐한 연기 속으로 그날의 과학실이 겹쳐 보인다." },
+        { "t": "text", "text": "도윤이 준비실로 뛰어든다. 「럭키7」이 문을 쾅 닫고 바깥 걸쇠를 건다." },
+        { "t": "text", "who": "럭키7", "text": "야, 쌤 오기 전에 튀어!" },
+        { "t": "sfx", "name": "alarm" },
+        { "t": "text", "text": "경보가 울리고, 발소리들이 흩어진다. 문 앞에는 한 사람만 남는다." },
+        { "t": "sfx", "name": "bang" },
+        { "t": "text", "who": "도윤", "text": "재민아… 거기 있지? 열어 줘." },
+        { "t": "text", "text": "그림자의 손이 걸쇠에 닿았다가 ── 떨어진다." },
+        { "t": "clue", "id": "past_latch" }
+      ]
+    }
   ],
   "objects": [
     { "x": 4, "y": 1, "tex": "board", "script": "board11" },
@@ -155,10 +206,15 @@
     { "x": 26, "y": 7, "tex": "desk", "script": "desk12" },
     { "x": 28, "y": 7, "tex": "desk", "script": "desk" },
 
-    { "x": 33, "y": 4, "tex": "desk" },
-    { "x": 35, "y": 4, "tex": "desk" },
-    { "x": 33, "y": 6, "tex": "desk" },
-    { "x": 35, "y": 6, "tex": "desk" },
+    { "x": 33, "y": 4, "tex": "desk", "script": "office_desk" },
+    { "x": 35, "y": 4, "tex": "desk", "script": "office_desk" },
+    { "x": 33, "y": 6, "tex": "desk", "script": "office_desk" },
+    { "x": 35, "y": 6, "tex": "desk", "script": "office_desk" },
+    { "x": 31, "y": 1, "tex": "cabinet", "script": "office_cabinet" },
+    { "x": 32, "y": 1, "tex": "cabinet", "script": "office_cabinet" },
+    { "x": 37, "y": 3, "tex": "desk", "script": "t_desk" },
+    { "x": 38, "y": 3, "tex": "frame", "script": "t_photo" },
+    { "x": 38, "y": 8, "tex": "locker", "hide": true, "view": "classroom" },
 
     { "x": 35, "y": 9, "door": "staff", "script": "door_staff" },
     { "x": 28, "y": 13, "door": "science", "script": "door_science" },
@@ -184,7 +240,18 @@
     { "x": 21, "y": 17, "tex": "stall", "script": "stall" },
     { "x": 21, "y": 18, "tex": "stall", "script": "stall" },
 
-    { "x": 37, "y": 15, "tex": "stairs_up", "solid": false }
+    { "x": 37, "y": 15, "tex": "stairs_up", "solid": false },
+
+    { "x": 23, "y": 14, "tex": "chemshelf", "script": "chemshelf" },
+    { "x": 24, "y": 14, "tex": "chemshelf", "script": "chemshelf" },
+    { "x": 29, "y": 14, "tex": "notice", "script": "safety" },
+    { "x": 25, "y": 15, "tex": "labtable", "script": "labtable" },
+    { "x": 26, "y": 15, "tex": "labtable", "script": "bottle" },
+    { "x": 25, "y": 17, "tex": "lamp", "script": "lamp" },
+    { "x": 26, "y": 17, "tex": "labtable", "script": "labtable" },
+    { "x": 30, "y": 16, "door": "prep", "script": "door_prep" },
+    { "x": 33, "y": 17, "tex": "bag", "script": "bag" },
+    { "x": 24, "y": 12, "tex": "trash", "script": "trash" }
   ],
   "scripts": {
     "near13": [
@@ -310,21 +377,279 @@
       {
         "t": "if", "cond": { "item": "keyOffice" },
         "then": [
-          { "t": "sfx", "name": "unlock" },
+          { "t": "openDoor", "id": "staff" },
           { "t": "text", "text": "교무실 열쇠를 꽂자, 자물쇠가 힘없이 돌아간다." },
           { "t": "text", "who": "재민", "text": "……담임이 숨기려던 게, 여기 있어." },
-          { "t": "flag", "key": "demo_end" },
-          { "t": "save" },
-          { "t": "goto", "scene": "DemoEnd" }
+          { "t": "chapter", "title": "4장", "sub": "교무실" },
+          { "t": "save" }
         ],
         "else": [{ "t": "text", "text": "교무실. 잠겨 있다. 유리창 너머로 서류 더미가 보인다." }]
       }
     ],
+    "office_desk": [{ "t": "text", "text": "다른 선생님들의 책상. 서랍은 전부 비어 있다. 마치 누가 서둘러 치운 것처럼." }],
+    "office_cabinet": [
+      {
+        "t": "if", "cond": { "notFlag": "read_report" },
+        "then": [
+          { "t": "text", "text": "서류함 맨 아래 칸에 「학생 사고 처리 — 대외비」라고 적힌 파일이 꽂혀 있다." },
+          { "t": "text", "text": "「7월 14일 방과후 과학실 화재. 1학년 3반 한도윤 사망.」" },
+          { "t": "text", "text": "「원인 — 학생 개인의 실험 부주의.」" },
+          { "t": "text", "text": "그 아래 몇 줄은 검은 매직으로 두껍게 먹칠되어 있다." },
+          { "t": "text", "who": "재민", "text": "……단순 사고라고? 지워진 데엔 뭐라고 적혀 있었던 거지." },
+          { "t": "flag", "key": "read_report" },
+          { "t": "clue", "id": "report" }
+        ],
+        "else": [{ "t": "text", "text": "먹칠된 사고 경위서. 원본이 어딘가에 남아 있다면…" }]
+      }
+    ],
+    "t_photo": [
+      {
+        "t": "if", "cond": { "notFlag": "read_photo" },
+        "then": [
+          { "t": "text", "text": "담임 책상 옆에 액자 하나가 엎어져 있다." },
+          { "t": "text", "text": "세워 보니 중학교 교복을 입은 두 아이가 피아노 앞에서 웃고 있다." },
+          { "t": "text", "who": "재민", "text": "……나랑, 도윤이?" },
+          { "t": "text", "text": "액자 뒷면에 볼펜 글씨 ── 「7월 5일. 도윤이가 첫 상담 때 두고 간 사진. \"우리 원래 친구였어요.\"」" },
+          { "t": "flag", "key": "read_photo" },
+          { "t": "clue", "id": "photo_friends" }
+        ],
+        "else": [{ "t": "text", "text": "피아노 앞의 두 아이. 뒷면에 「7월 5일. 도윤이가 첫 상담 때 두고 간 사진.」" }]
+      }
+    ],
+    "t_desk": [
+      {
+        "t": "if", "cond": { "flag": "p7" },
+        "then": [{ "t": "text", "text": "담임의 책상. 서랍은 이제 비어 있다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "flag": "drawer_open" },
+            "then": [{ "t": "call", "name": "p7" }],
+            "else": [
+              { "t": "text", "text": "담임의 책상. 맨 아래 서랍에만 번호 자물쇠가 달려 있다." },
+              { "t": "text", "text": "자물쇠 옆에 누렇게 바랜 쪽지 ── 「그 아이가 처음 찾아온 날.」" },
+              {
+                "t": "puzzle", "id": "drawer",
+                "success": [
+                  { "t": "flag", "key": "drawer_open" },
+                  { "t": "text", "text": "서랍 깊숙이, 다른 서류 밑에 깔린 상담 기록철이 나온다." },
+                  { "t": "clue", "id": "counsel" },
+                  { "t": "call", "name": "p7" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "p7": [
+      { "t": "text", "text": "상담 기록 원본과 먹칠된 사고 경위서를 나란히 놓는다." },
+      { "t": "text", "who": "재민", "text": "먹칠된 칸에 원래 뭐가 적혀 있었는지… 맞춰 보자." },
+      {
+        "t": "puzzle", "id": "p7",
+        "success": [
+          { "t": "flag", "key": "p7" },
+          { "t": "memory", "lines": ["(교무실 문이 닫히는 소리)", "“너 방금 교무실에서 나왔지?”", "“너 쌤한테 꼰질렀냐?”", "“……아무 말도 안 했어, 재민아.”", "“일등한테 말해 둔다.”"] },
+          { "t": "text", "who": "재민", "text": "……걔가 도와 달라고 한 날, 나는 그걸 고자질이라고 불렀어." },
+          { "t": "flag", "key": "frag6" },
+          { "t": "fragment", "n": 6 },
+          { "t": "text", "text": "기록철 맨 뒤에 열쇠 하나가 끼워져 있다. 꼬리표 「과학실 — 사고 후 봉인」." },
+          { "t": "item", "id": "keyScience" },
+          { "t": "text", "who": "재민", "text": "과학실… 그날의 장소. 복도 건너편, 화장실 옆이었지." }
+        ]
+      }
+    ],
+    "chase3": [
+      { "t": "sfx", "name": "slam" },
+      { "t": "effect", "name": "glitch" },
+      { "t": "text", "text": "교무실을 나서는 순간, 과학실 쪽에서 쾅— 무언가 부딪히는 소리." },
+      { "t": "sfx", "name": "follow", "wait": true },
+      { "t": "text", "who": "재민", "text": "……또 왔어. 이번엔, 더 빨라." },
+      { "t": "chase", "id": "chase3", "spawn": { "x": 22, "y": 12 }, "step": 200, "after": "afterChase3" }
+    ],
+    "afterChase3": [
+      { "t": "text", "text": "……발소리가 멀어졌다." },
+      { "t": "text", "text": "복도 바닥에 그을린 명찰이 하나 떨어져 있다. 「윤재민」." },
+      { "t": "text", "who": "재민", "text": "……저건, 그날의 나야." },
+      { "t": "text", "who": "재민", "text": "과학실 열쇠가 있다. 과학실은 복도 건너편, 화장실 옆이다." }
+    ],
     "door_science": [
       {
-        "t": "if", "cond": { "flag": "stage1" },
-        "then": [{ "t": "text", "text": "과학실. 문틈에서 희미하게 탄 냄새가 난다…" }],
-        "else": [{ "t": "text", "text": "과학실. 문이 단단히 잠겨 있다." }]
+        "t": "if", "cond": { "item": "keyScience" },
+        "then": [
+          { "t": "openDoor", "id": "science" },
+          { "t": "text", "text": "과학실 열쇠를 꽂자, 봉인 테이프가 바스러지며 문이 열린다." },
+          { "t": "text", "text": "문틈으로 매캐한 탄내가 쏟아져 나온다." },
+          { "t": "text", "who": "재민", "text": "……여기서, 그날." },
+          { "t": "chapter", "title": "5장", "sub": "과학실" },
+          { "t": "save" }
+        ],
+        "else": [
+          {
+            "t": "if", "cond": { "flag": "stage1" },
+            "then": [{ "t": "text", "text": "과학실. 문틈에서 희미하게 탄 냄새가 난다…" }],
+            "else": [{ "t": "text", "text": "과학실. 문이 단단히 잠겨 있다." }]
+          }
+        ]
+      }
+    ],
+    "lab_enter": [
+      { "t": "text", "text": "검게 그을린 실험대. 깨진 유리 조각. 십 년이 지났는데도 탄내가 가시지 않았다." },
+      { "t": "effect", "name": "glow" },
+      { "t": "text", "text": "주머니 속 부적이 뜨거워진다. 손을 대자 ── 눈앞이 바랜 사진처럼 흔들린다." },
+      { "t": "text", "who": "재민", "text": "……그날이, 겹쳐 보여." },
+      { "t": "flag", "key": "pastSight" },
+      { "t": "text", "text": "[ Q ] 과거 겹쳐보기 ── 부적이 뜨거워지는 곳에서, 그날의 모습을 볼 수 있다." },
+      { "t": "text", "who": "재민", "text": "안쪽에 문이 하나 있어. ……준비실." }
+    ],
+    "chemshelf": [
+      {
+        "t": "if", "cond": { "noClue": "chem_log" },
+        "then": [
+          { "t": "text", "text": "약품장 문에 약품 대장이 걸려 있다." },
+          { "t": "text", "text": "「7월 14일 ── 알코올 1병 분실. 이후 기록 없음.」" },
+          { "t": "clue", "id": "chem_log" }
+        ],
+        "else": [{ "t": "text", "text": "약품장. 「7월 14일 ── 알코올 1병 분실. 이후 기록 없음.」" }]
+      }
+    ],
+    "safety": [
+      {
+        "t": "if", "cond": { "noClue": "latch_rule" },
+        "then": [
+          { "t": "text", "text": "벽에 붙은 실험실 안전 수칙. 한 줄에 빨간 밑줄이 그어져 있다." },
+          { "t": "text", "text": "「준비실 문은 안에서 열리지 않음. 바깥 걸쇠 사용 후 반드시 확인할 것.」" },
+          { "t": "clue", "id": "latch_rule" }
+        ],
+        "else": [{ "t": "text", "text": "「준비실 문은 안에서 열리지 않음. 바깥 걸쇠 사용 후 반드시 확인할 것.」" }]
+      }
+    ],
+    "labtable": [{ "t": "text", "text": "검게 그을린 실험대. 표면이 불에 녹아 울퉁불퉁하다." }],
+    "bottle": [
+      {
+        "t": "if", "cond": { "noClue": "bottle" },
+        "then": [
+          { "t": "text", "text": "실험대 위에 깨진 약품병의 목이 굴러다닌다. 라벨에 「알코올」." },
+          { "t": "text", "who": "재민", "text": "「과학실 약품 좀 갖고 놀아 볼까 ㅋ」 ── 텐." },
+          { "t": "clue", "id": "bottle" }
+        ],
+        "else": [{ "t": "text", "text": "깨진 알코올병. 「과학실 약품 좀 갖고 놀아 볼까 ㅋ」" }]
+      }
+    ],
+    "door_prep": [
+      {
+        "t": "if", "cond": { "noClue": "prep_door" },
+        "then": [
+          { "t": "text", "text": "준비실 문. 바깥쪽 녹슨 걸쇠가 걸린 채로 굳어 있다." },
+          { "t": "text", "text": "몸을 숙이자, 문 아래쪽에 ── 안쪽에서 손톱으로 긁은 자국들이 보인다." },
+          { "t": "clue", "id": "prep_door" },
+          { "t": "text", "who": "재민", "text": "……걸쇠는 한 번도 풀린 적이 없어." }
+        ]
+      },
+      {
+        "t": "if", "cond": { "notFlag": "past_prep" },
+        "then": [
+          { "t": "effect", "name": "glow" },
+          { "t": "text", "text": "부적이 타는 듯이 뜨겁다. 이 문 앞에서, 그날을 봐야 한다. (Q)" }
+        ],
+        "else": [
+          {
+            "t": "choice", "prompt": "그날 과학실에서 일어난 일을 처음부터 떠올려 볼까?",
+            "options": [
+              { "label": "떠올린다", "then": [{ "t": "call", "name": "p8" }] },
+              { "label": "그만둔다", "then": [] }
+            ]
+          }
+        ]
+      }
+    ],
+    "p8": [
+      {
+        "t": "puzzle", "id": "p8",
+        "success": [
+          { "t": "flag", "key": "p8" },
+          { "t": "deduction", "id": "d2" },
+          { "t": "memory", "lines": ["(쾅, 쾅—)", "“재민아! 재민아, 거기 있지?”", "“문 좀 열어 줘… 제발.”", "(걸쇠에 닿았다가, 떨어지는 손)", "(멀어지는 발소리)"] },
+          { "t": "flag", "key": "frag7" },
+          { "t": "fragment", "n": 7 },
+          { "t": "text", "text": "손을 뻗는다. 십 년 전 그날 풀지 못한 걸쇠를, 이제야 들어 올린다." },
+          { "t": "openDoor", "id": "prep" },
+          { "t": "wait", "ms": 600 },
+          { "t": "ghost", "x": 32, "y": 16, "hold": 2200 },
+          { "t": "text", "text": "준비실 안쪽에 누군가 서 있었다. 교복을 입은, 창백한 아이." },
+          { "t": "text", "text": "아이는 아무 말 없이 구석의 가방을 바라보다가 ── 사라졌다." },
+          { "t": "text", "who": "재민", "text": "……도윤아." },
+          { "t": "save" }
+        ]
+      }
+    ],
+    "bag": [
+      {
+        "t": "if", "cond": { "flag": "got_bag" },
+        "then": [
+          {
+            "t": "if", "cond": { "notFlag": "called" },
+            "then": [{ "t": "text", "text": "주머니 속 휴대폰이 진동한다." }, { "t": "goto", "scene": "Cutscene", "id": "call" }],
+            "else": [{ "t": "text", "text": "가방이 놓여 있던 자리. 먼지 위에 네모난 자국만 남았다." }]
+          }
+        ],
+        "else": [
+          { "t": "chapter", "title": "6장", "sub": "남겨진 것" },
+          { "t": "text", "text": "구석에 그을린 책가방 하나. 이름표에 「1-3 한도윤」." },
+          { "t": "flag", "key": "got_bag" },
+          { "t": "item", "id": "bag" },
+          { "t": "text", "text": "안에는 손때 묻은 악보 한 묶음. 제목 「약속」." },
+          { "t": "text", "text": "마지막 장 귀퉁이에 작은 글씨 ── 「재민이 생일 선물. 완성!」" },
+          { "t": "text", "who": "재민", "text": "……다 만들었구나." },
+          { "t": "text", "text": "악보 사이에서 사진 한 장이 떨어진다. 도윤과, 교복을 입은 누나가 나란히 웃고 있다." },
+          { "t": "text", "text": "사진 뒷면 ── 「서진 누나랑.」" },
+          { "t": "clue", "id": "sister_photo" },
+          { "t": "effect", "name": "glitch" },
+          { "t": "text", "who": "재민", "text": "……이 얼굴. 점집의, 그 무당." },
+          { "t": "text", "who": "재민", "text": "한서진. 명함에 적혀 있던 이름." },
+          { "t": "flag", "key": "saw_sister" },
+          { "t": "save" },
+          { "t": "goto", "scene": "Cutscene", "id": "call" }
+        ]
+      }
+    ],
+    "lamp": [
+      {
+        "t": "if", "cond": { "flag": "called", "item": "bag" },
+        "then": [
+          { "t": "text", "text": "실험대 위의 알코올램프. 심지 끝에 아직 붉은 불씨가 남아 있다." },
+          { "t": "text", "text": "……이 가방만 없으면, 아무도 모른다." },
+          {
+            "t": "choice", "prompt": "가방을 불씨에 가져다 댈까?",
+            "options": [
+              { "label": "태운다", "then": [{ "t": "flag", "key": "final_burn" }, { "t": "goto", "scene": "Cutscene", "id": "ending1" }] },
+              { "label": "그만둔다", "then": [] }
+            ]
+          }
+        ],
+        "else": [{ "t": "text", "text": "실험대 위의 알코올램프. 심지가 까맣게 그을려 있다." }]
+      }
+    ],
+    "trash": [
+      {
+        "t": "if", "cond": { "flag": "called", "item": "bag" },
+        "then": [
+          {
+            "t": "choice", "prompt": "가방을 쓰레기통에 버리고 갈까?",
+            "options": [
+              {
+                "label": "버린다",
+                "then": [
+                  { "t": "take", "id": "bag" },
+                  { "t": "flag", "key": "final_dump" },
+                  { "t": "text", "text": "가방을 쓰레기통 깊숙이 밀어 넣는다. 손이 가벼워졌다." },
+                  { "t": "text", "who": "재민", "text": "……그런데, 왜 숨이 막히지." }
+                ]
+              },
+              { "label": "그만둔다", "then": [] }
+            ]
+          }
+        ],
+        "else": [{ "t": "text", "text": "녹슨 쓰레기통. 비어 있다." }]
       }
     ],
     "door_stairs": [
@@ -338,8 +663,57 @@
       }
     ],
     "exit": [
-      { "t": "text", "text": "현관문은 꿈쩍도 하지 않는다." },
-      { "t": "text", "who": "재민", "text": "휴대폰은… 여전히 「서비스 없음」이다." }
+      {
+        "t": "if", "cond": { "notFlag": "called" },
+        "then": [
+          { "t": "text", "text": "현관문은 꿈쩍도 하지 않는다." },
+          { "t": "text", "who": "재민", "text": "휴대폰은… 여전히 「서비스 없음」이다." }
+        ],
+        "else": [
+          { "t": "text", "text": "현관문이 열려 있다. 바깥에서 새벽 공기가 밀려든다." },
+          {
+            "t": "choice", "prompt": "학교를 나갈까?",
+            "options": [
+              { "label": "나간다", "then": [{ "t": "call", "name": "leave" }] },
+              { "label": "아직이다", "then": [] }
+            ]
+          }
+        ]
+      }
+    ],
+    "_leave": "엔딩 판정 (GDD 6.6). 엔딩 3 기준값은 아래 fragmentsAtLeast(조각 수)와 denialBelow(부정 수치)만 바꾸면 된다.",
+    "leave": [
+      {
+        "t": "if", "cond": { "item": "bag" },
+        "then": [
+          {
+            "t": "if", "cond": { "fragmentsAtLeast": 8 },
+            "then": [
+              {
+                "t": "if", "cond": { "denialBelow": 30 },
+                "then": [
+                  { "t": "text", "text": "가방 속, 악보 밑바닥에서 무언가가 손에 잡힌다. 「증거」라고 적힌 USB." },
+                  { "t": "text", "who": "재민", "text": "……네가 모아 둔 거구나. 이번엔, 내가 가져갈게." },
+                  { "t": "goto", "scene": "Cutscene", "id": "ending3" }
+                ],
+                "else": [
+                  { "t": "text", "text": "가방을 든 손이 떨린다." },
+                  { "t": "text", "who": "재민", "text": "……정말, 말할 수 있을까. 내가 한 일을." },
+                  { "t": "goto", "scene": "Cutscene", "id": "ending2" }
+                ]
+              }
+            ],
+            "else": [
+              { "t": "text", "text": "가방이 이상하게 가볍다. 아직 떠올리지 못한 기억처럼, 무언가가 빠져 있다." },
+              { "t": "goto", "scene": "Cutscene", "id": "ending2" }
+            ]
+          }
+        ],
+        "else": [
+          { "t": "text", "text": "빈손으로 현관을 나선다." },
+          { "t": "goto", "scene": "Cutscene", "id": "ending2" }
+        ]
+      }
     ],
     "shoebox": [{ "t": "text", "text": "신발장. 이름표가 붙은 칸이 몇 개 남아 있다. 다 바래서 읽을 수 없다." }],
     "hallnotice": [{ "t": "text", "text": "「교훈 — 꿈과 희망을 품은 사람」 글자가 반쯤 떨어져 나갔다." }],

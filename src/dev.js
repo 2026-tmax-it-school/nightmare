@@ -14,6 +14,7 @@ export function applyCheckpoint(id) {
   for (const c of chain) {
     for (const f of c.flags || []) state.flags[f] = true;
     Object.assign(state.flags, c.set);
+    for (const id of c.take || []) state.items = state.items.filter(v => v !== id);
     for (const k of ['clues', 'items', 'fragments']) {
       for (const v of c[k] || []) if (!state[k].includes(v)) state[k].push(v);
     }
@@ -24,7 +25,7 @@ export function applyCheckpoint(id) {
     state.pos = cp.pos ? { x: cp.pos.x, y: cp.pos.y } : null;
     state.dir = cp.pos?.dir || 'down';
   }
-  const data = cp.scene === 'Cutscene' ? { id: cp.cutscene } : cp.map ? { map: cp.map } : {};
+  const data = cp.scene === 'Cutscene' ? { id: cp.cutscene } : cp.map ? { map: cp.map } : cp.ending ? { ending: cp.ending } : {};
   return [cp.scene, data];
 }
 

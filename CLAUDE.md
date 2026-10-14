@@ -14,7 +14,7 @@
 - `?dev`: 개발자 모드 — 타이틀 대신 체크포인트 선택 화면. `?dev&start=<id>`로 바로 그 시점부터 시작, 플레이 중 `` ` `` 키로 선택 화면 복귀. 저장은 별도 슬롯(`ithope_save_v1_dev`). 체크포인트는 `data/checkpoints.json`(`from`으로 앞 체크포인트 상태 상속) — 콘텐츠가 바뀌면 플래그·좌표도 함께 갱신. 상세: `docs/개발자_모드.md`
 
 ## 구조
-- `src/scenes/` — Boot(데이터·텍스처 로드), Title, Cutscene, Explore(탑뷰 탐색·추격), GameOver, DemoEnd
+- `src/scenes/` — Boot(데이터·텍스처 로드), Title, Cutscene, Explore(탑뷰 탐색·추격), GameOver, Ending(엔딩 화면·2회차 기록)
 - `src/script.js` — JSON 스크립트 실행기 (`t`: text, if, choice, clue, item, fragment, puzzle, deduction, memory, chase, openDoor, stage, goto …)
 - `src/ui/ui.js` — 대화창, 선택지, 퍼즐(seat/keypad), 기억 재구성, 기억 노트
 - `src/state.js` — 플래그·단서·소지품·조각·부정 수치, localStorage 저장
