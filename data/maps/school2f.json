@@ -3,30 +3,30 @@
   "bgm": "drone",
   "dark": true,
   "legend": {
-    "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "r": "floor_room", "=": "floor_stairs",
+    "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "c": "floor_pc", "r": "floor_room", "=": "floor_stairs", "|": "floor_stairs_side",
     "D": "door_open", "L": "door_locked", "W": "window"
   },
   "solid": ["#", "L", "W"],
   "grid": [
     "##################################",
-    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
-    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
-    "W,,,,,,,,,,,#__________#rrrrrrrrr#",
-    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
-    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
-    "#,,,,,,,,,,,#__________#rrrrrrrrr#",
+    "#,,,,,,,,,,,#cccccccccc#,,,,,,,,,#",
+    "#,,,,,,,,,,,#cccccccccc#,,,,,,,,,#",
+    "W,,,,,,,,,,,#cccccccccc#,,,,,,,,,#",
+    "#,,,,,,,,,,,#cccccccccc#,,,,,,,,,#",
+    "#,,,,,,,,,,,#cccccccccc#,,,,,,,,,#",
+    "#,,,,,,,,,,,#cccccccccc#,,,,,,,,,#",
     "######D###########D#########L#####",
     "#................................#",
     "#................................W",
     "#................................#",
     "#####D#####W##W##W##W##W#####D####",
-    "#_________#################======#",
-    "#_________#################======#",
-    "#_________#################======#",
-    "#_________#################======#",
+    "#_________#################...|||#",
+    "#_________#################...|||#",
+    "#_________#################...|||#",
+    "#_________#################...|||#",
     "##################################"
   ],
-  "spawn": { "x": 31, "y": 15, "dir": "left" },
+  "spawn": { "x": 31, "y": 14, "dir": "left" },
   "areas": [
     { "name": "음악실", "x": 1, "y": 1, "w": 11, "h": 6 },
     { "name": "컴퓨터실", "x": 13, "y": 1, "w": 10, "h": 6 },
@@ -60,8 +60,11 @@
       { "t": "text", "who": "재민", "text": "……음악실인가." }
     ]
   },
+  "_rails": "난간: { x, y, w } = y줄 아래쪽 경계를 x부터 w칸 막는다. 2층 계단실 옥상 계단과 1층 계단 사이",
+  "rails": [{ "x": 30, "y": 13, "w": 3 }],
   "triggers": [
-    { "x": 32, "y": 15, "w": 1, "h": 1, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" }
+    { "x": 32, "y": 14, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" },
+    { "x": 32, "y": 12, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "door_roof" }
   ],
   "objects": [
     { "x": 4, "y": 1, "tex": "board", "script": "board_music" },
@@ -100,10 +103,7 @@
     { "x": 3, "y": 12, "tex": "mirror", "script": "mirror" },
     { "x": 9, "y": 13, "tex": "stall", "script": "stall" },
     { "x": 9, "y": 14, "tex": "stall", "script": "stall" },
-    { "x": 9, "y": 15, "tex": "stall", "script": "stall" },
-
-    { "x": 32, "y": 12, "tex": "stairs_up", "script": "door_roof" },
-    { "x": 32, "y": 15, "tex": "stairs_down", "solid": false }
+    { "x": 9, "y": 15, "tex": "stall", "script": "stall" }
   ],
   "scripts": {
     "stairs_down": [
@@ -320,23 +320,7 @@
     "stall": [{ "t": "text", "text": "칸막이 안은 비어 있다. 문 안쪽에 「피아노 왕자 전용 ㅋ」이라는 낙서." }],
 
     "door_roof": [
-      {
-        "t": "if", "cond": { "item": "keyRoof" },
-        "then": [
-          {
-            "t": "if", "cond": { "notFlag": "open_roof" },
-            "then": [
-              { "t": "sfx", "name": "unlock" },
-              { "t": "text", "text": "옥상 열쇠를 돌리자, 녹슨 철문이 바람에 밀려 열린다." },
-              { "t": "text", "text": "차가운 밤공기. 위에서 누군가 기다리고 있는 것 같다." },
-              { "t": "text", "who": "재민", "text": "……올라가자." },
-              { "t": "flag", "key": "open_roof" }
-            ]
-          },
-          { "t": "goto", "scene": "Explore", "map": "rooftop", "pos": { "x": 9, "y": 11, "dir": "up" } }
-        ],
-        "else": [{ "t": "text", "text": "옥상으로 이어지는 계단. 꼭대기 철문이 잠겨 있다. 「옥상 출입 금지」" }]
-      }
+      { "t": "goto", "scene": "Explore", "map": "rooftop", "pos": { "x": 10, "y": 10, "dir": "up" } }
     ]
   }
 }

@@ -4,3 +4,6 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# AI 원본 이미지 (용량이 커서 Git에 올리지 않음, tools/sprites.py의 입력)
+assets/source/
