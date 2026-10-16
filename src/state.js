@@ -24,6 +24,12 @@ function addTo(list, v) {
 }
 export const addClue = id => addTo(state.clues, id);
 export const addItem = id => addTo(state.items, id);
+export function removeItem(id) {
+  const i = state.items.indexOf(id);
+  if (i < 0) return false;
+  state.items.splice(i, 1);
+  return true;
+}
 export const addFragment = n => addTo(state.fragments, n);
 export function addDenial(n) { state.denial = Math.min(100, Math.max(0, state.denial + n)); }
 
@@ -38,6 +44,8 @@ export function checkCond(c) {
   if (c.noClue && asList(c.noClue).some(id => state.clues.includes(id))) return false;
   if (c.item && !asList(c.item).every(id => state.items.includes(id))) return false;
   if (c.noItem && asList(c.noItem).some(id => state.items.includes(id))) return false;
+  if (c.fragmentsAtLeast != null && state.fragments.length < c.fragmentsAtLeast) return false;
+  if (c.denialBelow != null && state.denial >= c.denialBelow) return false;
   return true;
 }
 
@@ -53,6 +61,25 @@ export function loadGame() {
     Object.assign(state, JSON.parse(raw));
     return true;
   } catch { return false; }
+}
+
+// ── 2회차 기록: 세이브와 별도로 본 엔딩과 최대 조각 수를 남긴다 ──
+const META_KEY = 'ithope_meta_v1' + (DEV ? '_dev' : '');
+
+export function loadMeta() {
+  try {
+    const m = JSON.parse(localStorage.getItem(META_KEY));
+    if (m && Array.isArray(m.endings)) return { endings: m.endings, maxFragments: m.maxFragments || 0 };
+  } catch {}
+  return { endings: [], maxFragments: 0 };
+}
+
+export function recordEnding(n) {
+  const m = loadMeta();
+  if (!m.endings.includes(n)) m.endings.push(n);
+  m.maxFragments = Math.max(m.maxFragments, state.fragments.length);
+  try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch {}
+  return m;
 }
 
 export function hasSave() {

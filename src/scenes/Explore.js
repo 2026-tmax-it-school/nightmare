@@ -187,6 +187,7 @@ export default class Explore extends Phaser.Scene {
     if (this.chase && this.chase.x === this.tx && this.chase.y === this.ty) return this.caught();
     this.updatePrompt();
     this.updateArea();
+    this.pastNotice();
     for (const t of this.map.triggers || []) {
       const inside = this.tx >= t.x && this.tx < t.x + t.w && this.ty >= t.y && this.ty < t.y + t.h;
       // once가 없는 트리거(계단 등)는 그 칸에 들어설 때마다 실행된다
@@ -239,7 +240,79 @@ export default class Explore extends Phaser.Scene {
       this.run(this.resolve(o.script));
     } else if (e.code === 'Escape' && !this.hidden && !this.chase) {
       this.openNotebook();
+    } else if (e.code === 'KeyQ' && !this.hidden && !this.chase) {
+      this.tryPast();
     }
+  }
+
+  // ── 과거 겹쳐보기 (GDD 4.5): 부적을 얻은 뒤, 맵의 past 구역에서 Q ──
+  pastHere() {
+    return (this.map.past || []).find(p => this.tx >= p.x && this.tx < p.x + p.w && this.ty >= p.y && this.ty < p.y + p.h && checkCond(p.cond));
+  }
+
+  tryPast() {
+    if (!flag('pastSight')) return;
+    const p = this.pastHere();
+    if (!p) { this.ui.toast('……여기선 아무것도 겹쳐 보이지 않는다.'); return; }
+    this.run([{ t: 'pastOn', id: p.id }, ...p.script, { t: 'pastOff' }, { t: 'flag', key: p.flag }]);
+  }
+
+  // 아직 보지 않은 구역에 들어서면 부적이 반응한다
+  pastNotice() {
+    const p = flag('pastSight') && this.pastHere();
+    const id = p && !flag(p.flag) ? p.id : null;
+    if (id && id !== this.pastNoticed) { sfx('chime'); this.ui.toast('부적이 뜨거워진다… (Q: 과거 겹쳐보기)'); }
+    this.pastNoticed = id;
+  }
+
+  pastOn(id) {
+    const p = this.map.past.find(p => p.id === id);
+    sfx('glitch');
+    this.cameras.main.flash(300, 200, 180, 140);
+    this.dark?.setVisible(false);
+    const layer = [this.add.rectangle(0, 0, W, H, 0x6b5a3a, 0.5).setOrigin(0).setScrollFactor(0).setDepth(9.5)];
+    for (const f of p.figures || []) {
+      layer.push(this.add.image(cx(f.x), cx(f.y), f.tex || 'past_fig').setDepth(9.6));
+      if (f.label) layer.push(this.add.text(cx(f.x), cx(f.y) - 24, f.label, textStyle(11, '#f0e2c0')).setOrigin(0.5, 1).setDepth(9.7));
+    }
+    for (const o of layer) { const a = o.alpha; o.setAlpha(0); this.tweens.add({ targets: o, alpha: a, duration: 500 }); }
+    this.pastLayer = layer;
+    // 맵 가장자리 방(과학실 등)에선 인물이 대화창에 가려지므로, 인물들이 화면 위쪽에 오도록 카메라를 옮긴다
+    const figs = p.figures || [];
+    if (figs.length) {
+      const cam = this.cameras.main;
+      const fx = figs.reduce((s, f) => s + cx(f.x), 0) / figs.length;
+      const fy = figs.reduce((s, f) => s + cx(f.y), 0) / figs.length;
+      const top = Math.min(...figs.map(f => cx(f.y))); // 가장 위 인물의 이름표가 화면 밖으로 나가지 않게
+      this.pastFollow = !!cam._follow;
+      cam.stopFollow();
+      cam.useBounds = false;
+      cam.pan(fx, Math.min(fy + 90, top + H / 2 - 50), 500, 'Sine.easeInOut');
+    }
+  }
+
+  pastOff() {
+    const layer = this.pastLayer || [];
+    this.pastLayer = null;
+    const cam = this.cameras.main;
+    cam.useBounds = true;
+    if (this.pastFollow) cam.startFollow(this.player, true, 1, 1);
+    else cam.centerOn(this.cols * TILE / 2, this.rows * TILE / 2);
+    this.pastFollow = false;
+    this.dark?.setVisible(true);
+    sfx('glitch');
+    this.tweens.add({ targets: layer, alpha: 0, duration: 400, onComplete: () => layer.forEach(o => o.destroy()) });
+  }
+
+  // 도윤의 귀신: 잠시 나타났다가 사라진다 (어둠 위에 보이도록 depth를 높인다)
+  ghost(a) {
+    const g = this.add.image(cx(a.x), cx(a.y), 'ghost').setDepth(10.5).setAlpha(0);
+    this.ui.hideDialog(); // 맵 아래쪽 방에선 대화창이 귀신을 가린다
+    sfx('whisper');
+    return new Promise(r => this.tweens.add({
+      targets: g, alpha: 0.85, duration: 900, hold: a.hold || 1800, yoyo: true,
+      onComplete: () => { g.destroy(); r(); },
+    }));
   }
 
   resolve(s) { return typeof s === 'string' ? this.map.scripts[s] : s; }
@@ -287,11 +360,14 @@ export default class Explore extends Phaser.Scene {
       case 'stage': setFlag('stage' + a.n); this.applyStage(); return;
       case 'chase':
         // 추격 직전 자동저장 → 잡히면 여기서 재시작
-        setFlag('pendingChase', { id: a.id, spawn: a.spawn, after: a.after || null });
+        setFlag('pendingChase', { id: a.id, spawn: a.spawn, after: a.after || null, step: a.step || null });
         saveGame();
         this.ui.toast('자동 저장됨');
         return this.startChase();
       case 'resumeChase': return this.startChase();
+      case 'pastOn': return this.pastOn(a.id);
+      case 'pastOff': return this.pastOff();
+      case 'ghost': return this.ghost(a);
     }
   }
 
@@ -377,9 +453,10 @@ export default class Explore extends Phaser.Scene {
     if (!pc || this.chase) return;
     const sprite = this.add.image(cx(pc.spawn.x), cx(pc.spawn.y), 'shadow').setDepth(3).setAlpha(0);
     this.tweens.add({ targets: sprite, alpha: 0.95, duration: 500 });
-    this.chase = { x: pc.spawn.x, y: pc.spawn.y, sprite, lost: 0 };
+    // step: 그림자가 한 칸 움직이는 시간(ms). 추격마다 다르게 줄 수 있다 (GDD 4.6)
+    this.chase = { x: pc.spawn.x, y: pc.spawn.y, sprite, lost: 0, step: pc.step || CHASE_STEP_MS };
     startLoop('chase');
-    this.chaseTimer = this.time.addEvent({ delay: CHASE_STEP_MS, loop: true, callback: this.chaseStep, callbackScope: this });
+    this.chaseTimer = this.time.addEvent({ delay: this.chase.step, loop: true, callback: this.chaseStep, callbackScope: this });
   }
 
   chaseStep() {
@@ -388,7 +465,7 @@ export default class Explore extends Phaser.Scene {
     let next;
     if (this.hidden) {
       // 숨은 동안엔 주변을 서성이다 사라진다
-      c.lost += CHASE_STEP_MS;
+      c.lost += c.step;
       if (c.lost >= CHASE_GIVE_UP_MS) return this.endChase();
       const opts = Object.values(DIRS).map(([dx, dy]) => [c.x + dx, c.y + dy]).filter(([x, y]) => this.passable(x, y));
       next = opts.length ? Phaser.Utils.Array.GetRandom(opts) : null;
@@ -399,7 +476,7 @@ export default class Explore extends Phaser.Scene {
     if (!next) return;
     [c.x, c.y] = next;
     sfx('thud');
-    this.tweens.add({ targets: c.sprite, x: cx(c.x), y: cx(c.y), duration: CHASE_STEP_MS - 20 });
+    this.tweens.add({ targets: c.sprite, x: cx(c.x), y: cx(c.y), duration: c.step - 20 });
     if (!this.hidden && c.x === this.tx && c.y === this.ty) this.caught();
   }
 

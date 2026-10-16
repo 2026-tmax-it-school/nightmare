@@ -96,9 +96,49 @@
       "pos": { "x": 11, "y": 10, "dir": "down" }
     },
     {
-      "id": "office", "label": "3장 — 1층 귀환 후 교무실 문 앞 (데모 끝)", "from": "frag5", "scene": "Explore", "map": "school1f",
+      "id": "office", "label": "4장 — 1층 귀환 후 교무실 문 앞", "from": "frag5", "scene": "Explore", "map": "school1f",
       "flags": ["stage2", "ret1f"], "items": ["keyOffice"],
       "pos": { "x": 35, "y": 10, "dir": "up" }
+    },
+    {
+      "id": "p7", "label": "4장 — 담임 책상 서랍 앞 (서류함·액자 확인)", "from": "office", "scene": "Explore", "map": "school1f",
+      "flags": ["open_staff", "read_report", "read_photo"], "clues": ["report", "photo_friends"],
+      "pos": { "x": 37, "y": 4, "dir": "up" }
+    },
+    {
+      "id": "frag6", "label": "4장 — 조각 6 이후 (교무실 문 안쪽, 나가면 추격)", "from": "p7", "scene": "Explore", "map": "school1f",
+      "flags": ["drawer_open", "p7", "frag6"], "clues": ["counsel"], "fragments": [6], "items": ["keyScience"],
+      "pos": { "x": 35, "y": 8, "dir": "down" }
+    },
+    {
+      "id": "science", "label": "4장 — 추격 후 과학실 문 앞", "from": "frag6", "scene": "Explore", "map": "school1f",
+      "flags": ["chase3_start", "chase3_done"],
+      "pos": { "x": 28, "y": 12, "dir": "down" }
+    },
+    {
+      "id": "lab", "label": "5장 — 과학실 안 (겹쳐보기 해금)", "from": "science", "scene": "Explore", "map": "school1f",
+      "flags": ["open_science", "lab_enter", "pastSight"],
+      "pos": { "x": 28, "y": 14, "dir": "down" }
+    },
+    {
+      "id": "p8", "label": "5장 — 준비실 문 앞 (문 흔적·겹쳐보기 완료)", "from": "lab", "scene": "Explore", "map": "school1f",
+      "flags": ["past_prep"], "clues": ["chem_log", "bottle", "latch_rule", "prep_door", "past_latch"],
+      "pos": { "x": 29, "y": 16, "dir": "right" }
+    },
+    {
+      "id": "frag7", "label": "6장 — 조각 7 이후 (준비실 가방 앞)", "from": "p8", "scene": "Explore", "map": "school1f",
+      "flags": ["p8", "frag7", "open_prep"], "fragments": [7],
+      "pos": { "x": 33, "y": 16, "dir": "down" }
+    },
+    {
+      "id": "final", "label": "6장 — 서진의 전화 이후 (행동 선택, 조각 7개)", "from": "frag7", "scene": "Explore", "map": "school1f",
+      "flags": ["got_bag", "saw_sister", "called"], "clues": ["sister_photo"], "items": ["bag"], "take": ["talisman"],
+      "pos": { "x": 32, "y": 16, "dir": "down" }
+    },
+    {
+      "id": "final8", "label": "6장 — 행동 선택 (조각 8개 · 부정 0, 현관 앞 → 엔딩 3 조건)", "from": "final", "scene": "Explore", "map": "school1f",
+      "flags": ["frag8"], "fragments": [8], "denial": 0,
+      "pos": { "x": 4, "y": 18, "dir": "down" }
     },
     {
       "id": "haunt", "label": "테스트 — 부정 수치 65 (환각·그림자 환영)", "from": "2f", "scene": "Explore", "map": "school2f",
@@ -111,6 +151,8 @@
       "pos": { "x": 16, "y": 9, "dir": "down" }
     },
     { "id": "gameover", "label": "화면 — 게임오버", "scene": "GameOver" },
-    { "id": "demoend", "label": "화면 — 데모 끝", "from": "office", "scene": "DemoEnd" }
+    { "id": "ending1", "label": "화면 — 엔딩 1", "from": "final", "scene": "Ending", "ending": 1 },
+    { "id": "ending2", "label": "화면 — 엔딩 2", "from": "final", "scene": "Ending", "ending": 2 },
+    { "id": "ending3", "label": "화면 — 엔딩 3", "from": "final8", "scene": "Ending", "ending": 3 }
   ]
 }

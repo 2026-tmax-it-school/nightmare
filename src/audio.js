@@ -4,13 +4,30 @@ let master = null;
 let noiseBuf = null;
 const loops = {};
 
+// 전체 볼륨 (0~1). 기억 노트의 설정 탭에서 바꾸고, 브라우저에 기억해 둔다.
+const VOLUME_KEY = 'ithope_volume';
+let volume = (() => {
+  try {
+    const v = parseFloat(localStorage.getItem(VOLUME_KEY));
+    return Number.isNaN(v) ? 0.7 : Math.min(1, Math.max(0, v));
+  } catch { return 0.7; }
+})();
+
+export const getVolume = () => volume;
+
+export function setVolume(v) {
+  volume = Math.round(Math.min(1, Math.max(0, v)) * 10) / 10;
+  if (master) master.gain.setValueAtTime(volume, ctx.currentTime);
+  try { localStorage.setItem(VOLUME_KEY, String(volume)); } catch {}
+}
+
 export function initAudio() {
   if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   ctx = new AC();
   master = ctx.createGain();
-  master.gain.value = 0.7;
+  master.gain.value = volume;
   master.connect(ctx.destination);
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
   const d = noiseBuf.getChannelData(0);

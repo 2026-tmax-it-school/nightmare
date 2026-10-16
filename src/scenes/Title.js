@@ -1,5 +1,5 @@
 import { W, H, GAME_TITLE } from '../constants.js';
-import { state, resetState, loadGame, hasSave } from '../state.js';
+import { state, resetState, loadGame, hasSave, loadMeta } from '../state.js';
 import { initAudio, sfx, startLoop, stopAllLoops } from '../audio.js';
 import { UI, textStyle } from '../ui/ui.js';
 
@@ -31,6 +31,12 @@ export default class Title extends Phaser.Scene {
     const sub = this.add.text(W / 2, 184, '— IT희망학교 —', textStyle(13, '#7a7480')).setOrigin(0.5).setAlpha(0);
     this.tweens.add({ targets: [title, sub], alpha: 1, duration: 1200 });
     this.add.text(W / 2, H - 36, '이 게임은 학교폭력과 죽음을 소재로 합니다.', textStyle(12, '#6d6875')).setOrigin(0.5);
+    // 2회차 요소: 본 엔딩과 가장 많이 모은 기억 조각 (엔딩을 하나라도 봤을 때만)
+    const meta = loadMeta();
+    if (meta.endings.length) {
+      const list = [1, 2, 3].map(n => (meta.endings.includes(n) ? `엔딩 ${n}` : '???')).join(' · ');
+      this.add.text(W / 2, 214, `${list}   |   기억 조각 최대 ${meta.maxFragments} / 8`, textStyle(12, '#8f8996')).setOrigin(0.5);
+    }
 
     const canContinue = hasSave();
     const labels = ['새로 시작', canContinue ? '이어하기' : '이어하기 (저장 없음)'];

@@ -3,6 +3,9 @@ export const DB = {
   clues: {},
   items: {},
   fragments: {},
+  people: [],   // 기억 노트 인물 탭 ({ name, desc, cond })
+  timeline: [], // 기억 노트 타임라인 탭
+  endings: {},
   puzzles: {},
   deductions: {},
   hints: {},

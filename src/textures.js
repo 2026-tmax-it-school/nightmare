@@ -232,6 +232,12 @@ export function makeTextures(scene) {
     g.fillStyle(0x2a3a6a).fillRect(10, 16, 13, 6);
     g.fillStyle(0xe8e2d6).fillRect(12, 18, 9, 2);
   });
+  // 책상 위에 엎어진 액자 (교무실)
+  make('frame', g => {
+    g.fillStyle(0x5c4027).fillRect(4, 10, 24, 16);
+    g.fillStyle(0x3a2817).fillRect(6, 12, 20, 12);
+    g.fillStyle(0xd8cfb4).fillRect(9, 15, 14, 2).fillRect(9, 19, 10, 1);
+  });
   make('extbox', g => {
     g.fillStyle(0x000000, 0.3).fillRect(6, 27, 20, 4);
     g.fillStyle(0x8a2020).fillRect(6, 3, 20, 25);
@@ -305,6 +311,45 @@ export function makeTextures(scene) {
   make('shadow', g => {
     g.fillStyle(0x000000, 0.45).fillCircle(16, 17, 15);
     person(g, { skin: 0x0b0b0e, hair: 0x000000, top: 0x101018, bottom: 0x08080a, eyes: 0xff2a2a });
+  });
+  // 과거 겹쳐보기의 그날 인물 (바랜 실루엣)
+  make('past_fig', g => person(g, { skin: 0x8a7a62, hair: 0x4a3e2e, top: 0x6a5a44, bottom: 0x4a3e2e, eyes: 0x3a3024 }));
+  // 도윤의 귀신: 창백하고 눈이 없다 (공격하지 않는 안내자)
+  make('ghost', g => {
+    g.fillStyle(0xbfd6e6, 0.25).fillCircle(16, 17, 15);
+    person(g, { skin: 0xdfe8ee, hair: 0x9aaab8, top: 0xc8d6e0, bottom: 0xaabccc, eyes: 0xdfe8ee });
+  });
+
+  // 과학실 · 준비실
+  make('labtable', g => {
+    g.fillStyle(0x000000, 0.3).fillRect(1, 26, 30, 4);
+    g.fillStyle(0x2a2c30).fillRect(1, 8, T - 2, 18);
+    g.fillStyle(0x3a3e44).fillRect(1, 8, T - 2, 4);
+    g.fillStyle(0x6e7a80).fillRect(6, 3, 3, 6).fillRect(22, 4, 4, 5);
+  });
+  make('chemshelf', g => {
+    g.fillStyle(0x4a3826).fillRect(2, 1, 28, 30);
+    g.fillStyle(0x2a2016).fillRect(4, 3, 24, 12).fillRect(4, 17, 24, 12);
+    const c = [0x6a8a5a, 0x8a5a3a, 0x5a6a8a, 0x9a9a7a];
+    for (let i = 0; i < 6; i++) g.fillStyle(c[i % 4]).fillRect(5 + i * 4, 7, 3, 8).fillRect(5 + i * 4, 21, 3, 8);
+  });
+  make('lamp', g => {
+    g.fillStyle(0x2a2c30).fillRect(1, 14, T - 2, 14);
+    g.fillStyle(0x9ab0b8, 0.8).fillCircle(16, 10, 5);
+    g.fillStyle(0x3a3020).fillRect(15, 3, 2, 4);
+    g.fillStyle(0xff7a2a).fillRect(15, 1, 2, 2);
+  });
+  make('trash', g => {
+    g.fillStyle(0x000000, 0.3).fillEllipse(16, 29, 18, 4);
+    g.fillStyle(0x4a5056).fillRect(8, 8, 16, 20);
+    g.fillStyle(0x5e666c).fillRect(6, 6, 20, 4);
+    g.fillStyle(0x3a4046).fillRect(11, 12, 2, 13).fillRect(15, 12, 2, 13).fillRect(19, 12, 2, 13);
+  });
+  make('bag', g => {
+    g.fillStyle(0x000000, 0.3).fillEllipse(16, 28, 20, 4);
+    g.fillStyle(0x2a3a5a).fillRoundedRect(7, 10, 18, 17, 4);
+    g.fillStyle(0x1e2a44).fillRect(9, 17, 14, 2);
+    g.lineStyle(2, 0x1e2a44).strokeRoundedRect(11, 5, 10, 8, 3);
   });
 
   // 손전등 빛 (어둠 렌더텍스처에서 지울 때 사용)
