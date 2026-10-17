@@ -45,6 +45,11 @@ async function exec(h, a) {
       return runScript(h, ok ? a.success : a.fail);
     }
     case 'deduction': return h.ui.deduction(a.id);
+    // 플레이어가 Space로 직접 두드린 횟수가 n과 같으면 success
+    case 'knock': {
+      const n = await h.ui.knock();
+      return runScript(h, n === a.n ? a.success : a.fail);
+    }
     case 'chapter': return h.ui.banner(a.title, a.sub, 1800);
     case 'goto': h.goto(a); return 'stop';
     default: return h.action?.(a);
