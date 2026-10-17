@@ -326,26 +326,29 @@ export class UI {
     });
   }
 
+  // 숫자 자물쇠. p.format이 있으면 제목 아래에 입력 형식을 적는다 (예: 「월 2자리 + 일 2자리」)
   keypad(p) {
     return new Promise(resolve => {
-      const pw = 340, ph = 250, n = p.digits;
+      const top = p.format ? 76 : 60;
+      const pw = 340, ph = 190 + top, n = p.digits;
       const c = this.fixed(this.s.add.container(W / 2 - pw / 2, H / 2 - ph / 2), 170);
       c.add([
         this.s.add.rectangle(0, 0, pw, ph, 0x1b1d20).setOrigin(0).setStrokeStyle(2, 0x5a5f66),
         this.s.add.text(pw / 2, 16, p.title, textStyle(17, '#d8d8d8')).setOrigin(0.5, 0),
       ]);
+      if (p.format) c.add(this.s.add.text(pw / 2, 46, p.format, textStyle(12, '#a99f8e')).setOrigin(0.5, 0));
       const vals = Array(n).fill(0);
       let pos = 0, wrong = 0;
       const startX = pw / 2 - (n * 54 - 10) / 2;
       const boxes = vals.map((_, i) => {
-        c.add(this.s.add.rectangle(startX + i * 54, 60, 44, 56, 0x0c0d0f).setOrigin(0).setStrokeStyle(2, 0x5a5f66));
-        const t = this.s.add.text(startX + i * 54 + 22, 88, '0', textStyle(28, '#e8e2d6')).setOrigin(0.5);
+        c.add(this.s.add.rectangle(startX + i * 54, top, 44, 56, 0x0c0d0f).setOrigin(0).setStrokeStyle(2, 0x5a5f66));
+        const t = this.s.add.text(startX + i * 54 + 22, top + 28, '0', textStyle(28, '#e8e2d6')).setOrigin(0.5);
         c.add(t);
         return t;
       });
-      const under = this.s.add.rectangle(0, 122, 44, 3, 0xc9a46a).setOrigin(0);
-      const msg = this.s.add.text(pw / 2, 140, '', textStyle(13, '#c06060')).setOrigin(0.5, 0);
-      const hint = this.s.add.text(pw / 2, 166, '', textStyle(12, '#a99f8e', { wordWrap: { width: pw - 40, useAdvancedWrap: true }, align: 'center' })).setOrigin(0.5, 0);
+      const under = this.s.add.rectangle(0, top + 62, 44, 3, 0xc9a46a).setOrigin(0);
+      const msg = this.s.add.text(pw / 2, top + 80, '', textStyle(13, '#c06060')).setOrigin(0.5, 0);
+      const hint = this.s.add.text(pw / 2, top + 106, '', textStyle(12, '#a99f8e', { wordWrap: { width: pw - 40, useAdvancedWrap: true }, align: 'center' })).setOrigin(0.5, 0);
       c.add([under, msg, hint, this.s.add.text(pw / 2, ph - 22, '↑↓ 숫자  ←→ 자리  숫자키 입력  E 확인  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5)]);
       const draw = () => { boxes.forEach((t, i) => t.setText(String(vals[i]))); under.setX(startX + pos * 54); };
       const off = this.listen(e => {
@@ -372,7 +375,8 @@ export class UI {
     });
   }
 
-  // 피아노: 악보대로 건반을 누른다 (p.melody: 1=도 … 7=시)
+  // 피아노: 악보대로 건반을 누른다 (p.melody: 1=도 … 7=시). 키보드·클릭 모두 press()로 들어온다.
+  // p.refs: 연주 중 펼쳐 볼 수 있는 단서 id (모은 것만 보여 준다)
   piano(p) {
     return new Promise(resolve => {
       const NOTES = ['도', '레', '미', '파', '솔', '라', '시'];
@@ -386,15 +390,44 @@ export class UI {
       ]);
       const played = this.s.add.text(pw / 2, 76, '', textStyle(16, '#e8e2d6')).setOrigin(0.5, 0);
       const keys = NOTES.map((n, i) => {
-        const k = this.s.add.rectangle(kx + i * kw, ky, kw - 2, kh, 0xe6e0d0).setOrigin(0).setStrokeStyle(2, 0x3a2e22);
+        const k = this.s.add.rectangle(kx + i * kw, ky, kw - 2, kh, 0xe6e0d0).setOrigin(0).setStrokeStyle(2, 0x3a2e22)
+          .setScrollFactor(0).setInteractive({ useHandCursor: true });
+        k.on('pointerover', () => { if (!locked && !refs) { idx = i; draw(); } });
+        k.on('pointerdown', () => { if (locked || refs) return; idx = i; press(i); draw(); });
         c.add([k, this.s.add.text(kx + i * kw + kw / 2 - 1, ky + kh - 30, `${n}\n${i + 1}`, textStyle(12, '#3a2e22', { align: 'center' })).setOrigin(0.5, 0.5)]);
         return k;
       });
-      for (const i of [0, 1, 3, 4, 5]) c.add(this.s.add.rectangle(kx + (i + 1) * kw - 1, ky, 30, 66, 0x0c0a08).setOrigin(0.5, 0));
+      // 검은 건반은 이 퍼즐에서 쓰지 않는다 — 클릭을 받아 두기만 해서 아래 흰 건반으로 새지 않게 한다
+      for (const i of [0, 1, 3, 4, 5]) c.add(this.s.add.rectangle(kx + (i + 1) * kw - 1, ky, 30, 66, 0x0c0a08).setOrigin(0.5, 0).setScrollFactor(0).setInteractive());
       const cursor = this.s.add.rectangle(0, ky + kh + 8, kw - 10, 4, 0xc9a46a).setOrigin(0);
       const msg = this.s.add.text(pw / 2, ky + kh + 20, '', textStyle(13, '#c06060')).setOrigin(0.5, 0);
       const hint = this.s.add.text(pw / 2, ky + kh + 42, '', textStyle(12, '#a99f8e', { wordWrap: { width: pw - 40, useAdvancedWrap: true }, align: 'center' })).setOrigin(0.5, 0);
-      c.add([played, cursor, msg, hint, this.s.add.text(pw / 2, ph - 20, '←→ 건반  E 누르기  숫자 1~7 바로 누르기  Backspace 지우기  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5)]);
+      c.add([played, cursor, msg, hint, this.s.add.text(pw / 2, ph - 20, '←→ 건반  E·클릭 누르기  숫자 1~7  Backspace 지우기  C 단서  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5)]);
+
+      // 단서 보기: 퍼즐 위에 덮는 창. 열려 있는 동안 키 입력은 이 창만 받고, 입력한 멜로디는 그대로 둔다
+      let refs = null;
+      const openRefs = () => {
+        refs = this.s.add.container(0, 0);
+        const bg = this.s.add.rectangle(0, 0, pw, ph, 0x0d0a08).setOrigin(0).setStrokeStyle(2, 0x5a4632)
+          .setScrollFactor(0).setInteractive();
+        bg.on('pointerdown', closeRefs);
+        const body = (p.refs || []).map(id => (state.clues.includes(id)
+          ? `■ ${DB.clues[id].name}\n${DB.clues[id].desc}`
+          : '■ ???\n아직 확인하지 않은 단서다.')).join('\n\n');
+        refs.add([
+          bg,
+          this.s.add.text(pw / 2, 14, '모아 둔 단서', textStyle(16, '#c9a46a')).setOrigin(0.5, 0),
+          this.s.add.text(28, 50, body, textStyle(13, '#d8cfb4', { wordWrap: { width: pw - 56, useAdvancedWrap: true } })),
+          this.s.add.text(pw / 2, ph - 20, 'C · E · ESC · 클릭: 돌아가기', textStyle(11, '#6d6875')).setOrigin(0.5),
+        ]);
+        c.add(refs);
+        sfx('tick');
+      };
+      const closeRefs = () => { refs?.destroy(); refs = null; sfx('tick'); };
+      const refsBtn = this.s.add.text(pw - 14, 16, '단서 보기', textStyle(12, '#c9a46a')).setOrigin(1, 0)
+        .setScrollFactor(0).setInteractive({ useHandCursor: true });
+      refsBtn.on('pointerdown', () => { if (!locked && !refs) openRefs(); });
+      c.add(refsBtn);
 
       let idx = 0, wrong = 0, locked = false;
       const seq = [];
@@ -427,8 +460,13 @@ export class UI {
       };
       const off = this.listen(e => {
         if (locked) return;
+        if (refs) {
+          if (e.code === 'KeyC' || e.code === 'Escape' || isConfirm(e)) closeRefs();
+          return;
+        }
         const d = dirOf(e);
         const digit = /^(Digit|Numpad)([1-7])$/.exec(e.code);
+        if (e.code === 'KeyC') { openRefs(); return; }
         if (digit) { idx = Number(digit[2]) - 1; press(idx); }
         else if (d === 'left') { idx = Math.max(0, idx - 1); sfx('tick'); }
         else if (d === 'right') { idx = Math.min(NOTES.length - 1, idx + 1); sfx('tick'); }
@@ -556,7 +594,7 @@ export class UI {
     return true;
   }
 
-  // 순서 맞추기: 항목을 골라 순서대로 넣는다. 넣을 때 그 소리를 재생한다.
+  // 순서 맞추기: Space로 미리 듣고(순서는 그대로), E로 순서에 넣는다. 넣은 테이프도 다시 들을 수 있다.
   order(p) {
     return new Promise(resolve => {
       const pw = 500, ph = 360, n = p.tapes.length;
@@ -584,14 +622,39 @@ export class UI {
       });
       const msg = this.s.add.text(pw / 2, 262, '', textStyle(13, '#c06060')).setOrigin(0.5, 0);
       const hint = this.s.add.text(pw / 2, 284, '', textStyle(12, '#a99f8e', { wordWrap: { width: pw - 40, useAdvancedWrap: true }, align: 'center' })).setOrigin(0.5, 0);
-      c.add([desc, msg, hint, this.s.add.text(pw / 2, ph - 18, '↑↓ 고르기  E 듣고 순서에 넣기  Backspace 빼기  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5)]);
+      c.add([desc, msg, hint, this.s.add.text(pw / 2, ph - 18, '↑↓ 고르기  Space 듣기  E 순서에 넣기  Backspace 빼기  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5)]);
 
-      let idx = 0, wrong = 0, locked = false;
+      let idx = 0, wrong = 0, locked = false, closed = false;
+      let playing = -1;  // 지금 재생 중인 테이프 (재생이 끝날 때까지 다른 테이프를 겹쳐 틀지 않는다)
       const seq = [];
       const draw = () => {
-        list.forEach((t, i) => t.setColor(seq.includes(i) ? '#4a4652' : i === idx ? '#ffffff' : '#8f8996').setText((i === idx ? '▶ ' : '   ') + p.tapes[i].label));
+        list.forEach((t, i) => t.setColor(seq.includes(i) ? '#4a4652' : i === idx ? '#ffffff' : '#8f8996')
+          .setText((i === idx ? '▶ ' : '   ') + p.tapes[i].label + (i === playing ? ' ♪' : '')));
         desc.setText(p.tapes[idx].desc);
         slots.forEach((t, i) => t.setText(seq[i] != null ? p.tapes[seq[i]].label : ''));
+      };
+      const preview = () => {
+        if (playing !== -1) return;
+        playing = idx;
+        const dur = sfx(p.tapes[idx].sfx) || 0.3;
+        this.wait(dur * 1000 + 150).then(() => { if (closed) return; playing = -1; draw(); });
+      };
+      const check = () => {
+        locked = true;
+        this.wait(400).then(() => {
+          if (closed) return;
+          if (seq.join() === p.answer.join()) {
+            off(); closed = true; sfx('ok'); msg.setColor('#7ac080').setText('……그날 오후가 이어진다.');
+            this.wait(900).then(() => { c.destroy(); resolve(true); });
+            return;
+          }
+          wrong++; sfx('error');
+          msg.setColor('#c06060').setText('……이 순서가 아니다.');
+          if (p.hint) hint.setText(p.hint);
+          seq.length = 0;
+          locked = false;
+          draw();
+        });
       };
       const off = this.listen(e => {
         if (locked) return;
@@ -599,30 +662,14 @@ export class UI {
         if (d === 'up') { idx = (idx + n - 1) % n; sfx('tick'); }
         else if (d === 'down') { idx = (idx + 1) % n; sfx('tick'); }
         else if (e.code === 'Backspace') seq.pop();
-        else if (e.code === 'Escape') { off(); c.destroy(); resolve(false); return; }
+        else if (e.code === 'Escape') { off(); closed = true; c.destroy(); resolve(false); return; }
+        else if (e.code === 'Space' && !e.repeat) preview();
         else if (isConfirm(e)) {
-          if (seq.includes(idx)) { sfx('error'); return; }
+          if (seq.includes(idx)) { sfx('error'); msg.setColor('#c06060').setText('……이미 순서에 넣은 테이프다.'); return; }
           seq.push(idx);
+          sfx('tick');
           msg.setText('');
-          locked = true;
-          // 소리가 끝날 때까지 다음 입력을 막는다
-          const dur = sfx(p.tapes[idx].sfx) || 0.3;
-          draw();
-          this.wait(dur * 1000 + 150).then(() => {
-            if (seq.length < n) { locked = false; return; }
-            if (seq.join() === p.answer.join()) {
-              off(); sfx('ok'); msg.setColor('#7ac080').setText('……그날 오후가 이어진다.');
-              this.wait(900).then(() => { c.destroy(); resolve(true); });
-              return;
-            }
-            wrong++; sfx('error');
-            msg.setColor('#c06060').setText('……이 순서가 아니다.');
-            if (p.hint) hint.setText(p.hint);
-            seq.length = 0;
-            locked = false;
-            draw();
-          });
-          return;
+          if (seq.length === n) check();
         }
         draw();
       });
