@@ -18,5 +18,7 @@
   "labtable": { "src": "science.webp", "box": [344, 244, 680, 512], "mode": "object" },
   "lamp": { "src": "science.webp", "box": [688, 236, 1020, 512], "mode": "object" },
   "bag": { "src": "science.webp", "box": [4, 516, 340, 768], "mode": "object", "cutout": { "kind": "blue" }, "scale": 0.8 },
-  "trash": { "src": "science.webp", "box": [344, 516, 684, 768], "mode": "object", "trim": [6, 6, 6, 6], "cutout": { "kind": "border", "tol": 55 }, "scale": 0.8 }
+  "trash": { "src": "science.webp", "box": [344, 516, 684, 768], "mode": "object", "trim": [6, 6, 6, 6], "cutout": { "kind": "border", "tol": 55 }, "scale": 0.8 },
+  "mirror": { "src": "bathroom.png", "box": [136, 52, 376, 536], "mode": "object", "size": [32, 64] },
+  "stall": { "src": "bathroom.png", "box": [536, 52, 960, 536], "mode": "object", "patch": [[916, 450, 40, 44, 0, -90]] }
 }
