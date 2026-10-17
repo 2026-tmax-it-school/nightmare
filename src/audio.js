@@ -1,5 +1,4 @@
 // 임시 사운드: Web Audio로 합성한다. 무료 효과음이 정해지면 파일 재생으로 교체.
-import { DEV } from './constants.js';
 
 let ctx = null;
 let master = null;
@@ -23,17 +22,6 @@ export function setVolume(v) {
   volume = Math.round(Math.min(1, Math.max(0, v)) * 10) / 10;
   if (master) master.gain.setValueAtTime(volume, ctx.currentTime);
   try { localStorage.setItem(VOLUME_KEY, String(volume)); } catch {}
-}
-
-// 새 소리 시험 스위치 (GDD 4.7, 이슈 #66). 개발자 모드에서만 켤 수 있고, 일반 플레이는 늘 지금 소리.
-const TRIAL_KEY = 'ithope_trial_sfx';
-let trial = (() => { try { return localStorage.getItem(TRIAL_KEY) === '1'; } catch { return false; } })();
-
-export const trialOn = () => DEV && trial;
-
-export function setTrial(on) {
-  trial = !!on;
-  try { localStorage.setItem(TRIAL_KEY, trial ? '1' : '0'); } catch {}
 }
 
 export function initAudio() {
@@ -161,7 +149,7 @@ const SFX = {
     tone(t + 0.55, { freq: 92, to: 74, type: 'sawtooth', peak: 0.02, a: 0.08, d: 0.45, vib: 3 });
     return 1.1;
   },
-  // ── 새 소리 (시험 중, TRIAL 참고) ──
+  // ── 새 소리 (SITUATION 참고) ──
   // 아이템: 손에 쥐는 바스락 + 낮은 두 음
   itemNew: t => {
     noise(t, { freq: 2400, q: 1.5, peak: 0.08, d: 0.12 });
@@ -248,20 +236,20 @@ export function playNote(n) {
   tone(t, { freq: NOTE_HZ[n - 1] * 2, peak: 0.03, a: 0.005, d: 0.4 });
 }
 
-// 새 소리 시험 (이슈 #66): 상황 이름 → 스위치가 꺼졌을 때(off, null이면 무음) / 켜졌을 때(on) 재생할 소리
-const TRIAL = {
-  itemGet: { off: 'item', on: 'itemNew' },
-  clueGet: { off: 'item', on: 'clueNew' },
-  doorOpen: { off: 'unlock', on: 'doorOpenNew' },
-  doorLocked: { off: null, on: 'doorLockedNew' },
-  doorClose: { off: 'doorClose', on: 'doorShutNew' },
-  caught: { off: 'slam', on: 'caughtNew' },
-  escape: { off: null, on: 'escapeNew' },
+// 새 소리 (이슈 #66): 상황 이름 → 재생할 소리
+const SITUATION = {
+  itemGet: 'itemNew',
+  clueGet: 'clueNew',
+  doorOpen: 'doorOpenNew',
+  doorLocked: 'doorLockedNew',
+  doorClose: 'doorShutNew',
+  caught: 'caughtNew',
+  escape: 'escapeNew',
 };
 
 // vol: 0~1 음량 배율 (0이면 재생하지 않음), muffle: 벽 너머처럼 높은 소리를 깎는다
 export function sfx(name, vol = 1, muffle = false) {
-  if (TRIAL[name]) name = TRIAL[name][trialOn() ? 'on' : 'off'];
+  if (SITUATION[name]) name = SITUATION[name];
   if (!ctx || !SFX[name] || vol <= 0) return 0;
   if (vol >= 1 && !muffle) return SFX[name](ctx.currentTime + 0.02);
   const g = ctx.createGain();
@@ -302,7 +290,7 @@ export function startLoop(name) {
   else if (name === 'drone') { osc(55, 'sine', 0.05); osc(55.6, 'sine', 0.05); hiss(200, 0.04); }
   else if (name === 'wind') { hiss(500, 0.09, 'bandpass'); hiss(180, 0.06); osc(48, 'sine', 0.03); }
   else if (name === 'chase') { osc(41, 'sawtooth', 0.025); sfx('heart'); timer = setInterval(() => sfx('heart'), 520); }
-  // 새 배경음 (시험 중, 맵의 bgmTrial): 드론·바람 위에 가끔 다른 소리가 섞인다
+  // 새 배경음 (맵의 bgmTrial): 드론·바람 위에 가끔 다른 소리가 섞인다
   else if (name === 'hall' || name === 'hall2' || name === 'roof') {
     if (name === 'roof') { hiss(500, 0.09, 'bandpass'); hiss(180, 0.06); osc(48, 'sine', 0.03); }
     else { osc(55, 'sine', 0.05); osc(55.6, 'sine', 0.05); hiss(200, 0.04); }
