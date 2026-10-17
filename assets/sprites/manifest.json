@@ -138,5 +138,85 @@
  "pc_on": [
   32,
   32
+ ],
+ "player_down": [
+  32,
+  32
+ ],
+ "player_up": [
+  32,
+  32
+ ],
+ "player_left": [
+  32,
+  32
+ ],
+ "player_right": [
+  32,
+  32
+ ],
+ "player_down_1": [
+  32,
+  32
+ ],
+ "player_down_2": [
+  32,
+  32
+ ],
+ "player_down_3": [
+  32,
+  32
+ ],
+ "player_down_4": [
+  32,
+  32
+ ],
+ "player_up_1": [
+  32,
+  32
+ ],
+ "player_up_2": [
+  32,
+  32
+ ],
+ "player_up_3": [
+  32,
+  32
+ ],
+ "player_up_4": [
+  32,
+  32
+ ],
+ "player_left_1": [
+  32,
+  32
+ ],
+ "player_left_2": [
+  32,
+  32
+ ],
+ "player_left_3": [
+  32,
+  32
+ ],
+ "player_left_4": [
+  32,
+  32
+ ],
+ "player_right_1": [
+  32,
+  32
+ ],
+ "player_right_2": [
+  32,
+  32
+ ],
+ "player_right_3": [
+  32,
+  32
+ ],
+ "player_right_4": [
+  32,
+  32
  ]
 }
