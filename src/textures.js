@@ -375,13 +375,18 @@ export function makeTextures(scene) {
     const tex = scene.textures.createCanvas(key, r * 2, r * 2);
     const c = tex.getContext();
     const grd = c.createRadialGradient(r, r, 0, r, r, r);
-    grd.addColorStop(0, 'rgba(255,255,255,1)');
-    grd.addColorStop(0.45, 'rgba(255,255,255,0.85)');
+    // 폐건물에서 손전등 하나로 버티는 밝기: 한가운데도 완전히 밝지 않고(0.86),
+    // 중앙부터 살짝씩 어두워지며 가장자리까지 넓게 펴진 옅은 그림자 영역이 남는다
+    grd.addColorStop(0, 'rgba(255,255,255,0.86)');
+    grd.addColorStop(0.15, 'rgba(255,255,255,0.8)');
+    grd.addColorStop(0.4, 'rgba(255,255,255,0.62)');
+    grd.addColorStop(0.65, 'rgba(255,255,255,0.4)');
+    grd.addColorStop(0.88, 'rgba(255,255,255,0.15)');
     grd.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = grd;
     c.fillRect(0, 0, r * 2, r * 2);
     tex.refresh();
   };
-  light('light', 170);
+  light('light', 210); // 반지름 — Explore.js drawDark()와 같아야 한다
   light('light_s', 70);
 }

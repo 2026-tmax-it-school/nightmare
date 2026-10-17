@@ -16,6 +16,9 @@ const depthAt = (y, player = false) => 2 + y / 100 + (player ? 0.005 : 0);
 const TILE_FALLBACK = { floor_pc: 'floor_tile' };
 
 const MOVE_MS = 150;
+const SIGHT_R = 640;      // 레이캐스팅 시야 거리(px). 어두운 맵에선 손전등이 실제 범위를 정한다
+const SIGHT_EPS = 0.0005; // 벽 모서리 양옆으로 쏘는 광선의 각도 차 — 모서리 너머까지 시야가 이어진다
+const WALL_TOP_TINT = 0x9aa6bc; // 위에서 내려다본 벽 줄의 문·창 색조 — 그림은 알아보이되 그늘진 벽 윗면과 어울리게
 const CAM_EASE_MS = 350; // 방 고정 ↔ 따라가기 전환 시간
 const CHASE_STEP_MS = 250;
 const CHASE_WANDER_MS = 2500; // 숨은 뒤 그림자가 주변을 서성이는 시간
@@ -74,6 +77,7 @@ export default class Explore extends Phaser.Scene {
       this.objects.set(key(o.x, o.y), obj);
     }
     this.buildRails();
+    this.buildSight();
     this.buildSparkles();
     this.decals = (m.graffiti || []).map(g => {
       const t = this.add.text(g.x * TILE, g.y * TILE, g.text, textStyle(15, '#8e1616', { fontStyle: 'bold' }))
@@ -147,6 +151,7 @@ export default class Explore extends Phaser.Scene {
 
   update(time, delta) {
     this.stepCamera(delta);
+    this.drawSight();
     if (this.dark) this.drawDark();
     this.lockerView?.update(this.chase, this.tx, this.ty);
     // 위를 볼 때는 머리 위 E가 조사 대상을 가리므로 대상 칸 위로 올린다
@@ -168,7 +173,7 @@ export default class Explore extends Phaser.Scene {
     rt.clear();
     rt.fill(0x000000, 1); // 부분 알파는 WebGL에서 훨씬 밝게 나와서 완전한 어둠 + 손전등 그라데이션으로 처리
     if (flag('stage1') && Math.random() < 0.01) return; // 손전등이 깜빡인다
-    const [tex, r] = this.hidden ? ['light_s', 70] : ['light', 170];
+    const [tex, r] = this.hidden ? ['light_s', 70] : ['light', 210]; // 반지름은 textures.js의 light()와 같게
     rt.erase(tex, this.player.x - r, this.player.y - r);
   }
 
@@ -246,7 +251,7 @@ export default class Explore extends Phaser.Scene {
     return (this.map.legend[this.grid[y][x]] || '').startsWith('floor');
   }
 
-  // ── 방 단위 시야: 지금 있는 방(벽·문으로 나뉜 바닥 덩어리)과 그 둘레 벽만 보이고 나머지는 가린다 ──
+  // ── 방: 벽·문으로 나뉜 바닥 덩어리. 카메라 고정과 벽 앞면/윗면에 쓴다 (보이는 범위는 레이캐스팅 시야가 정한다) ──
   buildRooms() {
     this.room = this.grid.map(r => r.map(() => -1));
     this.roomBox = []; // 방마다 바닥 칸의 경계 상자 (카메라 고정용)
@@ -267,31 +272,151 @@ export default class Explore extends Phaser.Scene {
       }
       id++;
     }
-    this.roomMask = this.add.graphics().setDepth(8);
     this.roomKey = null;
   }
 
+  // ── 레이캐스팅 시야: 플레이어에서 쏜 광선이 벽·닫힌 문에 막히기 전까지만 보인다 ──
+  // 열린 문 너머는 문틈 각도만큼, 코너는 돌아서는 만큼 서서히 보인다.
+  // 반짝임(9.7) 위·어둠·손전등(10) 아래에 깔아, 반만 보이는 칸의 반짝임이 어둠 속에 떠 보이지 않게 한다
+  buildSight() {
+    this.sight = this.add.renderTexture(0, 0, this.cols * TILE, this.rows * TILE).setOrigin(0).setDepth(9.8);
+    this.sightPoly = this.make.graphics({}, false);
+    this.sightAt = null;
+    this.buildOpaque();
+  }
+
+  // 시야를 막는 칸: 맵 밖, 벽·창·닫힌 문 (바닥·열린 문·옥상 펜스는 비친다)
+  // frame: 열린 문 칸. 비스듬히 보면 문짝 그림이 대각선으로 잘리므로, 광선이 지나가면 칸 전체를 보여 준다
+  buildOpaque() {
+    this.frame = this.grid.map(r => r.map(() => false));
+    this.opaque = this.grid.map((row, y) => row.map((ch, x) => {
+      const o = this.objects.get(key(x, y));
+      const t = this.map.legend[ch] || 'wall';
+      const open = o?.door ? flag('open_' + o.door) : t === 'door_open';
+      if (open) this.frame[y][x] = true;
+      if (o?.door) return !open;
+      return !(t.startsWith('floor') || open || t === 'fence');
+    }));
+    this.sightAt = null;
+  }
+
+  opaqueAt(x, y) {
+    return x < 0 || y < 0 || x >= this.cols || y >= this.rows || this.opaque[y][x];
+  }
+
+  // 칸 격자를 따라가는 광선 (DDA). 처음 닿은 막힌 칸과 거리를 돌려준다. frames: 지나간 열린 문 칸을 모은다
+  castRay(ox, oy, dx, dy, maxT, frames = null) {
+    let tx = Math.floor(ox / TILE), ty = Math.floor(oy / TILE);
+    const sx = dx > 0 ? 1 : -1, sy = dy > 0 ? 1 : -1;
+    const ddx = dx ? Math.abs(TILE / dx) : Infinity, ddy = dy ? Math.abs(TILE / dy) : Infinity;
+    let mx = dx > 0 ? ((tx + 1) * TILE - ox) / dx : dx < 0 ? (tx * TILE - ox) / dx : Infinity;
+    let my = dy > 0 ? ((ty + 1) * TILE - oy) / dy : dy < 0 ? (ty * TILE - oy) / dy : Infinity;
+    for (;;) {
+      let t;
+      if (mx < my) { t = mx; mx += ddx; tx += sx; } else { t = my; my += ddy; ty += sy; }
+      if (t >= maxT) return { t: maxT, hit: false };
+      if (this.opaqueAt(tx, ty)) return { t, tx, ty, hit: true };
+      if (frames && this.frame[ty][tx]) frames.add(ty * this.cols + tx);
+    }
+  }
+
+  // 시야 다각형(광선 끝점들)과 보이는 벽 칸 목록
+  castSight(ox, oy) {
+    const r = SIGHT_R;
+    const x0 = Math.max(0, Math.floor((ox - r) / TILE)), x1 = Math.min(this.cols - 1, Math.floor((ox + r) / TILE));
+    const y0 = Math.max(0, Math.floor((oy - r) / TILE)), y1 = Math.min(this.rows - 1, Math.floor((oy + r) / TILE));
+    // 벽이 없는 쪽도 둥글게 닫히도록 고르게 쏘는 광선
+    const angles = [];
+    for (let i = 0; i < 48; i++) angles.push((i / 48) * Math.PI * 2 - Math.PI);
+    // 바닥과 맞닿은 막힌 칸의 모서리마다 광선 3개 (모서리 정확히 + 양옆)
+    const done = new Set();
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      if (!this.opaque[y][x]) continue;
+      if (!Object.values(DIRS).some(([dx, dy]) => !this.opaqueAt(x + dx, y + dy))) continue;
+      for (const [px, py] of [[x, y], [x + 1, y], [x, y + 1], [x + 1, y + 1]]) {
+        const ci = py * (this.cols + 1) + px;
+        if (done.has(ci)) continue;
+        done.add(ci);
+        const vx = px * TILE - ox, vy = py * TILE - oy;
+        if (vx * vx + vy * vy > r * r) continue;
+        const a = Math.atan2(vy, vx);
+        angles.push(a - SIGHT_EPS, a, a + SIGHT_EPS);
+      }
+    }
+    angles.sort((a, b) => a - b);
+    const poly = [], hits = new Set();
+    for (const a of angles) {
+      const dx = Math.cos(a), dy = Math.sin(a);
+      const h = this.castRay(ox, oy, dx, dy, r, hits);
+      poly.push(ox + dx * h.t, oy + dy * h.t);
+      if (h.hit && h.tx >= 0 && h.ty >= 0 && h.tx < this.cols && h.ty < this.rows) hits.add(h.ty * this.cols + h.tx);
+    }
+    // 방 모서리 벽: 광선은 꼭짓점에만 닿아 빠지므로, 가로·세로 이웃 벽이 둘 다 보이면 함께 보인다
+    const lit = (x, y) => hits.has(y * this.cols + x);
+    const corners = [];
+    for (const i of hits) {
+      const hx = i % this.cols, hy = (i - hx) / this.cols;
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const x = hx + dx, y = hy + dy;
+        if (x < 0 || y < 0 || x >= this.cols || y >= this.rows || !this.opaque[y][x] || lit(x, y)) continue;
+        if ((lit(x - 1, y) || lit(x + 1, y)) && (lit(x, y - 1) || lit(x, y + 1))) corners.push(y * this.cols + x);
+      }
+    }
+    corners.forEach(i => hits.add(i));
+    return { poly, hits };
+  }
+
+  // 매 프레임: 플레이어가 움직였을 때만 다시 그린다 (이동 중에도 시야가 부드럽게 따라온다)
+  drawSight() {
+    const ox = this.player.x, oy = this.player.y;
+    const k = `${ox},${oy}`;
+    if (k === this.sightAt) return;
+    this.sightAt = k;
+    const { poly, hits } = this.castSight(ox, oy);
+    const g = this.sightPoly.clear().fillStyle(0xffffff, 1);
+    // 시야 다각형은 플레이어를 중심으로 한 별 모양이라 부채꼴 삼각형으로 채운다
+    const n = poly.length / 2;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      g.fillTriangle(ox, oy, poly[i * 2], poly[i * 2 + 1], poly[j * 2], poly[j * 2 + 1]);
+    }
+    for (const i of hits) {
+      const x = i % this.cols;
+      g.fillRect(x * TILE, ((i - x) / this.cols) * TILE, TILE, TILE);
+    }
+    this.sight.clear().fill(0x000000, 1).erase(g);
+  }
+
+  // 칸이 보이는지 (가운데나 네 귀퉁이 중 하나라도 광선이 닿으면). 막힌 칸은 광선이 처음 닿은 칸이면 보인다
+  seeTile(ox, oy, x, y) {
+    for (const [px, py] of [[0.5, 0.5], [0.15, 0.15], [0.85, 0.15], [0.15, 0.85], [0.85, 0.85]]) {
+      const vx = (x + px) * TILE - ox, vy = (y + py) * TILE - oy, d = Math.hypot(vx, vy);
+      if (d < 1) return true;
+      const h = this.castRay(ox, oy, vx / d, vy / d, d);
+      if (!h.hit || (h.tx === x && h.ty === y)) return true;
+    }
+    return false;
+  }
+
   updateRooms() {
+    this.sightAt = null;
+    // 가구·반짝임은 그 칸이 시야에 들어올 때만 보인다 (다른 방의 2칸 가구가 벽 칸으로 윗부분만 비치지 않게)
+    const ox = cx(this.tx), oy = cx(this.ty);
+    const shown = this.grid.map(r => r.map(() => null));
+    for (const o of this.objects?.values() || []) {
+      shown[o.y][o.x] ??= this.seeTile(ox, oy, o.x, o.y);
+      o.img?.setVisible(shown[o.y][o.x]);
+    }
+    this.shown = shown;
+    if (this.sparkles) this.updateSparkles();
     const at = (x, y) => (x < 0 || y < 0 || x >= this.cols || y >= this.rows ? -1 : this.room[y][x]);
-    // 문 칸에 서 있으면 양쪽 방을 모두 보여 준다
+    // 문 칸에 서 있으면 양쪽 방 기준
     let ids = [at(this.tx, this.ty)];
     if (ids[0] < 0) ids = Object.values(DIRS).map(([dx, dy]) => at(this.tx + dx, this.ty + dy));
     ids = [...new Set(ids.filter(i => i >= 0))].sort();
     const k = ids.join();
     if (!ids.length || k === this.roomKey) return;
     this.roomKey = k;
-    const g = this.roomMask.clear().fillStyle(0x000000, 1);
-    const shown = this.grid.map(r => r.map(() => false));
-    for (let y = 0; y < this.rows; y++) for (let x = 0; x < this.cols; x++) {
-      let seen = false;
-      for (let dy = -1; dy <= 1 && !seen; dy++) for (let dx = -1; dx <= 1 && !seen; dx++) seen = ids.includes(at(x + dx, y + dy));
-      shown[y][x] = seen;
-      if (!seen) g.fillRect(x * TILE, y * TILE, TILE, TILE);
-    }
-    // 다른 방의 2칸 가구가 벽 칸으로 윗부분만 비치지 않도록, 바닥 칸이 가려진 가구는 통째로 숨긴다
-    for (const o of this.objects?.values() || []) o.img?.setVisible(shown[o.y][o.x]);
-    this.shown = shown;
-    if (this.sparkles) this.updateSparkles();
     // 벽 앞면은 그 벽 아래 방에 있을 때만 앞면. 위쪽 방 안에서 보면 같은 벽이 윗면(두꺼운 벽)으로 보인다
     if (this.textures.exists('wall_face')) {
       for (let y = 0; y < this.rows - 1; y++) for (let x = 0; x < this.cols; x++) {
@@ -300,6 +425,14 @@ export default class Explore extends Phaser.Scene {
         if (this.tileTex(x, y) !== 'wall_face') continue;
         t.setTexture(ids.includes(at(x, y + 1)) ? 'wall_face' : 'wall_top');
       }
+    }
+    // 벽 줄의 문·창도 같다: 위쪽 방에서 내려다보면 벽이 윗면(어두운 남색)이 되므로 문만 밝게 뜨지 않게 같은 어둠으로 물들인다
+    for (let y = 1; y < this.rows; y++) for (let x = 0; x < this.cols; x++) {
+      const tex = this.map.legend[this.grid[y][x]] || 'wall';
+      if (tex === 'wall' || tex.startsWith('floor') || !this.isWall(x - 1, y) || !this.isWall(x + 1, y)) continue;
+      const fromAbove = ids.includes(at(x, y - 1)) && !ids.includes(at(x, y + 1));
+      if (fromAbove) this.tiles[y][x].setTint(WALL_TOP_TINT);
+      else this.tiles[y][x].clearTint();
     }
   }
 
@@ -673,6 +806,8 @@ export default class Explore extends Phaser.Scene {
     setFlag('open_' + id);
     sfx('unlock');
     for (const o of this.objects.values()) if (o.door === id) this.tiles[o.y][o.x].setTexture('door_open');
+    this.buildOpaque(); // 열린 문 너머가 보이기 시작한다
+    this.updateRooms();
   }
 
   applyStage() {
