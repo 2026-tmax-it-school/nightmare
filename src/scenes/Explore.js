@@ -1,7 +1,7 @@
 // 탑뷰 탐색: 칸 단위 이동, 조사, 문, 트리거, 손전등 어둠, 사물함 숨기, 그림자 추격
 import { TILE, W, H } from '../constants.js';
 import { DB } from '../db.js';
-import { state, flag, setFlag, saveGame, checkCond } from '../state.js';
+import { state, flag, setFlag, saveGame, checkCond, guiltLevel } from '../state.js';
 import { runScript } from '../script.js';
 import { UI, textStyle, isConfirm, dirOf } from '../ui/ui.js';
 import { sfx, startLoop, stopLoop, stopAllLoops } from '../audio.js';
@@ -31,6 +31,12 @@ const DENIAL_HAUNT = 30;   // 이상이면 가끔 환각
 const DENIAL_PHANTOM = 60; // 이상이면 환각 때 그림자 환영도
 const DENIAL_MAX = 100;    // 붙잡힘
 const HAUNT_EVERY_S = 30;  // 환각 최소 간격(초), 여기에 0~15초를 더한다
+// 죄책감 (GDD 4.4-2): 단계별 환청 간격(초) [최소, 최대] / 3단계 키 반전 간격(초)·지속(ms)
+const GUILT_HAUNT_S = { 2: [35, 55], 3: [18, 30] };
+const GUILT_INVERT_EVERY_S = [45, 75];
+const GUILT_INVERT_MS = 2500;
+// 환청과 함께 화면에 잠깐 떠오르는 목소리 (도윤 / 가해자들)
+const GUILT_VOICES = ['……재민아.', '거기 있지?', '문 열어 줘.', '약속했잖아.', '왜 모른 척했어?', '야, 윤재민. 너도 웃기지?', '너도 웃었잖아.', '그냥 가자. 아무도 몰라.'];
 
 export default class Explore extends Phaser.Scene {
   constructor() { super('Explore'); }
@@ -146,6 +152,9 @@ export default class Explore extends Phaser.Scene {
     this.updateObjective();
     this.haunt = 0;
     this.time.addEvent({ delay: 1000, loop: true, callback: this.denialTick, callbackScope: this });
+    this.guiltWait = this.guiltDelay();
+    this.invertWait = Phaser.Math.Between(...GUILT_INVERT_EVERY_S);
+    this.time.addEvent({ delay: 1000, loop: true, callback: this.guiltTick, callbackScope: this });
     cam.fadeIn(500);
     this.time.delayedCall(550, () => this.runEnter());
   }
@@ -166,7 +175,7 @@ export default class Explore extends Phaser.Scene {
       : (k.DOWN.isDown || k.S.isDown) ? 'down'
       : (k.LEFT.isDown || k.A.isDown) ? 'left'
       : (k.RIGHT.isDown || k.D.isDown) ? 'right' : null;
-    if (dir) this.tryMove(dir);
+    if (dir) this.tryMove(this.guiltDir(dir));
   }
 
   drawDark() {
@@ -651,7 +660,7 @@ export default class Explore extends Phaser.Scene {
     if (this.busy || this.moving || this.over) return;
     const dir = dirOf(e);
     // 키를 누르고 있는 동안의 이동은 update()가 맡는다. OS 키 반복까지 받으면 뗀 직후 한 칸 더 갈 수 있다.
-    if (dir) { if (!this.hidden && !e.repeat) this.tryMove(dir); return; }
+    if (dir) { if (!this.hidden && !e.repeat) this.tryMove(this.guiltDir(dir)); return; }
     if (isConfirm(e)) {
       if (this.hidden) return this.exitLocker();
       const o = this.frontObj();
@@ -850,6 +859,61 @@ export default class Explore extends Phaser.Scene {
     sfx('follow');
     this.ui.glitch(250);
     if (state.denial >= DENIAL_PHANTOM) this.phantom();
+  }
+
+  // ── 죄책감 (GDD 4.4-2): 기억을 되찾을수록 환청·화면 왜곡이 잦아지고, 3단계에선 잠깐 키가 반전된다 ──
+  // 탐색 중에만 일어난다 (대화·퍼즐·추격·사물함 중엔 멈춤)
+  guiltDelay() {
+    const [a, b] = GUILT_HAUNT_S[guiltLevel()] || [40, 60];
+    return Phaser.Math.Between(a, b);
+  }
+
+  guiltTick() {
+    if (this.over || !this.map.dark || this.busy || this.hidden || this.chase) return;
+    const lv = guiltLevel();
+    if (lv < 2) return;
+    if (--this.guiltWait <= 0) { this.guiltWait = this.guiltDelay(); this.guiltHaunt(lv); }
+    if (lv >= 3 && !this.invert && --this.invertWait <= 0) {
+      this.invertWait = Phaser.Math.Between(...GUILT_INVERT_EVERY_S);
+      this.invertKeys();
+    }
+  }
+
+  // 환청 (속삭임·문 긁는 소리·부르는 목소리) + 화면에 잠깐 떠오르는 말 + 짧은 일그러짐. 3단계는 시야도 출렁인다
+  guiltHaunt(lv) {
+    sfx(Phaser.Utils.Array.GetRandom(['whisper', 'scratch', 'murmur']));
+    this.ui.glitch(lv >= 3 ? 320 : 200);
+    const t = this.add.text(Phaser.Math.Between(90, W - 90), Phaser.Math.Between(90, H - 170), Phaser.Utils.Array.GetRandom(GUILT_VOICES),
+      textStyle(14, '#b46a6a', { fontStyle: 'italic' })).setOrigin(0.5).setScrollFactor(0).setDepth(97).setAlpha(0);
+    this.tweens.add({ targets: t, alpha: 0.75, duration: 500, hold: 900, yoyo: true, onComplete: () => t.destroy() });
+    if (lv >= 3) {
+      // 시야각 왜곡: 화면이 살짝 기울었다 돌아온다
+      const cam = this.cameras.main;
+      this.tweens.addCounter({
+        from: 0, to: 1, duration: 1400, ease: 'Sine.easeInOut',
+        onUpdate: tw => { const v = Math.sin(tw.getValue() * Math.PI); cam.setRotation(v * 0.035 * (this.warpSign ||= 1)); cam.setZoom(1 + v * 0.04); },
+        onComplete: () => { cam.setRotation(0); cam.setZoom(1); this.warpSign = -this.warpSign; },
+      });
+    }
+  }
+
+  // 키 반전: 심장 소리·흔들림으로 예고한 뒤 잠깐 좌우 또는 상하 이동이 뒤집힌다
+  invertKeys() {
+    sfx('heart');
+    this.cameras.main.shake(350, 0.005);
+    this.time.delayedCall(450, () => {
+      if (this.busy || this.chase || this.over) return;
+      this.invert = Phaser.Math.RND.pick(['lr', 'ud']);
+      this.ui.glitch(150);
+      this.time.delayedCall(GUILT_INVERT_MS, () => { this.invert = null; });
+    });
+  }
+
+  // 반전 중이면 방향을 뒤집는다 (추격 중에는 반전하지 않는다)
+  guiltDir(dir) {
+    if (!this.invert || this.chase) return dir;
+    const flip = this.invert === 'lr' ? { left: 'right', right: 'left' } : { up: 'down', down: 'up' };
+    return flip[dir] || dir;
   }
 
   // 손전등 빛 가장자리의 빈 칸에 그림자가 잠깐 서 있다 사라진다 (쫓아오지 않음)

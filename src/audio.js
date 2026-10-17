@@ -127,6 +127,18 @@ const SFX = {
   },
   glitch: t => { for (let i = 0; i < 10; i++) tone(t + i * 0.035, { freq: 80 + Math.random() * 1800, type: 'square', peak: 0.06, a: 0.002, d: 0.03 }); return 0.4; },
   whisper: t => { noise(t, { freq: 2600, q: 6, peak: 0.05, a: 0.1, d: 0.4 }); return 0.5; },
+  // 죄책감 환청: 닫힌 문을 손톱으로 긁는 소리 / 귀에 바짝 붙어 웅얼거리는 목소리
+  scratch: t => {
+    for (let i = 0; i < 7; i++) noise(t + i * 0.12 + Math.random() * 0.04, { freq: 1600 + Math.random() * 1600, q: 9, peak: 0.06, a: 0.01, d: 0.09 });
+    return 0.95;
+  },
+  murmur: t => {
+    for (let i = 0; i < 4; i++) {
+      noise(t + i * 0.22, { freq: 900 + Math.random() * 500, q: 5, peak: 0.05, a: 0.04, d: 0.18 });
+      tone(t + i * 0.22, { freq: 150 + Math.random() * 40, type: 'triangle', peak: 0.035, a: 0.03, d: 0.17, vib: 12 });
+    }
+    return 1;
+  },
   laugh: t => { for (let i = 0; i < 5; i++) tone(t + i * 0.14, { freq: 320 - i * 12, type: 'triangle', peak: 0.05, a: 0.01, d: 0.09, vib: 30 }); return 0.8; },
   beep: t => { tone(t, { freq: 880, type: 'square', peak: 0.05, d: 0.06 }); return 0.1; },
   tick: t => { tone(t, { freq: 1200, type: 'square', peak: 0.025, d: 0.02 }); return 0.05; },
