@@ -16,8 +16,13 @@ const depthAt = (y, player = false) => 2 + y / 100 + (player ? 0.005 : 0);
 const TILE_FALLBACK = { floor_pc: 'floor_tile' };
 
 const MOVE_MS = 150;
+const CAM_EASE_MS = 350; // 방 고정 ↔ 따라가기 전환 시간
 const CHASE_STEP_MS = 250;
-const CHASE_GIVE_UP_MS = 4500;
+const CHASE_WANDER_MS = 2500; // 숨은 뒤 그림자가 주변을 서성이는 시간
+const CHASE_LEAVE_DIST = 10;  // 서성인 뒤 숨은 곳에서 이 칸 수 이상 떨어진 복도까지 걸어 나가 사라진다
+// 그림자 소리 (GDD 4.6): 이 칸 수보다 멀면 들리지 않는다. 숨소리 간격은 멀 때 → 가까울 때
+const SHADOW_HEAR = 12;
+const BREATH_FAR_MS = 1800, BREATH_NEAR_MS = 800;
 // 부정 수치 (GDD 4.4)
 const DENIAL_HAUNT = 30;   // 이상이면 가끔 환각
 const DENIAL_PHANTOM = 60; // 이상이면 환각 때 그림자 환영도
@@ -96,7 +101,7 @@ export default class Explore extends Phaser.Scene {
     const mw = this.cols * TILE, mh = this.rows * TILE;
     this.camFixedMap = mw <= W && mh <= H;
     if (this.camFixedMap) cam.centerOn(mw / 2, mh / 2);
-    else { cam.setBounds(0, 0, mw, mh); this.camRoom = undefined; this.updateCamera(true); }
+    else { this.camRoom = undefined; this.updateCamera(true); }
 
     if (m.ambient) {
       this.add.rectangle(0, 0, mw, mh, Phaser.Display.Color.HexStringToColor(m.ambient.color).color, m.ambient.alpha).setOrigin(0).setDepth(9);
@@ -123,6 +128,7 @@ export default class Explore extends Phaser.Scene {
     this.events.once('shutdown', () => {
       this.input.keyboard.off('keydown', this.onKey, this);
       this.chaseTimer?.remove();
+      this.breathTimer?.remove();
       stopLoop('chase');
     });
 
@@ -139,7 +145,8 @@ export default class Explore extends Phaser.Scene {
     this.time.delayedCall(550, () => this.runEnter());
   }
 
-  update() {
+  update(time, delta) {
+    this.stepCamera(delta);
     if (this.dark) this.drawDark();
     this.lockerView?.update(this.chase, this.tx, this.ty);
     // 위를 볼 때는 머리 위 E가 조사 대상을 가리므로 대상 칸 위로 올린다
@@ -194,8 +201,8 @@ export default class Explore extends Phaser.Scene {
     });
   }
 
-  // ── 방 순서 (GDD 4.7): map.gates의 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 독백을 띄운다 ──
-  // 나올 때(반대 방향)는 막지 않는다. cond가 없으면 늘 막는다 (진행과 상관없는 방)
+  // ── 층 이동 막기 (GDD 4.7, 스토리 건너뛰기 방지): map.gates의 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 독백을 띄운다 ──
+  // 나올 때(반대 방향)는 막지 않는다. cond가 없으면 늘 막는다
   gateAt(x, y, dir) {
     return (this.map.gates || []).find(g => g.dir === dir && x >= g.x && x < g.x + (g.w || 1) && y >= g.y && y < g.y + (g.h || 1) && !(g.cond && checkCond(g.cond)));
   }
@@ -297,7 +304,8 @@ export default class Explore extends Phaser.Scene {
   }
 
   // ── 카메라: 화면에 다 들어오는 방에 들어서면 그 방을 화면 가운데에 고정하고(목표 패널·대화창에 가리지 않게),
-  // 복도처럼 화면보다 큰 곳에선 플레이어를 따라간다. 문 칸에선 바꾸지 않는다. instant: 이동 없이 바로 맞춘다 ──
+  // 복도처럼 화면보다 큰 곳에선 플레이어를 따라간다. 문 칸에선 바꾸지 않는다. instant: 이동 없이 바로 맞춘다
+  // 실제 이동은 stepCamera()가 매 프레임 한다. 여기선 목표(방 / 따라가기)만 바꾸고 전환을 시작한다 ──
   updateCamera(instant = false) {
     if (this.camFixedMap) return;
     let id = this.room[this.ty]?.[this.tx] ?? -1;
@@ -307,24 +315,41 @@ export default class Explore extends Phaser.Scene {
     const target = fits ? id : null;
     if (target === this.camRoom && !instant) return;
     this.camRoom = target;
+    this.camEase(instant ? 0 : CAM_EASE_MS);
+  }
+
+  // 지금 위치에서 새 목표까지 ms 동안 부드럽게 옮긴다 (0이면 바로)
+  camEase(ms) {
     const cam = this.cameras.main;
     cam.stopFollow();
-    if (fits) {
-      // 맵 가장자리 방도 가운데에 오도록 경계를 끈다 (방 밖은 방 단위 시야로 가려져 있다)
-      cam.useBounds = false;
-      const x = (b.x0 + b.x1 + 1) * TILE / 2, y = (b.y0 + b.y1 + 1) * TILE / 2;
-      if (instant) cam.centerOn(x, y);
-      else cam.pan(x, y, 250, 'Sine.easeOut', true);
-      return;
-    }
-    cam.useBounds = true;
-    // lerp 1: 카메라가 늦게 따라오면 멈춘 뒤에도 화면이 미끄러져 한 발 더 가는 것처럼 느껴진다
-    if (instant) { cam.startFollow(this.player, true, 1, 1); return; }
+    // 경계는 stepCamera가 직접 맞춘다. Phaser 경계를 켜고 끄면 그 순간 화면이 튄다
+    cam.useBounds = false;
+    this.camFrom = { x: cam.midPoint.x, y: cam.midPoint.y };
+    this.camT = ms ? 0 : 1;
+    this.camMs = ms;
+    this.stepCamera(0);
+  }
+
+  // 방 고정: 방 가운데 / 따라가기: 플레이어 (맵 밖이 보이지 않게 가장자리에서 멈춘다)
+  camTarget() {
+    const b = this.camRoom != null && this.roomBox[this.camRoom];
+    if (b) return [(b.x0 + b.x1 + 1) * TILE / 2, (b.y0 + b.y1 + 1) * TILE / 2];
     const mw = this.cols * TILE, mh = this.rows * TILE;
-    const px = Phaser.Math.Clamp(this.player.x, W / 2, mw - W / 2), py = Phaser.Math.Clamp(this.player.y, H / 2, mh - H / 2);
-    cam.pan(px, py, 200, 'Sine.easeOut', true, (c, p) => {
-      if (p === 1 && this.camRoom === null) cam.startFollow(this.player, true, 1, 1);
-    });
+    return [Phaser.Math.Clamp(this.player.x, W / 2, mw - W / 2), Phaser.Math.Clamp(this.player.y, H / 2, mh - H / 2)];
+  }
+
+  // 전환 중엔 출발점과 (움직이는) 목표 사이를 이어서, 끝나는 순간 목표와 정확히 겹친다 → 끝에서 튀지 않는다.
+  // 전환이 끝나면 바로 붙어 따라간다: 늦게 따라오면 멈춘 뒤에도 화면이 미끄러져 한 발 더 가는 것처럼 느껴진다
+  stepCamera(dt) {
+    if (this.camFixedMap || this.pastLayer || !this.camFrom) return; // 과거 겹쳐보기 중엔 그쪽이 카메라를 움직인다
+    let [x, y] = this.camTarget();
+    if (this.camT < 1) {
+      this.camT = Math.min(1, this.camT + dt / this.camMs);
+      const e = Phaser.Math.Easing.Sine.InOut(this.camT);
+      x = this.camFrom.x + (x - this.camFrom.x) * e;
+      y = this.camFrom.y + (y - this.camFrom.y) * e;
+    }
+    this.cameras.main.centerOn(Math.round(x), Math.round(y));
   }
 
   // 벽: 아래가 바닥이면 앞면(정면에서 본 벽), 아니면 윗면 — 완성 그래픽이 있을 때만
@@ -548,7 +573,7 @@ export default class Explore extends Phaser.Scene {
     this.pastLayer = null;
     const cam = this.cameras.main;
     if (this.camFixedMap) { cam.useBounds = true; cam.centerOn(this.cols * TILE / 2, this.rows * TILE / 2); }
-    else this.updateCamera(true); // 방 고정 / 따라가기를 원래대로
+    else this.camEase(CAM_EASE_MS); // 방 고정 / 따라가기로 부드럽게 돌아온다
     this.dark?.setVisible(true);
     sfx('glitch');
     this.tweens.add({ targets: layer, alpha: 0, duration: 400, onComplete: () => layer.forEach(o => o.destroy()) });
@@ -725,6 +750,28 @@ export default class Explore extends Phaser.Scene {
     this.chase = { x: pc.spawn.x, y: pc.spawn.y, sprite, lost: 0, step: pc.step || CHASE_STEP_MS };
     startLoop('chase');
     this.chaseTimer = this.time.addEvent({ delay: this.chase.step, loop: true, callback: this.chaseStep, callbackScope: this });
+    this.breathTimer = this.time.delayedCall(400, this.breathe, [], this);
+  }
+
+  // 그림자가 얼마나 가까운지 (0 = 들리지 않을 만큼 멂, 1 = 바로 옆)
+  shadowNear() {
+    const c = this.chase;
+    if (!c) return 0;
+    return Math.max(0, 1 - Math.hypot(c.x - this.tx, c.y - this.ty) / SHADOW_HEAR);
+  }
+
+  // 그림자 소리: 가까울수록 크게. 숨어 있으면 사물함 문 너머로 먹먹하게 들린다
+  shadowSfx(name) {
+    const p = this.shadowNear();
+    if (p > 0) sfx(name, 0.1 + 0.9 * p * p, this.hidden);
+  }
+
+  // 숨소리는 발걸음과 따로 돈다. 가까울수록 간격이 짧아진다
+  breathe() {
+    if (!this.chase || this.over) return;
+    if (!this.busy) this.shadowSfx('breath');
+    const delay = Phaser.Math.Linear(BREATH_FAR_MS, BREATH_NEAR_MS, this.shadowNear());
+    this.breathTimer = this.time.delayedCall(delay, this.breathe, [], this);
   }
 
   chaseStep() {
@@ -732,20 +779,62 @@ export default class Explore extends Phaser.Scene {
     if (!c || this.busy || this.over) return;
     let next;
     if (this.hidden) {
-      // 숨은 동안엔 주변을 서성이다 사라진다
+      // 숨은 동안엔 주변을 서성이다가, 방 밖 복도로 걸어 나가 멀어진 뒤 사라진다
       c.lost += c.step;
-      if (c.lost >= CHASE_GIVE_UP_MS) return this.endChase();
-      const opts = Object.values(DIRS).map(([dx, dy]) => [c.x + dx, c.y + dy]).filter(([x, y]) => this.passable(x, y) && !this.railBetween(c.x, c.y, x, y));
-      next = opts.length ? Phaser.Utils.Array.GetRandom(opts) : null;
+      if (c.lost < CHASE_WANDER_MS) {
+        const opts = Object.values(DIRS).map(([dx, dy]) => [c.x + dx, c.y + dy]).filter(([x, y]) => this.passable(x, y) && !this.railBetween(c.x, c.y, x, y));
+        // 방금 온 칸으로 바로 되돌아가지 않아야 제자리에서 떨지 않는다
+        const fwd = opts.filter(([x, y]) => !(x === c.px && y === c.py));
+        next = fwd.length ? Phaser.Utils.Array.GetRandom(fwd) : opts[0] || null;
+      } else {
+        c.exit ??= this.chaseExit(c.x, c.y);
+        if (!c.exit || (c.x === c.exit[0] && c.y === c.exit[1])) return this.endChase();
+        next = this.pathStep(c.x, c.y, c.exit[0], c.exit[1]);
+        if (!next) return this.endChase();
+      }
     } else {
       c.lost = 0;
+      c.exit = null;
       next = this.pathStep(c.x, c.y, this.tx, this.ty);
     }
     if (!next) return;
+    [c.px, c.py] = [c.x, c.y];
     [c.x, c.y] = next;
-    sfx('thud');
+    this.shadowSfx('shadowStep');
     this.tweens.add({ targets: c.sprite, x: cx(c.x), y: cx(c.y), duration: c.step - 20 });
     if (!this.hidden && c.x === this.tx && c.y === this.ty) this.caught();
+  }
+
+  // 시작점에서 갈 수 있는 칸까지의 거리 (BFS)
+  distFrom(sx, sy) {
+    const dist = new Map([[key(sx, sy), 0]]);
+    const q = [[sx, sy]];
+    while (q.length) {
+      const [x, y] = q.shift();
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const nx = x + dx, ny = y + dy, k = key(nx, ny);
+        if (dist.has(k) || !this.passable(nx, ny) || this.railBetween(x, y, nx, ny)) continue;
+        dist.set(k, dist.get(key(x, y)) + 1);
+        q.push([nx, ny]);
+      }
+    }
+    return dist;
+  }
+
+  // 그림자가 떠나갈 칸: 숨은 곳에서 CHASE_LEAVE_DIST 이상 떨어진 복도 중 그림자에게 가장 가까운 칸.
+  // 교실·방에 숨었으면 문을 지나 복도로, 복도에 숨었으면 복도를 따라 멀어진다.
+  // 그런 복도가 없으면 숨은 곳에서 가장 먼 칸으로 간다.
+  chaseExit(sx, sy) {
+    const fromHide = this.distFrom(this.tx, this.ty);
+    const fromShadow = this.distFrom(sx, sy);
+    let best = null, bestD = Infinity, far = null, farD = -1;
+    for (const [k, d] of fromShadow) {
+      const [x, y] = k.split(',').map(Number);
+      const h = fromHide.get(k) ?? Infinity;
+      if (h >= CHASE_LEAVE_DIST && d < bestD && this.map.legend[this.grid[y][x]] === 'floor_corridor') [best, bestD] = [[x, y], d];
+      if (h !== Infinity && h > farD) [far, farD] = [[x, y], h];
+    }
+    return best || far;
   }
 
   // BFS로 목표까지의 다음 한 칸
@@ -778,6 +867,7 @@ export default class Explore extends Phaser.Scene {
     const c = this.chase;
     const pc = state.flags.pendingChase;
     this.chaseTimer.remove();
+    this.breathTimer?.remove();
     this.chase = null;
     stopLoop('chase');
     this.tweens.add({ targets: c.sprite, alpha: 0, duration: 600, onComplete: () => c.sprite.destroy() });
@@ -793,6 +883,7 @@ export default class Explore extends Phaser.Scene {
     this.over = true;
     this.busy = true;
     this.chaseTimer?.remove();
+    this.breathTimer?.remove();
     stopLoop('chase');
     sfx('slam');
     const cam = this.cameras.main;
