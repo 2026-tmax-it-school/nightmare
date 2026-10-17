@@ -62,12 +62,9 @@
   },
   "_rails": "난간: { x, y, w } = y줄 아래쪽 경계를 x부터 w칸 막는다. 2층 계단실 옥상 계단과 1층 계단 사이",
   "rails": [{ "x": 30, "y": 13, "w": 3 }],
-  "_gates": "방 순서: { x, y, w?, h?, dir, cond, text } = 그 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 text 독백. cond가 없으면 늘 막는다 (GDD 4.7)",
+  "_gates": "층 이동 막기(스토리 건너뛰기 방지): { x, y, w?, h?, dir, cond, text } = 그 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 text 독백. cond가 없으면 늘 막는다 (GDD 4.7)",
   "gates": [
-    { "x": 18, "y": 7, "dir": "up", "cond": { "flag": "frag2" }, "text": "……피아노 소리가 난 건 음악실 쪽이었어. 음악실부터 살펴보자." },
-    { "x": 5, "y": 11, "dir": "down", "cond": { "flag": "p5" }, "text": "……화장실은 나중에. 아직 둘러보지 않은 교실이 남아 있어." },
-    { "x": 30, "y": 12, "h": 2, "dir": "right", "cond": { "flag": "frag4" }, "text": "……아직 위로 올라갈 때가 아니야. 2층에 할 일이 남아 있어." },
-    { "x": 32, "y": 14, "h": 2, "dir": "right", "cond": { "flag": "frag4" }, "text": "……2층을 다 둘러보기 전엔 내려가지 말자." }
+    { "x": 30, "y": 12, "h": 2, "dir": "right", "cond": { "flag": ["p5", "frag4"] }, "text": "……발이 떨어지지 않는다. 이 층에서 아직 떠오르지 않은 게 있는 것 같다." }
   ],
   "triggers": [
     { "x": 32, "y": 14, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" },
@@ -217,11 +214,17 @@
               { "t": "text", "text": "이 컴퓨터 한 대만 희미하게 켜져 있다. 전기도 끊긴 학교인데." },
               { "t": "text", "text": "로그인 화면 ── 「1-3 12번」\n비밀번호 힌트: 약속한 날" },
               {
-                "t": "puzzle", "id": "pc",
-                "success": [
-                  { "t": "flag", "key": "pc_unlocked" },
-                  { "t": "call", "name": "pc_chat" }
-                ]
+                "t": "if", "cond": { "clue": "diary" },
+                "then": [
+                  {
+                    "t": "puzzle", "id": "pc",
+                    "success": [
+                      { "t": "flag", "key": "pc_unlocked" },
+                      { "t": "call", "name": "pc_chat" }
+                    ]
+                  }
+                ],
+                "else": [{ "t": "text", "who": "재민", "text": "……약속한 날. 뭔가 있었던 것 같은데, 아직 떠오르지 않는다." }]
               }
             ]
           }
@@ -305,7 +308,7 @@
         "then": [{ "t": "text", "text": "금이 간 거울. 이제는 지금의 내 얼굴만 비친다." }],
         "else": [
           {
-            "t": "if", "cond": { "notFlag": "p4" },
+            "t": "if", "cond": { "notFlag": "p5" },
             "then": [{ "t": "text", "text": "물때 낀 거울. 내 얼굴이 흐릿하게 비친다." }],
             "else": [
               { "t": "text", "text": "거울에 비친 얼굴이… 어리다." },
