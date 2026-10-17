@@ -27,8 +27,8 @@
     { "cond": { "flag": "open_science", "notFlag": "p8" }, "text": "준비실 문 앞에서 그날을 처음부터 떠올려 보자. 단톡방의 시각과 테이프 순서가 도움이 된다. 걸쇠는 한 번도 풀린 적이 없다." },
     { "cond": { "flag": "open_science", "notFlag": "got_bag" }, "text": "도윤이 바라보던 준비실 구석의 가방." },
     { "cond": { "flag": "open_science", "notFlag": "called" }, "text": "가방이 있던 자리를 다시 살펴보자." },
-    { "cond": { "flag": "called", "notFlag": "final_dump", "item": "bag" }, "text": "현관문이 열려 있다. 이 가방을 들고 나갈지, 버릴지, 태울지… 내가 정해야 한다." },
-    { "cond": { "flag": "called" }, "text": "현관문이 열려 있다." },
+    { "cond": { "flag": "called", "notFlag": "final_dump", "item": "bag" }, "text": "현관문이 열려 있다. 이 가방을 과학실 실험대의 알코올램프에 태울지, 복도 쓰레기통에 버릴지, 들고 현관으로 나갈지… 내가 정해야 한다." },
+    { "cond": { "flag": "called" }, "text": "현관문이 열려 있다. 현관으로 나가자." },
     { "cond": { "flag": "frag4", "notFlag": "frag8" }, "text": "2층 거울에서 본 것… 1층 화장실 거울도 다시 들여다볼까." },
     { "cond": {}, "text": "2층에 아직 할 일이 남아 있다. 계단실은 복도 동쪽 끝이다." }
   ],
