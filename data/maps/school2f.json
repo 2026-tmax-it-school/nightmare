@@ -62,6 +62,13 @@
   },
   "_rails": "난간: { x, y, w } = y줄 아래쪽 경계를 x부터 w칸 막는다. 2층 계단실 옥상 계단과 1층 계단 사이",
   "rails": [{ "x": 30, "y": 13, "w": 3 }],
+  "_gates": "방 순서: { x, y, w?, h?, dir, cond, text } = 그 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 text 독백. cond가 없으면 늘 막는다 (GDD 4.7)",
+  "gates": [
+    { "x": 18, "y": 7, "dir": "up", "cond": { "flag": "frag2" }, "text": "……피아노 소리가 난 건 음악실 쪽이었어. 음악실부터 살펴보자." },
+    { "x": 5, "y": 11, "dir": "down", "cond": { "flag": "p5" }, "text": "……화장실은 나중에. 아직 둘러보지 않은 교실이 남아 있어." },
+    { "x": 30, "y": 12, "h": 2, "dir": "right", "cond": { "flag": "frag4" }, "text": "……아직 위로 올라갈 때가 아니야. 2층에 할 일이 남아 있어." },
+    { "x": 32, "y": 14, "h": 2, "dir": "right", "cond": { "flag": "frag4" }, "text": "……2층을 다 둘러보기 전엔 내려가지 말자." }
+  ],
   "triggers": [
     { "x": 32, "y": 14, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" },
     { "x": 32, "y": 12, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "door_roof" }

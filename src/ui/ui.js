@@ -139,7 +139,8 @@ export class UI {
 
   // ── 알림 · 배너 ──
   toast(msg) {
-    const y = 14 + this.toasts.length * 32;
+    // 목표 패널이 있으면 그 아래부터 쌓는다
+    const y = (this.obj?.c.visible ? this.obj.bottom + 6 : 14) + this.toasts.length * 32;
     const t = this.fixed(this.s.add.text(W - 14, y, msg, textStyle(13, '#e8d8b0', {
       backgroundColor: 'rgba(20,18,26,0.88)', padding: { x: 10, y: 5 },
     })).setOrigin(1, 0), 150);
@@ -148,6 +149,33 @@ export class UI {
       targets: t, alpha: 0, delay: 2200, duration: 500,
       onComplete: () => { t.destroy(); this.toasts = this.toasts.filter(x => x !== t); },
     });
+  }
+
+  // ── 목표 패널 (오른쪽 위, GDD 4.7): 장 이름·진행도 + 지금 할 일 ──
+  // p: { ch, done, total } (Explore.progress()), hint: 지금 할 일 문구
+  objective(p, hint) {
+    const PW = 250;
+    if (!this.obj) {
+      const c = this.fixed(this.s.add.container(W - 14, 12), 96);
+      const bg = this.s.add.graphics();
+      const head = this.s.add.text(-PW + 10, 7, '', textStyle(12, '#a8a1b0'));
+      const bar = this.s.add.text(-10, 7, '', textStyle(12, '#c9a46a')).setOrigin(1, 0);
+      const body = this.s.add.text(-PW + 10, 28, '', textStyle(12, '#d8cfb4', { wordWrap: { width: PW - 20, useAdvancedWrap: true } }));
+      c.add([bg, head, bar, body]);
+      this.obj = { c, bg, head, bar, body, bottom: 0 };
+    }
+    const o = this.obj;
+    o.head.setText(p ? `${p.ch.title} · ${p.ch.sub}` : '');
+    o.bar.setText(p && p.total ? `${'■'.repeat(p.done)}${'□'.repeat(p.total - p.done)}  ${p.done}/${p.total}` : '');
+    const text = '▶ ' + hint;
+    if (o.body.text !== text) {
+      // 할 일이 바뀌면 잠깐 밝게 눈에 띄게 한다
+      if (o.body.text) { this.s.tweens.killTweensOf(o.body); o.body.setAlpha(0.2); this.s.tweens.add({ targets: o.body, alpha: 1, duration: 700 }); }
+      o.body.setText(text);
+    }
+    const h = o.body.y + o.body.height + 8;
+    o.bg.clear().fillStyle(0x000000, 0.55).fillRect(-PW, 0, PW, h);
+    o.bottom = 12 + h;
   }
 
   banner(title, sub = '', hold = 1400) {
@@ -232,11 +260,15 @@ export class UI {
   }
 
   // ── 퍼즐 ──
-  puzzle(id) {
+  async puzzle(id) {
     this.hideDialog();
     const p = DB.puzzles[id];
     const fn = { seat: this.seatPuzzle, keypad: this.keypad, piano: this.piano, match: this.match, order: this.order, silhouette: this.silhouette, compare: this.compare, timeline: this.timeline }[p.type];
-    return fn.call(this, p);
+    // 퍼즐 창은 화면 가운데라 오른쪽 위 목표 패널과 겹친다
+    this.obj?.c.setVisible(false);
+    const ok = await fn.call(this, p);
+    this.obj?.c.setVisible(true);
+    return ok;
   }
 
   seatPuzzle(p) {
@@ -780,7 +812,7 @@ export class UI {
   }
 
   // ── 기억 노트 (ESC) ──
-  notebook(hintText) {
+  notebook(hintText, prog) {
     return new Promise(resolve => {
       const tabs = ['소지품', '단서', '기억 조각', '인물', '타임라인', '생각하기', '설정'];
       const SETTINGS = tabs.length - 1;
@@ -814,7 +846,12 @@ export class UI {
         if (tab === 3) return DB.people.filter(e => checkCond(e.cond));
         if (tab === 4) return DB.timeline.filter(e => checkCond(e.cond));
         if (tab === SETTINGS) return [{ name: `전체 볼륨  ${Math.round(getVolume() * 100)}%`, desc: '↑↓ 로 볼륨을 조절합니다.\n바꾼 값은 이 브라우저에 기억됩니다.' }];
-        return [{ name: '지금 할 일', desc: hintText }];
+        // 생각하기: 지금 할 일 + 이번 장의 단계 체크리스트 (data/objectives.json)
+        const steps = (prog?.ch.steps || []).map((s, i) => ({
+          name: `${prog.marks[i] ? '✔' : '·'} ${s.name}`,
+          desc: prog.marks[i] ? '끝냈다.' : '아직이다.',
+        }));
+        return [{ name: '지금 할 일', desc: hintText }, ...steps];
       };
       const draw = () => {
         tabTexts.forEach((t, i) => t.setColor(i === tab ? '#ffffff' : '#6d6875'));

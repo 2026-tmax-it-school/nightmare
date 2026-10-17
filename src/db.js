@@ -9,6 +9,7 @@ export const DB = {
   puzzles: {},
   deductions: {},
   hints: {},
+  objectives: [], // 목표 패널의 장별 단계 (data/objectives.json)
   cutscenes: {},
   maps: {},
   checkpoints: [], // 개발자 모드 전용
