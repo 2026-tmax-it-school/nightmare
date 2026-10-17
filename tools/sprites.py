@@ -19,6 +19,8 @@
             {"kind": "border", "tol": 55}  가장자리 바닥 색과 tol 이상 다른 가장 큰 덩어리 (볼록한 물체용)
             {"kind": "blue"}               파란빛 물체(가방 등)와 그 외곽선
   fill    : object를 비율과 상관없이 W×H에 꽉 채운다 (예: 사물함 높이를 줄일 때)
+  parts   : object를 여러 조각으로 따로 잘라 한 장에 배치한다. [{"box": [...], "at": [x, y, w, h]}, ...]
+            각 조각은 비율을 지켜 at 영역 안 아래 가운데에 놓인다 (예: 거울은 벽 칸 아래쪽, 세면대는 바로 아래 바닥 칸)
   frame   : 문틀(양옆·위 어두운 나무)과 문턱(아래 회색 줄)을 둘러 벽과 구분되게 한다
   clear_dark : [x0, y0, x1, y1, 밝기] 결과 이미지의 이 범위(0~1 비율)에서 어두운 픽셀을 투명하게 (열린 문 너머로 바닥이 보이게)
 기본으로 tile·stretch는 가장자리를 4픽셀 더 잘라 배경색이 번진 테두리를 없앤다.
@@ -133,6 +135,8 @@ def build(key, cfg):
     img = load(cfg['src'])
     for x, y, w, h, dx, dy in cfg.get('patch', []):
         img[y:y + h, x:x + w] = img[y + dy:y + dy + h, x + dx:x + dx + w]
+    if 'parts' in cfg:
+        return build_parts(img, cfg)
     x0, y0, x1, y1 = tight(img, cfg['box'])
     mode = cfg.get('mode', 'tile')
     edge = 4 if mode in ('tile', 'stretch') else 0
@@ -165,6 +169,31 @@ def build(key, cfg):
     canvas = np.zeros((H, W, 4), np.uint8)
     ox, oy = (W - tw) // 2, H - th
     canvas[oy:oy + th, ox:ox + tw] = small
+    return clean_edge(canvas)
+
+
+def build_parts(img, cfg):
+    W, H = cfg.get('size', [32, 32])
+    canvas = np.zeros((H, W, 4), np.uint8)
+    for part in cfg['parts']:
+        x0, y0, x1, y1 = tight(img, part['box'])
+        sub = img[y0:y1, x0:x1]
+        mask = (np.abs(sub - img[2, 2]).sum(axis=2) > BG_DIST) & ~magentaish(sub)
+        ys, xs = np.nonzero(mask)
+        sub, mask = sub[ys.min():ys.max() + 1, xs.min():xs.max() + 1], mask[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+        ax, ay, aw, ah = part['at']
+        sh, sw = mask.shape
+        scale = min(aw / sw, ah / sh)
+        tw, th = max(1, round(sw * scale)), max(1, round(sh * scale))
+        small = shrink(sub, mask, (tw, th))
+        ox, oy = ax + (aw - tw) // 2, ay + ah - th
+        region = canvas[oy:oy + th, ox:ox + tw]
+        keep = small[..., 3] > 0
+        region[keep] = small[keep]
+    return clean_edge(canvas)
+
+
+def clean_edge(canvas):
     # 투명한 곳과 맞닿은 테두리 픽셀에 남은 보랏빛(배경 번짐)을 회색으로 바꾼다
     a = canvas[..., 3] > 0
     pad = np.pad(a, 1)

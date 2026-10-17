@@ -335,6 +335,11 @@ export default class Explore extends Phaser.Scene {
   }
 
   // ── 방: 벽·문으로 나뉜 바닥 덩어리. 카메라 고정과 벽 앞면/윗면에 쓴다 (보이는 범위는 레이캐스팅 시야가 정한다) ──
+  // (x, y) 바로 위가 1칸 벽이고, 그 너머가 다른 방의 바닥인지
+  sharedWallAbove(x, y) {
+    return this.isWall(x, y - 1) && this.isFloor(x, y - 2) && this.room[y - 2][x] !== this.room[y][x];
+  }
+
   buildRooms() {
     this.room = this.grid.map(r => r.map(() => -1));
     this.roomBox = []; // 방마다 바닥 칸의 경계 상자 (카메라 고정용)
@@ -485,6 +490,11 @@ export default class Explore extends Phaser.Scene {
     this.sightAt = null;
     // 가구·반짝임은 그 칸이 시야에 들어올 때만 보인다 (다른 방의 2칸 가구가 벽 칸으로 윗부분만 비치지 않게)
     const ox = cx(this.tx), oy = cx(this.ty);
+    const at = (x, y) => (x < 0 || y < 0 || x >= this.cols || y >= this.rows ? -1 : this.room[y][x]);
+    // 문 칸에 서 있으면 양쪽 방 기준
+    let ids = [at(this.tx, this.ty)];
+    if (ids[0] < 0) ids = Object.values(DIRS).map(([dx, dy]) => at(this.tx + dx, this.ty + dy));
+    ids = [...new Set(ids.filter(i => i >= 0))].sort();
     // 벽 칸에 붙은 물건(창문 등)은 그 벽이 시야에 보이면 함께 보인다 — 벽을 비추는 광선과 같은 기준
     const shown = this.grid.map(r => r.map(() => null));
     let wallHits;
@@ -494,15 +504,13 @@ export default class Explore extends Phaser.Scene {
         shown[o.y][o.x] = wallHits.has(o.y * this.cols + o.x) || this.seeTile(ox, oy, o.x, o.y);
       }
       shown[o.y][o.x] ??= this.seeTile(ox, oy, o.x, o.y);
-      o.img?.setVisible(shown[o.y][o.x]);
+      // 2칸 가구의 윗부분이 다른 방과 함께 쓰는 1칸 벽에 솟으면(화장실 거울 등) 그 방 안에서만 보인다.
+      // 밖에서 보면 그 벽은 바깥 방의 벽이라, 안쪽 거울이 바깥 벽에 걸린 것처럼 보이기 때문이다 (#92)
+      const inside = !(o.img?.height > TILE && this.sharedWallAbove(o.x, o.y)) || ids.includes(at(o.x, o.y));
+      o.img?.setVisible(shown[o.y][o.x] && inside);
     }
     this.shown = shown;
     if (this.sparkles) this.updateSparkles();
-    const at = (x, y) => (x < 0 || y < 0 || x >= this.cols || y >= this.rows ? -1 : this.room[y][x]);
-    // 문 칸에 서 있으면 양쪽 방 기준
-    let ids = [at(this.tx, this.ty)];
-    if (ids[0] < 0) ids = Object.values(DIRS).map(([dx, dy]) => at(this.tx + dx, this.ty + dy));
-    ids = [...new Set(ids.filter(i => i >= 0))].sort();
     const k = ids.join();
     if (!ids.length || k === this.roomKey) return;
     this.roomKey = k;

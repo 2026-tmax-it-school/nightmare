@@ -3,6 +3,9 @@
 import { W, H } from '../constants.js';
 import { textStyle } from './ui.js';
 
+// 변기 (완성 그림 toilet_closeup 96×192을 1.3배로, 아래 가운데 기준). 변기 안쪽 물 위치는 BOWL
+const TOILET = { x: W / 2 - 30, y: 380, scale: 1.3 };
+const BOWL = { x: W / 2 - 30, y: 272 };
 const DOOR = [[440, 70], [600, 18], [600, 470], [440, 404]]; // 안쪽으로 열린 문짝 (원근)
 
 // 칸마다 다른 것 — 2층: 노크 칸(손톱 자국·걸쇠) / 낙서 / 막힌 변기, 1층: 빈 칸 / 손톱 자국 / 그을린 벽
@@ -48,10 +51,10 @@ const KINDS = {
   },
   clogged(s, g) {
     // 넘칠 듯 고인 물과 처박힌 교과서
-    g.fillStyle(0x4a5a52, 0.85).fillEllipse(W / 2 - 40, 330, 96, 30);
-    g.fillStyle(0x6a5a3a).fillRect(W / 2 - 64, 318, 48, 14);
-    g.fillStyle(0x8a7a52).fillRect(W / 2 - 62, 320, 44, 3);
-    g.fillStyle(0x2a2420).fillRect(W / 2 - 50, 323, 18, 6);   // 도려낸 이름 칸
+    g.fillStyle(0x4a5a52, 0.85).fillEllipse(BOWL.x, BOWL.y, 76, 26);
+    g.fillStyle(0x6a5a3a).fillRect(BOWL.x - 22, BOWL.y - 8, 36, 11);
+    g.fillStyle(0x8a7a52).fillRect(BOWL.x - 21, BOWL.y - 7, 34, 2);
+    g.fillStyle(0x2a2420).fillRect(BOWL.x - 14, BOWL.y - 4, 12, 5);   // 도려낸 이름 칸
     g.fillStyle(0x3a4a44, 0.6).fillEllipse(W / 2 - 30, 420, 160, 30); // 바닥에 번진 물
   },
 };
@@ -63,6 +66,9 @@ export class StallView {
     const g = scene.add.graphics();
     parts.push(g);
     this.drawStall(g);
+    if (scene.textures.exists('toilet_closeup')) {
+      parts.push(scene.add.image(TOILET.x, TOILET.y, 'toilet_closeup').setOrigin(0.5, 1).setScale(TOILET.scale));
+    } else this.drawToilet(g);
     const detail = scene.add.graphics();
     parts.push(detail);
     (KINDS[opts.kind] || (() => {}))(scene, detail, o => o && parts.push(o));
@@ -77,7 +83,7 @@ export class StallView {
 
   set() {}
 
-  // 좁은 칸: 뒷벽 타일, 양옆 칸막이, 변기와 물탱크, 오른쪽에 안쪽으로 열린 문짝
+  // 좁은 칸: 뒷벽 타일, 양옆 칸막이, 오른쪽에 안쪽으로 열린 문짝 (변기는 따로)
   drawStall(g) {
     g.fillStyle(0x000000).fillRect(0, 0, W, H);
     // 뒷벽 타일
@@ -93,8 +99,15 @@ export class StallView {
     g.fillStyle(0x23282a).fillPoints([{ x: 150, y: 370 }, { x: 440, y: 370 }, { x: 600, y: H }, { x: 40, y: H }], true);
     g.lineStyle(1, 0x1a1e20, 1);
     for (let i = 1; i < 5; i++) g.lineBetween(150 + i * 58, 370, 40 + i * 112, H);
-    // 물탱크 · 변기
-    const cx = W / 2 - 30;
+    // 안쪽으로 열린 문짝
+    g.fillStyle(0x5a646a).fillPoints(DOOR.map(([x, y]) => ({ x, y })), true);
+    g.fillStyle(0x4a5358).fillPoints([{ x: 440, y: 70 }, { x: 452, y: 66 }, { x: 452, y: 408 }, { x: 440, y: 404 }], true);
+    g.fillStyle(0x9aa3ab).fillRect(456, 220, 4, 18); // 옷걸이 고리
+  }
+
+  // 완성 그림(toilet_closeup)이 없을 때의 임시 변기와 물탱크
+  drawToilet(g) {
+    const cx = TOILET.x;
     g.fillStyle(0xc9d0d2).fillRect(cx - 50, 196, 100, 70);
     g.fillStyle(0xaab2b5).fillRect(cx - 50, 196, 100, 8);
     g.fillStyle(0x9aa3ab).fillRect(cx + 30, 210, 12, 5);
@@ -102,10 +115,6 @@ export class StallView {
     g.fillStyle(0xd8dee0).fillEllipse(cx, 326, 140, 70);
     g.fillStyle(0x7f888c).fillEllipse(cx, 322, 104, 44);
     g.fillStyle(0xc9d0d2).fillRect(cx - 30, 348, 60, 28);
-    // 안쪽으로 열린 문짝
-    g.fillStyle(0x5a646a).fillPoints(DOOR.map(([x, y]) => ({ x, y })), true);
-    g.fillStyle(0x4a5358).fillPoints([{ x: 440, y: 70 }, { x: 452, y: 66 }, { x: 452, y: 408 }, { x: 440, y: 404 }], true);
-    g.fillStyle(0x9aa3ab).fillRect(456, 220, 4, 18); // 옷걸이 고리
   }
 
   destroy() {
