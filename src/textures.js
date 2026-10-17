@@ -106,6 +106,47 @@ export function makeTextures(scene) {
     g.fillStyle(0x7a5a38).fillRect(3, 9, 26, 14);
     g.fillStyle(0x8d6a44).fillRect(3, 9, 26, 3);
   });
+  // 맵 기믹 (12번 책상 밀기): 비뚤게 끌려온 책상(밀 수 있음, 바닥에 끈 자국) / 책상 위에 의자를 거꾸로 쌓은 더미(꿈쩍 안 함)
+  make('desk_push', g => {
+    g.fillStyle(0x2a2016, 0.9).fillRect(0, 27, 12, 1).fillRect(18, 29, 14, 1);
+    g.fillStyle(0x000000, 0.25).fillRect(6, 25, 24, 4);
+    g.fillStyle(0x5c4027).fillRect(6, 22, 3, 7).fillRect(26, 23, 3, 6);
+    g.fillStyle(0x7a5a38).fillRect(5, 10, 26, 13);
+    g.fillStyle(0x8d6a44).fillRect(5, 10, 26, 3);
+    g.fillStyle(0x4a3420).fillRect(5, 22, 26, 1);
+  });
+  make('desk_pile', g => {
+    g.fillStyle(0x000000, 0.3).fillRect(3, 26, 27, 4);
+    g.fillStyle(0x5c4027).fillRect(4, 22, 3, 7).fillRect(25, 22, 3, 7);
+    g.fillStyle(0x6a4c30).fillRect(3, 15, 26, 8);
+    g.fillStyle(0x4a4e55).fillRect(6, 3, 2, 12).fillRect(14, 3, 2, 12).fillRect(17, 1, 2, 14).fillRect(25, 1, 2, 14);
+    g.fillStyle(0x5d4632).fillRect(5, 9, 12, 3).fillRect(16, 7, 12, 3);
+    g.fillStyle(0x8d6a44).fillRect(3, 15, 26, 2);
+  });
+  // 맵 기믹 (과학실 달라진 곳 찾기): 그날의 소화기·램프 불꽃·알코올병 / 지금 쓰러져 있는 소화기
+  make('past_ext', g => {
+    g.fillStyle(0x000000, 0.3).fillEllipse(16, 29, 14, 4);
+    g.fillStyle(0xb02a22).fillRoundedRect(10, 8, 12, 21, 3);
+    g.fillStyle(0xd84a3a).fillRect(12, 10, 2, 16);
+    g.fillStyle(0x2a2a2e).fillRect(13, 3, 6, 5).fillRect(18, 4, 7, 2);
+    g.fillStyle(0xe8e0d0).fillRect(11, 15, 10, 5);
+  });
+  make('ext_fallen', g => {
+    g.fillStyle(0x000000, 0.3).fillEllipse(16, 26, 26, 5);
+    g.fillStyle(0x8a2a22).fillRoundedRect(5, 17, 21, 10, 3);
+    g.fillStyle(0xa83a30).fillRect(7, 18, 16, 2);
+    g.fillStyle(0x2a2a2e).fillRect(25, 19, 5, 6);
+    g.fillStyle(0xc8c0a8).fillRect(27, 16, 2, 4).fillCircle(28, 15, 2);
+  });
+  make('past_flame', g => {
+    g.fillStyle(0xe8a030, 0.9).fillEllipse(16, 14, 8, 14);
+    g.fillStyle(0xfff0a0, 0.95).fillEllipse(16, 17, 4, 7);
+  });
+  make('past_bottle', g => {
+    g.fillStyle(0x6a8a6a, 0.95).fillRect(13, 12, 7, 12);
+    g.fillStyle(0x8aaa8a).fillRect(15, 7, 3, 5);
+    g.fillStyle(0xe8e0d0).fillRect(13, 16, 7, 4);
+  });
   make('lectern', g => {
     g.fillStyle(0x5b412a).fillRect(2, 6, 28, 22);
     g.fillStyle(0x6e5034).fillRect(2, 6, 28, 4);

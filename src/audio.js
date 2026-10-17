@@ -161,6 +161,23 @@ const SFX = {
     tone(t + 0.55, { freq: 92, to: 74, type: 'sawtooth', peak: 0.02, a: 0.08, d: 0.45, vib: 3 });
     return 1.1;
   },
+  // 맵 기믹: 책상을 바닥에 끄는 소리
+  deskDrag: t => {
+    noise(t, { freq: 320, q: 2.5, peak: 0.22, a: 0.03, d: 0.22 });
+    noise(t + 0.04, { freq: 1400, q: 6, peak: 0.05, a: 0.02, d: 0.18 });
+    return 0.3;
+  },
+  // 쌓아 둔 의자가 와르르 무너지는 소리 (책상 밀기 함정)
+  chairsFall: t => {
+    noise(t, { type: 'lowpass', freq: 600, q: 0.7, peak: 0.8, d: 0.5 });
+    for (let i = 0; i < 9; i++) {
+      const s = t + 0.05 + i * 0.09 + Math.random() * 0.05;
+      noise(s, { freq: 900 + Math.random() * 1600, q: 3, peak: 0.25 - i * 0.02, d: 0.06 });
+      tone(s, { freq: 300 + Math.random() * 500, type: 'square', peak: 0.03, d: 0.05 });
+    }
+    noise(t + 0.95, { type: 'lowpass', freq: 300, peak: 0.4, d: 0.3 });
+    return 1.3;
+  },
   // ── 새 소리 (시험 중, TRIAL 참고) ──
   // 아이템: 손에 쥐는 바스락 + 낮은 두 음
   itemNew: t => {
