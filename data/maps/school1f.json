@@ -44,6 +44,8 @@
     { "name": "계단실", "x": 35, "y": 14, "w": 4, "h": 5 }
   ],
   "graffiti": [
+    { "x": 26.7, "y": 2.5, "text": "13번 윤재민", "angle": -5, "cond": { "flag": "p1" } },
+    { "x": 25.2, "y": 3.5, "text": "벽은 13번부터 ㅋ", "angle": 4, "cond": { "flag": "p1" } },
     { "x": 11.3, "y": 10.15, "text": "왜 모른 척했어", "angle": -4, "cond": { "flag": "stage1" } },
     { "x": 26.4, "y": 11.55, "text": "피아노 왕자 ㅋㅋ", "angle": 3, "cond": { "flag": "stage1" } },
     { "x": 33.2, "y": 10.2, "text": "기억해", "angle": -2, "cond": { "flag": "stage1" } },
@@ -89,6 +91,7 @@
   ],
   "_rails": "난간: { x, y, w } = y줄 아래쪽 경계를 x부터 w칸 막는다. 계단실 계단 아래쪽",
   "rails": [{ "x": 37, "y": 15, "w": 2 }],
+  "saveOnEnter": [{ "area": "1학년 3반", "cond": { "flag": "p1", "notFlag": "frag1" } }],
   "triggers": [
     { "x": 24, "y": 10, "w": 3, "h": 1, "once": "near13", "script": "near13" },
     { "x": 21, "y": 1, "w": 9, "h": 8, "once": "enter13", "script": "enter13" },
@@ -123,7 +126,7 @@
       ]
     },
     {
-      "id": "prep", "x": 28, "y": 15, "w": 2, "h": 3, "flag": "past_prep",
+      "id": "prep", "x": 28, "y": 15, "w": 2, "h": 3, "flag": "past_prep", "cond": { "flag": "lab_compared" },
       "figures": [{ "x": 29, "y": 15, "label": "럭키7" }, { "x": 28, "y": 16, "label": "재민" }, { "x": 31, "y": 16, "label": "도윤" }],
       "script": [
         { "t": "sfx", "name": "glass" },
@@ -136,6 +139,21 @@
         { "t": "text", "who": "도윤", "text": "재민아… 거기 있지? 열어 줘." },
         { "t": "text", "text": "그림자의 손이 걸쇠에 닿았다가 ── 떨어진다." },
         { "t": "clue", "id": "past_latch" }
+      ]
+    },
+    {
+      "id": "lab", "x": 23, "y": 14, "w": 7, "h": 5, "flag": "past_lab",
+      "figures": [
+        { "x": 23, "y": 15, "label": "텐" }, { "x": 24, "y": 15, "tex": "past_bottle" },
+        { "x": 25, "y": 17, "tex": "past_flame" }, { "x": 27, "y": 16, "label": "일등" },
+        { "x": 26, "y": 14, "label": "도윤" }, { "x": 29, "y": 15, "tex": "past_ext" }
+      ],
+      "script": [
+        { "t": "text", "text": "매캐한 냄새 ── 그날 방과후의 과학실이 겹쳐 보인다." },
+        { "t": "text", "who": "텐", "text": "야, 이거 불 위에 부으면 색 바뀐대 ㅋㅋ" },
+        { "t": "text", "who": "일등", "text": "피아노왕자, 너도 와서 봐." },
+        { "t": "text", "text": "그날의 과학실은 지금과 어딘가 다르다." },
+        { "t": "text", "who": "재민", "text": "……달라진 곳을 찾아보자. 그날 무슨 일이 있었는지." }
       ]
     }
   ],
@@ -192,19 +210,25 @@
     { "x": 22, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 24, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 26, "y": 4, "tex": "desk", "script": "desk" },
-    { "x": 28, "y": 4, "tex": "desk", "script": "desk13" },
+    { "x": 28, "y": 4, "tex": "desk", "script": "desk13", "cond": { "notFlag": "p1" } },
+    { "x": 28, "y": 4, "tex": "desk_pile", "cond": { "flag": "p1" }, "topple": "pile_fall", "script": "seat13_pile" },
     { "x": 22, "y": 5, "tex": "desk", "script": "desk" },
     { "x": 24, "y": 5, "tex": "desk", "script": "desk" },
     { "x": 26, "y": 5, "tex": "desk", "script": "desk" },
-    { "x": 28, "y": 5, "tex": "desk", "script": "desk" },
+    { "x": 28, "y": 5, "tex": "desk", "script": "desk", "push": true, "pushCond": { "flag": "p1" }, "pushTex": "desk_push", "id": "d13_5", "keep": "frag1" },
     { "x": 22, "y": 6, "tex": "desk", "script": "desk" },
     { "x": 24, "y": 6, "tex": "desk", "script": "desk" },
     { "x": 26, "y": 6, "tex": "desk", "script": "desk" },
-    { "x": 28, "y": 6, "tex": "desk", "script": "desk" },
+    { "x": 28, "y": 6, "tex": "desk", "script": "desk", "push": true, "pushCond": { "flag": "p1" }, "pushTex": "desk_push", "id": "d13_6", "keep": "frag1" },
     { "x": 22, "y": 7, "tex": "desk", "script": "desk" },
     { "x": 24, "y": 7, "tex": "desk", "script": "desk" },
     { "x": 26, "y": 7, "tex": "desk", "script": "desk12" },
-    { "x": 28, "y": 7, "tex": "desk", "script": "desk" },
+    { "x": 29, "y": 3, "tex": "desk_push", "push": true, "id": "d13w", "keep": "frag1", "cond": { "flag": "p1" }, "script": "desk13_moved" },
+    { "x": 25, "y": 7, "tex": "desk_pile", "cond": { "flag": "p1" }, "topple": "pile_fall", "script": "desk_pile" },
+    { "x": 26, "y": 8, "tex": "desk_pile", "cond": { "flag": "p1" }, "topple": "pile_fall", "script": "desk_pile" },
+    { "x": 27, "y": 4, "tex": "desk_pile", "cond": { "flag": "p1" }, "topple": "pile_fall", "script": "desk_pile" },
+    { "x": 28, "y": 8, "tex": "desk_pile", "cond": { "flag": "p1" }, "topple": "pile_fall", "script": "desk_pile" },
+    { "x": 28, "y": 7, "tex": "desk", "script": "desk", "push": true, "pushCond": { "flag": "p1" }, "pushTex": "desk_push", "id": "d13_7", "keep": "frag1" },
 
     { "x": 33, "y": 4, "tex": "desk", "script": "office_desk" },
     { "x": 35, "y": 4, "tex": "desk", "script": "office_desk" },
@@ -248,6 +272,7 @@
     { "x": 26, "y": 17, "tex": "labtable", "script": "labtable" },
     { "x": 30, "y": 16, "door": "prep", "script": "door_prep" },
     { "x": 33, "y": 17, "tex": "bag", "script": "bag" },
+    { "x": 23, "y": 18, "tex": "ext_fallen", "script": "ext_fallen" },
     { "x": 24, "y": 12, "tex": "trash", "script": "trash" }
   ],
   "scripts": {
@@ -312,7 +337,18 @@
                         "success": [
                           { "t": "flag", "key": "p1" },
                           { "t": "text", "text": "창가에서 세 번째 분단, 맨 뒷자리." },
-                          { "t": "text", "who": "재민", "text": "……저 자리다." }
+                          { "t": "text", "who": "재민", "text": "……저 자리다." },
+                          { "t": "sfx", "name": "deskDrag" },
+                          { "t": "wait", "ms": 260 },
+                          { "t": "sfx", "name": "deskDrag" },
+                          { "t": "wait", "ms": 260 },
+                          { "t": "sfx", "name": "deskDrag" },
+                          { "t": "syncObjects" },
+                          { "t": "text", "text": "끼익── 끼이익. 교실 뒤쪽에서 책상을 끄는 소리가 났다." },
+                          { "t": "text", "text": "돌아보니 12번 자리 둘레가 책상과 의자로 빙 둘러 막혀 있다." },
+                          { "t": "text", "who": "재민", "text": "……일부러 이렇게 둔 거야. 그 아이 자리만." },
+                          { "t": "text", "who": "재민", "text": "의자를 무너뜨리지 않게 조심해야 해. ……이 학교엔, 나 말고 뭔가가 있어." },
+                          { "t": "save" }
                         ]
                       }
                     ]
@@ -357,6 +393,27 @@
           }
         ]
       }
+    ],
+    "desk_pushed": [{ "t": "text", "text": "누군가 끌어다 놓은 책상. 바닥에 끈 자국이 남아 있다. ……밀면 움직일 것 같다." }],
+    "desk13_moved": [
+      { "t": "text", "text": "창가 구석까지 끌려온 책상. 귀퉁이에 「윤재민」이라고 새겨져 있다." },
+      { "t": "text", "who": "재민", "text": "……내 책상이다. 내 자리엔 의자만 잔뜩 쌓여 있고." },
+      { "t": "text", "who": "재민", "text": "그 아이를 가둔 벽이, 내 자리에서부터 쌓여 있어." },
+      { "t": "text", "text": "바닥에 끈 자국이 남아 있다. ……밀면 움직일 것 같다." }
+    ],
+    "seat13_pile": [
+      { "t": "text", "text": "13번 ── 내 자리였던 곳에 의자가 거꾸로 위태롭게 쌓여 있다." },
+      { "t": "text", "text": "조금만 부딪쳐도 와르르 무너질 것 같다." }
+    ],
+    "desk_pile": [{ "t": "text", "text": "책상 위에 의자가 거꾸로 위태롭게 쌓여 있다. 조금만 부딪쳐도 와르르 무너질 것 같다." }],
+    "pile_fall": [
+      { "t": "sfx", "name": "chairsFall" },
+      { "t": "effect", "name": "shake", "ms": 500, "i": 0.02 },
+      { "t": "text", "text": "와르르── 쌓여 있던 의자들이 한꺼번에 무너졌다." },
+      { "t": "text", "text": "소리가 복도 끝까지 울려 퍼진다. ……그리고, 뚝 멎는다." },
+      { "t": "sfx", "name": "follow", "wait": true },
+      { "t": "text", "who": "재민", "text": "……뭔가, 온다." },
+      { "t": "shadowStrike", "from": { "x": 25, "y": 9 } }
     ],
     "desk_piano": [{ "t": "text", "text": "책상 위에 볼펜으로 그린 피아노 건반이 남아 있다. 손가락으로 연습이라도 한 것처럼 닳아 있다." }],
     "desk13": [
@@ -515,6 +572,37 @@
         ]
       }
     ],
+    "ext_fallen": [
+      {
+        "t": "if", "cond": { "flag": "diff_ext" },
+        "then": [{ "t": "text", "text": "안전핀이 꽂힌 채 쓰러진 소화기." }],
+        "else": [
+          {
+            "t": "if", "cond": { "flag": "past_lab" },
+            "then": [
+              { "t": "text", "text": "구석에 소화기가 쓰러져 있다. 그날은 준비실 문 옆에 서 있던 것이다." },
+              { "t": "text", "text": "누군가 들고 뛰다 내던졌다. 안전핀은 ── 그대로 꽂혀 있다." },
+              { "t": "text", "who": "재민", "text": "……아무도, 불을 끄려고 하지 않았어." },
+              { "t": "flag", "key": "diff_ext" },
+              { "t": "call", "name": "lab_diff" }
+            ],
+            "else": [{ "t": "text", "text": "구석에 소화기 하나가 쓰러져 있다. 안전핀은 그대로 꽂혀 있다." }]
+          }
+        ]
+      }
+    ],
+    "lab_diff": [
+      {
+        "t": "if", "cond": { "flag": ["diff_shelf", "diff_lamp", "diff_ext"], "notFlag": "lab_compared" },
+        "then": [
+          { "t": "sfx", "name": "chime" },
+          { "t": "text", "text": "열려 있던 약품장. 켜져 있던 램프. 한 번도 쓰이지 않은 소화기." },
+          { "t": "text", "who": "재민", "text": "그날 불은 장난이었어. 그리고 ── 아무도 끄지 않았고, 아무도 누굴 부르러 가지 않았어. 다들 도망치기만 했지." },
+          { "t": "flag", "key": "lab_compared" },
+          { "t": "clue", "id": "lab_compare" }
+        ]
+      }
+    ],
     "lab_enter": [
       { "t": "text", "text": "검게 그을린 실험대. 깨진 유리 조각. 십 년이 지났는데도 탄내가 가시지 않았다." },
       { "t": "effect", "name": "glow" },
@@ -526,13 +614,61 @@
     ],
     "chemshelf": [
       {
-        "t": "if", "cond": { "noClue": "chem_log" },
+        "t": "if",
+        "cond": {
+          "flag": "past_lab",
+          "notFlag": "diff_shelf"
+        },
         "then": [
-          { "t": "text", "text": "약품장 문에 약품 대장이 걸려 있다." },
-          { "t": "text", "text": "「7월 14일 ── 알코올 1병 분실. 이후 기록 없음.」" },
-          { "t": "clue", "id": "chem_log" }
+          {
+            "t": "text",
+            "text": "그날 이 약품장은 활짝 열려 있었다. 지금은 문이 닫혀 있고 ── 알코올 칸 하나만 비어 있다."
+          },
+          {
+            "t": "text",
+            "text": "「7월 14일 ── 알코올 1병 분실. 이후 기록 없음.」"
+          },
+          {
+            "t": "clue",
+            "id": "chem_log"
+          },
+          {
+            "t": "flag",
+            "key": "diff_shelf"
+          },
+          {
+            "t": "call",
+            "name": "lab_diff"
+          }
         ],
-        "else": [{ "t": "text", "text": "약품장. 「7월 14일 ── 알코올 1병 분실. 이후 기록 없음.」" }]
+        "else": [
+          {
+            "t": "if",
+            "cond": {
+              "noClue": "chem_log"
+            },
+            "then": [
+              {
+                "t": "text",
+                "text": "약품장 문에 약품 대장이 걸려 있다."
+              },
+              {
+                "t": "text",
+                "text": "「7월 14일 ── 알코올 1병 분실. 이후 기록 없음.」"
+              },
+              {
+                "t": "clue",
+                "id": "chem_log"
+              }
+            ],
+            "else": [
+              {
+                "t": "text",
+                "text": "약품장. 「7월 14일 ── 알코올 1병 분실. 이후 기록 없음.」"
+              }
+            ]
+          }
+        ]
       }
     ],
     "safety": [
@@ -560,26 +696,86 @@
     ],
     "door_prep": [
       {
-        "t": "if", "cond": { "noClue": "prep_door" },
+        "t": "if",
+        "cond": {
+          "notFlag": "lab_compared"
+        },
         "then": [
-          { "t": "text", "text": "준비실 문. 바깥쪽 녹슨 걸쇠가 걸린 채로 굳어 있다." },
-          { "t": "text", "text": "몸을 숙이자, 문 아래쪽에 ── 안쪽에서 손톱으로 긁은 자국들이 보인다." },
-          { "t": "clue", "id": "prep_door" },
-          { "t": "text", "who": "재민", "text": "……걸쇠는 한 번도 풀린 적이 없어." }
-        ]
-      },
-      {
-        "t": "if", "cond": { "notFlag": "past_prep" },
-        "then": [
-          { "t": "effect", "name": "glow" },
-          { "t": "text", "text": "부적이 타는 듯이 뜨겁다. 이 문 앞에서, 그날을 봐야 한다. (Q)" }
+          {
+            "t": "effect",
+            "name": "glow"
+          },
+          {
+            "t": "text",
+            "text": "준비실 문. 부적이 뜨겁다."
+          },
+          {
+            "t": "text",
+            "who": "재민",
+            "text": "……문 앞에 서기 전에, 이 방에서 그날 무슨 일이 있었는지 먼저 봐야 해. (Q)"
+          }
         ],
         "else": [
           {
-            "t": "choice", "prompt": "그날 과학실에서 일어난 일을 처음부터 떠올려 볼까?",
-            "options": [
-              { "label": "떠올린다", "then": [{ "t": "call", "name": "p8" }] },
-              { "label": "그만둔다", "then": [] }
+            "t": "if",
+            "cond": {
+              "noClue": "prep_door"
+            },
+            "then": [
+              {
+                "t": "text",
+                "text": "준비실 문. 바깥쪽 녹슨 걸쇠가 걸린 채로 굳어 있다."
+              },
+              {
+                "t": "text",
+                "text": "몸을 숙이자, 문 아래쪽에 ── 안쪽에서 손톱으로 긁은 자국들이 보인다."
+              },
+              {
+                "t": "clue",
+                "id": "prep_door"
+              },
+              {
+                "t": "text",
+                "who": "재민",
+                "text": "……걸쇠는 한 번도 풀린 적이 없어."
+              }
+            ]
+          },
+          {
+            "t": "if",
+            "cond": {
+              "notFlag": "past_prep"
+            },
+            "then": [
+              {
+                "t": "effect",
+                "name": "glow"
+              },
+              {
+                "t": "text",
+                "text": "부적이 타는 듯이 뜨겁다. 이 문 앞에서, 그날을 봐야 한다. (Q)"
+              }
+            ],
+            "else": [
+              {
+                "t": "choice",
+                "prompt": "그날 과학실에서 일어난 일을 처음부터 떠올려 볼까?",
+                "options": [
+                  {
+                    "label": "떠올린다",
+                    "then": [
+                      {
+                        "t": "call",
+                        "name": "p8"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "그만둔다",
+                    "then": []
+                  }
+                ]
+              }
             ]
           }
         ]
@@ -651,9 +847,20 @@
         ],
         "else": [
           {
-            "t": "if", "cond": { "guiltAtLeast": 3 },
-            "then": [{ "t": "text", "text": "실험대 위의 알코올램프. ……그날 이 냄새를 맡으면서, 나는 웃고 있었다." }],
-            "else": [{ "t": "text", "text": "실험대 위의 알코올램프. 심지가 까맣게 그을려 있다." }]
+            "t": "if", "cond": { "flag": "past_lab", "notFlag": "diff_lamp" },
+            "then": [
+              { "t": "text", "text": "실험대 위의 알코올램프. 심지가 까맣게 그을려 있다." },
+              { "t": "text", "text": "그날 이 램프에는 불이 켜져 있었다. 텐은 그 불 위로 알코올병을 기울였다." },
+              { "t": "flag", "key": "diff_lamp" },
+              { "t": "call", "name": "lab_diff" }
+            ],
+            "else": [
+              {
+                "t": "if", "cond": { "guiltAtLeast": 3 },
+                "then": [{ "t": "text", "text": "실험대 위의 알코올램프. ……그날 이 냄새를 맡으면서, 나는 웃고 있었다." }],
+                "else": [{ "t": "text", "text": "실험대 위의 알코올램프. 심지가 까맣게 그을려 있다." }]
+              }
+            ]
           }
         ]
       }
