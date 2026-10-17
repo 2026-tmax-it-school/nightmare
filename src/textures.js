@@ -216,6 +216,21 @@ export function makeTextures(scene) {
     for (let i = -T; i < T; i += 6) { g.lineBetween(i, 0, i + 22, 22); g.lineBetween(i + 22, 0, i, 22); }
     g.fillStyle(0x7a808a).fillRect(0, 0, T, 2).fillRect(0, 20, T, 2);
   });
+  // 난간에 칼로 새긴 「7.13」 (P6 조사 지점) — 녹슨 자리에 긁힌 숫자가 보인다
+  make('carving', g => {
+    g.fillStyle(0x101114).fillRect(0, 0, T, T);
+    g.fillStyle(0x1b1d22).fillRect(0, 22, T, 10);
+    g.lineStyle(1, 0x6a707a, 0.8);
+    for (let i = -T; i < T; i += 6) { g.lineBetween(i, 0, i + 22, 22); g.lineBetween(i + 22, 0, i, 22); }
+    g.fillStyle(0x7a808a).fillRect(0, 0, T, 2).fillRect(0, 20, T, 2);
+    g.fillStyle(0x6a3a22).fillRect(2, 5, 28, 12);
+    g.fillStyle(0x8a4e2c).fillRect(3, 6, 26, 1);
+    g.fillStyle(0xe0d2b4);
+    g.fillRect(4, 8, 5, 1).fillRect(8, 9, 1, 2).fillRect(7, 11, 1, 2).fillRect(6, 13, 1, 2); // 7
+    g.fillRect(11, 14, 1, 1);                                                               // .
+    g.fillRect(14, 8, 1, 7).fillRect(13, 9, 1, 1);                                          // 1
+    g.fillRect(18, 8, 5, 1).fillRect(22, 9, 1, 2).fillRect(19, 11, 4, 1).fillRect(22, 12, 1, 2).fillRect(18, 14, 5, 1); // 3
+  });
   make('tank', g => {
     g.fillStyle(0x000000, 0.3).fillRect(2, 26, 28, 5);
     g.fillStyle(0x4d6a7a).fillRect(2, 4, 28, 23);

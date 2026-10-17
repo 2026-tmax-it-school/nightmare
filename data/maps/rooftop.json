@@ -1,6 +1,6 @@
 {
   "id": "rooftop",
-  "bgm": "wind",
+  "bgm": "wind", "bgmTrial": "roof",
   "dark": true,
   "legend": {
     "F": "fence", "r": "floor_roof", "#": "wall", "L": "door_locked", "=": "floor_stairs", "|": "floor_stairs_side", ".": "floor_corridor", "D": "door_open"
@@ -62,7 +62,7 @@
     { "x": 10, "y": 9, "door": "roof", "script": "door_roof" },
     { "x": 9, "y": 8, "tex": "tag", "script": "clue_tag" },
     { "x": 11, "y": 8, "tex": "extbox", "script": "extbox" },
-    { "x": 13, "y": 0, "script": "carving" }
+    { "x": 13, "y": 0, "tex": "carving", "script": "carving" }
   ],
   "scripts": {
     "door_roof": [

@@ -904,7 +904,9 @@ export class UI {
         // 인물·타임라인: 관련 단서·플래그를 얻으면 나타난다 (data/clues.json)
         if (tab === 3) return DB.people.filter(e => checkCond(e.cond));
         if (tab === 4) return DB.timeline.filter(e => checkCond(e.cond));
-        if (tab === SETTINGS) return [{ name: `전체 볼륨  ${Math.round(getVolume() * 100)}%`, desc: '↑↓ 로 볼륨을 조절합니다.\n바꾼 값은 이 브라우저에 기억됩니다.' }];
+        if (tab === SETTINGS) {
+          return [{ name: `전체 볼륨  ${Math.round(getVolume() * 100)}%`, desc: '↑↓ 로 볼륨을 조절합니다.\n바꾼 값은 이 브라우저에 기억됩니다.' }];
+        }
         // 생각하기: 지금 할 일 + 이번 장의 단계 체크리스트 (data/objectives.json)
         const steps = (prog?.ch.steps || []).map((s, i) => ({
           name: `${prog.marks[i] ? '✔' : '·'} ${s.name}`,
