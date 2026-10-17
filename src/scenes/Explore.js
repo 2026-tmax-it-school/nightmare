@@ -4,7 +4,7 @@ import { DB } from '../db.js';
 import { state, flag, setFlag, saveGame, checkCond } from '../state.js';
 import { runScript } from '../script.js';
 import { UI, textStyle, isConfirm, dirOf } from '../ui/ui.js';
-import { sfx, startLoop, stopLoop, stopAllLoops, trialOn } from '../audio.js';
+import { sfx, startLoop, stopLoop, stopAllLoops } from '../audio.js';
 import { LockerView } from '../ui/locker.js';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
@@ -634,9 +634,9 @@ export default class Explore extends Phaser.Scene {
     }
   }
 
-  // 맵 배경음. 새 소리 시험 중이면 맵의 bgmTrial (GDD 4.7, 이슈 #66)
+  // 맵 배경음. 새 배경음(bgmTrial)이 있으면 그것 (GDD 4.7, 이슈 #66)
   bgmName() {
-    return (trialOn() && this.map.bgmTrial) || this.map.bgm;
+    return this.map.bgmTrial || this.map.bgm;
   }
 
   hint() {
