@@ -197,7 +197,20 @@
         "then": [{ "t": "text", "text": "「7월 1일. 2층 음악실 창문 깨짐」 ── 순찰 일지에 있던 그 창문이다." }]
       }
     ],
-    "stand": [{ "t": "text", "text": "보면대. 빈 악보 집게만 덜렁 걸려 있다." }],
+    "_guilt": "기억의 변질 (GDD 4.4-2): 죄책감 단계(guiltAtLeast)에 따라 같은 물건의 묘사가 바뀐다",
+    "stand": [
+      {
+        "t": "if", "cond": { "guiltAtLeast": 3 },
+        "then": [{ "t": "text", "text": "보면대. ……그 애 악보를 찢어 여기 걸어 둔 건 나였다. 다들 웃어서, 나도 웃었다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "guiltAtLeast": 2 },
+            "then": [{ "t": "text", "text": "보면대. 집게에 찢어진 악보 귀퉁이가 끼어 있다." }],
+            "else": [{ "t": "text", "text": "보면대. 빈 악보 집게만 덜렁 걸려 있다." }]
+          }
+        ]
+      }
+    ],
 
     "pc_off": [{ "t": "text", "text": "꺼진 컴퓨터. 전원 버튼을 눌러도 반응이 없다." }],
     "pc": [
@@ -329,7 +342,19 @@
         ]
       }
     ],
-    "stall": [{ "t": "text", "text": "칸막이 안은 비어 있다. 문 안쪽에 「피아노 왕자 전용 ㅋ」이라는 낙서." }],
+    "stall": [
+      { "t": "text", "text": "칸막이 안은 비어 있다. 문 안쪽에 「피아노 왕자 전용 ㅋ」이라는 낙서." },
+      {
+        "t": "if", "cond": { "guiltAtLeast": 3 },
+        "then": [{ "t": "text", "who": "재민", "text": "……이 삐뚤어진 글씨. 내 글씨다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "guiltAtLeast": 2 },
+            "then": [{ "t": "text", "who": "재민", "text": "……이 글씨체, 어디서 많이 봤는데." }]
+          }
+        ]
+      }
+    ],
 
     "door_roof": [
       { "t": "goto", "scene": "Explore", "map": "rooftop", "pos": { "x": 10, "y": 10, "dir": "up" } }
