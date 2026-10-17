@@ -21,5 +21,10 @@
   "trash": { "src": "science.webp", "box": [344, 516, 684, 768], "mode": "object", "trim": [6, 6, 6, 6], "cutout": { "kind": "border", "tol": 55 }, "scale": 0.8 },
   "mirror": { "src": "bathroom.png", "box": [136, 52, 376, 536], "mode": "object", "size": [32, 64], "parts": [{ "box": [144, 52, 368, 308], "at": [4, 3, 24, 27] }, { "box": [136, 328, 376, 536], "at": [3, 30, 26, 22] }] },
   "stall": { "src": "bathroom.png", "box": [536, 52, 960, 536], "mode": "object", "patch": [[916, 450, 40, 44, 0, -90]] },
-  "toilet_closeup": { "src": "toilet.png", "box": [496, 16, 756, 536], "mode": "object", "size": [96, 192] }
+  "toilet_closeup": { "src": "toilet.png", "box": [496, 16, 756, 536], "mode": "object", "size": [96, 192] },
+  "floor_room": { "src": "bedroom.png", "box": [22, 44, 326, 346], "trim": [80, 80, 80, 80] },
+  "bed_top": { "src": "bedroom.png", "box": [378, 44, 566, 251], "mode": "stretch" },
+  "bed_bottom": { "src": "bedroom.png", "box": [378, 298, 566, 498], "mode": "stretch" },
+  "mailbox": { "src": "bedroom.png", "box": [836, 60, 960, 204], "mode": "object", "cutout": { "kind": "border", "tol": 125 }, "scale": 0.8 },
+  "homedoor": { "src": "bedroom.png", "box": [820, 292, 982, 518], "mode": "stretch", "patch": [[918, 446, 36, 40, 0, -80]], "brighten": 1.7, "frame": true }
 }
