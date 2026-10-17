@@ -237,7 +237,18 @@ export class UI {
     }
     this.s.cameras.main.flash(200, 255, 255, 255);
     this.s.cameras.main.shake(400, 0.015);
+    // 금은 이벤트(기억·대사)가 끝날 때까지 남고, 스크립트의 effect "uncrack"으로 걷힌다
+    this.crackG?.destroy();
+    this.crackG = g;
     await this.wait(900);
+  }
+
+  // 화면의 금이 서서히 사라지고 원래 화면으로 돌아온다
+  uncrack() {
+    const g = this.crackG;
+    if (!g) return;
+    this.crackG = null;
+    return tweenP(this.s, { targets: g, alpha: 0, duration: 700 }).then(() => g.destroy());
   }
 
   glow() {

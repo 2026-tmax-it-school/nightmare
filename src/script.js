@@ -64,6 +64,7 @@ function effect(h, a) {
     case 'fadeIn': return new Promise(r => { cam.once('camerafadeincomplete', r); cam.fadeIn(a.ms || 600); });
     case 'glitch': return h.ui.glitch(a.ms || 450);
     case 'crack': return h.ui.crack();
+    case 'uncrack': return h.ui.uncrack();
     case 'glow': return h.ui.glow();
   }
 }
