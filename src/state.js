@@ -34,6 +34,9 @@ export function removeItem(id) {
 export const addFragment = n => addTo(state.fragments, n);
 export function addDenial(n) { state.denial = Math.min(100, Math.max(0, state.denial + n)); }
 
+// 죄책감 단계 (GDD 4.4-2): 되찾은 기억 조각 수로 정한다 (0~2 → 1, 3~5 → 2, 6~8 → 3). 따로 저장하지 않는다
+export const guiltLevel = () => (state.fragments.length >= 6 ? 3 : state.fragments.length >= 3 ? 2 : 1);
+
 const asList = v => (Array.isArray(v) ? v : [v]);
 
 // 조건 객체: 모든 항목이 참이어야 통과
@@ -47,6 +50,7 @@ export function checkCond(c) {
   if (c.noItem && asList(c.noItem).some(id => state.items.includes(id))) return false;
   if (c.fragmentsAtLeast != null && state.fragments.length < c.fragmentsAtLeast) return false;
   if (c.denialBelow != null && state.denial >= c.denialBelow) return false;
+  if (c.guiltAtLeast != null && guiltLevel() < c.guiltAtLeast) return false;
   return true;
 }
 

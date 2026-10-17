@@ -16,9 +16,9 @@
       "pos": { "x": 22, "y": 2, "dir": "up" }
     },
     {
-      "id": "frag1", "label": "1장 — 조각 1 (12번 책상 앞)", "from": "p1", "scene": "Explore", "map": "school1f",
+      "id": "frag1", "label": "1장 — 12번 책상 밀기 (P1 이후, 교실 뒷문 앞)", "from": "p1", "scene": "Explore", "map": "school1f",
       "flags": ["p1"],
-      "pos": { "x": 26, "y": 8, "dir": "up" }
+      "pos": { "x": 25, "y": 8, "dir": "up" }
     },
     {
       "id": "p2", "label": "1장 — P2 열쇠함 앞", "from": "frag1", "scene": "Explore", "map": "school1f",
@@ -128,7 +128,7 @@
     },
     {
       "id": "p8", "label": "5장 — 준비실 문 앞 (문 흔적·겹쳐보기 완료)", "from": "lab", "scene": "Explore", "map": "school1f",
-      "flags": ["past_prep"], "clues": ["chem_log", "bottle", "latch_rule", "prep_door", "past_latch"],
+      "flags": ["past_lab", "diff_shelf", "diff_lamp", "diff_ext", "lab_compared", "past_prep"], "clues": ["chem_log", "bottle", "latch_rule", "lab_compare", "prep_door", "past_latch"],
       "pos": { "x": 29, "y": 16, "dir": "right" }
     },
     {

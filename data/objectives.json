@@ -51,6 +51,7 @@
     {
       "title": "5장", "sub": "과학실", "start": { "flag": "open_science" },
       "steps": [
+        { "name": "과학실 — 그날과 달라진 곳 찾기 (Q)", "done": { "flag": "lab_compared" } },
         { "name": "과학실 — 준비실 문 살펴보기", "done": { "clue": "prep_door" } },
         { "name": "준비실 문 앞 — 그날 겹쳐 보기 (Q)", "done": { "flag": "past_prep" } },
         { "name": "준비실 문 앞 — 그날의 순서 맞추기", "done": { "flag": "p8" } },

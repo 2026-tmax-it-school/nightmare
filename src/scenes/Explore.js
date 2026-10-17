@@ -1,12 +1,13 @@
 // 탑뷰 탐색: 칸 단위 이동, 조사, 문, 트리거, 손전등 어둠, 사물함 숨기, 그림자 추격
 import { TILE, W, H } from '../constants.js';
 import { DB } from '../db.js';
-import { state, flag, setFlag, saveGame, checkCond } from '../state.js';
+import { state, flag, setFlag, saveGame, checkCond, guiltLevel } from '../state.js';
 import { runScript } from '../script.js';
 import { UI, textStyle, isConfirm, dirOf } from '../ui/ui.js';
 import { sfx, startLoop, stopLoop, stopAllLoops } from '../audio.js';
 import { LockerView } from '../ui/locker.js';
 import { holdBreath, struggle, eyesShut } from '../ui/hideGame.js';
+import { MirrorView } from '../ui/mirror.js';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const key = (x, y) => `${x},${y}`;
@@ -32,6 +33,13 @@ const DENIAL_HAUNT = 30;   // 이상이면 가끔 환각
 const DENIAL_PHANTOM = 60; // 이상이면 환각 때 그림자 환영도
 const DENIAL_MAX = 100;    // 붙잡힘
 const HAUNT_EVERY_S = 30;  // 환각 최소 간격(초), 여기에 0~15초를 더한다
+// 죄책감 (GDD 4.4-2): 단계별 환청 간격(초) [최소, 최대] / 3단계 키 반전 간격(초)·지속(ms)
+const GUILT_HAUNT_S = { 2: [35, 55], 3: [18, 30] };
+const GUILT_INVERT_EVERY_S = [45, 75];
+const GUILT_INVERT_MS = 2500;
+const GUILT_CALM_S = 10; // 대화·이벤트·추격이 끝난 뒤 죄책감 연출을 쉬는 시간(초)
+// 환청과 함께 화면에 잠깐 떠오르는 목소리 (도윤 / 가해자들)
+const GUILT_VOICES = ['……재민아.', '거기 있지?', '문 열어 줘.', '약속했잖아.', '왜 모른 척했어?', '야, 윤재민. 너도 웃기지?', '너도 웃었잖아.', '그냥 가자. 아무도 몰라.'];
 
 export default class Explore extends Phaser.Scene {
   constructor() { super('Explore'); }
@@ -68,15 +76,24 @@ export default class Explore extends Phaser.Scene {
     }));
     this.buildRooms();
     this.objects = new Map();
+    this.condObjs = []; // cond가 있는 물건: 조건이 맞을 때만 맵에 놓인다 (syncObjects)
     for (const o of m.objects) {
       const obj = { ...o };
+      // 밀 수 있는 물건(push): 민 자리는 플래그 push_<id>에 남는다
+      if (o.push) {
+        obj.home = [o.x, o.y];
+        const at = state.flags['push_' + o.id];
+        if (at) [obj.x, obj.y] = at;
+      }
       if (o.tex) {
         // 2칸 높이 가구(32×64)는 바닥 칸을 기준으로 위로 솟는다. 앞에 있는(아래쪽) 것이 뒤의 것을 가린다.
-        obj.img = this.add.image(cx(o.x), (o.y + 1) * TILE, this.objTex(o)).setOrigin(0.5, 1).setDepth(depthAt(o.y));
+        obj.img = this.add.image(cx(obj.x), (obj.y + 1) * TILE, this.objTex(o)).setOrigin(0.5, 1).setDepth(depthAt(obj.y));
       }
       if (o.door && flag('open_' + o.door)) this.tiles[o.y][o.x].setTexture('door_open');
-      this.objects.set(key(o.x, o.y), obj);
+      if (o.cond) { this.condObjs.push(obj); obj.img?.setVisible(false); continue; }
+      this.objects.set(key(obj.x, obj.y), obj);
     }
+    this.syncObjects();
     this.buildRails();
     this.buildSight();
     this.buildSparkles();
@@ -147,6 +164,9 @@ export default class Explore extends Phaser.Scene {
     this.updateObjective();
     this.haunt = 0;
     this.time.addEvent({ delay: 1000, loop: true, callback: this.denialTick, callbackScope: this });
+    this.guiltWait = this.guiltDelay();
+    this.invertWait = Phaser.Math.Between(...GUILT_INVERT_EVERY_S);
+    this.time.addEvent({ delay: 1000, loop: true, callback: this.guiltTick, callbackScope: this });
     cam.fadeIn(500);
     this.time.delayedCall(550, () => this.runEnter());
   }
@@ -167,7 +187,7 @@ export default class Explore extends Phaser.Scene {
       : (k.DOWN.isDown || k.S.isDown) ? 'down'
       : (k.LEFT.isDown || k.A.isDown) ? 'left'
       : (k.RIGHT.isDown || k.D.isDown) ? 'right' : null;
-    if (dir) this.tryMove(dir);
+    if (dir) this.tryMove(this.guiltDir(dir));
   }
 
   drawDark() {
@@ -191,6 +211,8 @@ export default class Explore extends Phaser.Scene {
     const [dx, dy] = DIRS[dir];
     const nx = this.tx + dx, ny = this.ty + dy;
     if (this.chase && this.chase.x === nx && this.chase.y === ny) return this.caught();
+    const po = this.objects.get(key(nx, ny));
+    if (po?.push && checkCond(po.pushCond)) return this.tryPush(po, dir);
     if (!this.passable(nx, ny) || this.railBetween(this.tx, this.ty, nx, ny)) { this.updatePrompt(); return; }
     const gate = this.gateAt(nx, ny, dir);
     if (gate) return this.gateBlocked(gate, nx, ny);
@@ -206,6 +228,64 @@ export default class Explore extends Phaser.Scene {
       targets: this.player, x: cx(nx), y: cx(ny), duration: MOVE_MS,
       onComplete: () => { this.moving = false; this.afterMove(); },
     });
+  }
+
+  // ── 밀기 (GDD 6장 맵 기믹): 걸어 들어가면 한 칸 밀리고, 나도 그 자리로 들어선다. 앞이 막혔으면 꿈쩍하지 않는다 ──
+  tryPush(o, dir) {
+    const [dx, dy] = DIRS[dir];
+    const bx = o.x + dx, by = o.y + dy;
+    // 무너지는 물건(topple) 쪽으로 밀면 그 스크립트가 실행된다 (의자 더미 → 큰 소리 → 그림자)
+    const hit = this.objects.get(key(bx, by));
+    if (hit?.topple) {
+      sfx('deskDrag');
+      this.tweens.add({ targets: o.img, x: o.img.x + dx * 6, y: o.img.y + dy * 6, duration: 80, yoyo: true });
+      return this.run(this.resolve(hit.topple));
+    }
+    const blocked = !this.isFloor(bx, by) || !this.passable(bx, by) || this.railBetween(o.x, o.y, bx, by)
+      || (this.chase && this.chase.x === bx && this.chase.y === by);
+    if (blocked) {
+      if (this.pushHit !== key(o.x, o.y)) { this.pushHit = key(o.x, o.y); sfx('thud'); }
+      this.updatePrompt();
+      return;
+    }
+    this.pushHit = null;
+    this.objects.delete(key(o.x, o.y));
+    [o.x, o.y] = [bx, by];
+    this.objects.set(key(bx, by), o);
+    setFlag('push_' + o.id, [bx, by]);
+    sfx('deskDrag');
+    o.img.setDepth(depthAt(by));
+    this.tweens.add({ targets: o.img, x: cx(bx), y: (by + 1) * TILE, duration: MOVE_MS });
+    this.tryMove(dir);
+  }
+
+  // 민 물건은 keep 플래그를 얻기 전까지, 그 방을 나가면 제자리로 돌아간다 (막혀도 다시 풀 수 있게)
+  resetPushed() {
+    const here = this.room[this.ty]?.[this.tx] ?? -1;
+    if (here < 0) return;
+    for (const o of [...this.objects.values(), ...this.condObjs]) {
+      if (!o.push || (o.keep && flag(o.keep))) continue;
+      const [hx, hy] = o.home;
+      if ((o.x === hx && o.y === hy) || this.roomOf(hx, hy) === here) continue;
+      if (this.objects.get(key(o.x, o.y)) === o) { this.objects.delete(key(o.x, o.y)); this.objects.set(key(hx, hy), o); }
+      [o.x, o.y] = [hx, hy];
+      o.img?.setPosition(cx(hx), (hy + 1) * TILE).setDepth(depthAt(hy));
+      setFlag('push_' + o.id, null);
+    }
+  }
+
+  // cond가 있는 물건을 지금 조건에 맞춰 놓거나 치운다 (스크립트 { t: 'syncObjects' }, 스크립트가 끝날 때)
+  syncObjects() {
+    // 밀 수 있게 된 책상은 끈 자국이 있는 그림(pushTex)으로 바꿔 알아볼 수 있게 한다
+    for (const o of this.objects.values()) {
+      if (o.push && o.pushTex && o.img) o.img.setTexture(checkCond(o.pushCond) ? o.pushTex : this.objTex(o));
+    }
+    for (const o of this.condObjs) {
+      const on = checkCond(o.cond);
+      const k = key(o.x, o.y);
+      if (on && this.objects.get(k) !== o) { this.objects.set(k, o); o.img?.setVisible(this.shown ? this.shown[o.y][o.x] : true); }
+      else if (!on && this.objects.get(k) === o) { this.objects.delete(k); o.img?.setVisible(false); }
+    }
   }
 
   // ── 층 이동 막기 (GDD 4.7, 스토리 건너뛰기 방지): map.gates의 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 독백을 띄운다 ──
@@ -534,12 +614,14 @@ export default class Explore extends Phaser.Scene {
 
   afterMove() {
     this.gateHit = null;
+    this.pushHit = null;
     this.player.setDepth(depthAt(this.ty, true));
     this.updateRooms();
     this.updateCamera();
     state.pos = { x: this.tx, y: this.ty };
     state.dir = this.dir;
     if (this.chase && this.chase.x === this.tx && this.chase.y === this.ty) return this.caught();
+    this.resetPushed();
     this.updatePrompt();
     this.updateArea();
     this.pastNotice();
@@ -558,6 +640,11 @@ export default class Explore extends Phaser.Scene {
     const a = (this.map.areas || []).find(a => this.tx >= a.x && this.tx < a.x + a.w && this.ty >= a.y && this.ty < a.y + a.h);
     if (!a || a.name === this.areaName) return;
     this.areaName = a.name;
+    // 함정이 있는 방 등은 들어설 때 자동 저장한다 (map.saveOnEnter: [{ area, cond }]) — 게임오버면 여기부터 다시
+    if ((this.map.saveOnEnter || []).some(s => s.area === a.name && checkCond(s.cond))) {
+      saveGame();
+      this.ui.toast('자동 저장됨');
+    }
     this.areaTxt.setText(a.name);
     this.tweens.killTweensOf(this.areaTxt);
     this.areaTxt.setAlpha(1);
@@ -576,7 +663,7 @@ export default class Explore extends Phaser.Scene {
   buildSparkles() {
     this.sparkles = new Map();
     for (const o of this.objects.values()) {
-      if (!o.script || o.hide) continue;
+      if (!o.script || o.hide || o.push || o.cond) continue;
       const g = `${typeof o.script === 'string' ? o.script : key(o.x, o.y)}@${this.roomOf(o.x, o.y)}`;
       o.sparkleKey = g;
       if (this.sparkles.has(g)) continue;
@@ -652,7 +739,7 @@ export default class Explore extends Phaser.Scene {
     if (this.busy || this.moving || this.over) return;
     const dir = dirOf(e);
     // 키를 누르고 있는 동안의 이동은 update()가 맡는다. OS 키 반복까지 받으면 뗀 직후 한 칸 더 갈 수 있다.
-    if (dir) { if (!this.hidden && !e.repeat) this.tryMove(dir); return; }
+    if (dir) { if (!this.hidden && !e.repeat) this.tryMove(this.guiltDir(dir)); return; }
     if (isConfirm(e)) {
       if (this.hidden) return this.exitLocker();
       const o = this.frontObj();
@@ -737,11 +824,16 @@ export default class Explore extends Phaser.Scene {
   getScript(name) { return this.map.scripts[name]; }
 
   async run(list) {
+    this.stopGuilt(); // 대화·이벤트가 시작되면 죄책감 연출을 바로 거둔다
     this.busy = true;
     this.updatePrompt();
     if ((await runScript(this, list)) === 'stop') return;
     this.ui.hideDialog();
+    // 거울 화면은 스크립트가 끝나면 닫힌다
+    if (this.mirrorView) { const v = this.mirrorView; this.mirrorView = null; await v.destroy(); }
     this.busy = false;
+    this.syncObjects();
+    this.applyStage(); // 스크립트로 바뀐 플래그에 맞춰 낙서·바닥 장식도 바로 보이게
     this.updatePrompt();
     this.updateObjective();
   }
@@ -759,6 +851,7 @@ export default class Explore extends Phaser.Scene {
   }
 
   async openNotebook() {
+    this.stopGuilt();
     this.busy = true;
     this.updatePrompt();
     sfx('beep');
@@ -803,6 +896,8 @@ export default class Explore extends Phaser.Scene {
   action(a) {
     switch (a.t) {
       case 'openDoor': return this.openDoor(a.id);
+      case 'syncObjects': return this.syncObjects();
+      case 'shadowStrike': return this.shadowStrike(a);
       case 'stage': setFlag('stage' + a.n); this.applyStage(); return;
       case 'chase':
         // 추격 직전 자동저장 → 잡히면 여기서 재시작
@@ -813,6 +908,11 @@ export default class Explore extends Phaser.Scene {
       case 'resumeChase': return this.startChase();
       case 'pastOn': return this.pastOn(a.id);
       case 'pastOff': return this.pastOff();
+      // 화장실 거울 1인칭 화면: 처음이면 열고, 열려 있으면 얼굴·김·금만 바꾼다
+      case 'mirror':
+        if (this.mirrorView) return this.mirrorView.set(a);
+        this.mirrorView = new MirrorView(this, a);
+        return this.ui.wait(250);
       case 'ghost': return this.ghost(a);
     }
   }
@@ -848,9 +948,77 @@ export default class Explore extends Phaser.Scene {
     if (this.busy || this.hidden || this.chase || state.denial < DENIAL_HAUNT) return;
     if (++this.haunt < HAUNT_EVERY_S) return;
     this.haunt = -Phaser.Math.Between(0, 15);
+    this.guiltWait = Math.max(this.guiltWait, 8); // 부정 수치 환각과 죄책감 환청이 겹치지 않게
     sfx('follow');
     this.ui.glitch(250);
     if (state.denial >= DENIAL_PHANTOM) this.phantom();
+  }
+
+  // ── 죄책감 (GDD 4.4-2): 기억을 되찾을수록 환청·화면 왜곡이 잦아지고, 3단계에선 잠깐 키가 반전된다 ──
+  // 탐색 중에만 일어난다 (대화·퍼즐·추격·사물함 중엔 멈춤)
+  guiltDelay() {
+    const [a, b] = GUILT_HAUNT_S[guiltLevel()] || [40, 60];
+    return Phaser.Math.Between(a, b);
+  }
+
+  guiltTick() {
+    if (this.over || !this.map.dark) return;
+    // 대화·이벤트·퍼즐·추격·사물함 중엔 나오던 연출도 거두고, 끝난 뒤에도 잠시 쉬었다가 다시 시작한다
+    if (this.busy || this.hidden || this.chase || state.flags.pendingChase) { this.stopGuilt(); this.guiltCalm = GUILT_CALM_S; return; }
+    if (this.guiltCalm > 0) { this.guiltCalm--; return; }
+    const lv = guiltLevel();
+    if (lv < 2) return;
+    if (--this.guiltWait <= 0) { this.guiltWait = this.guiltDelay(); this.guiltHaunt(lv); }
+    if (lv >= 3 && !this.invert && --this.invertWait <= 0) {
+      this.invertWait = Phaser.Math.Between(...GUILT_INVERT_EVERY_S);
+      this.invertKeys();
+    }
+  }
+
+  // 환청 (속삭임·문 긁는 소리·부르는 목소리) + 화면에 잠깐 떠오르는 말 + 짧은 일그러짐. 3단계는 시야도 출렁인다
+  guiltHaunt(lv) {
+    sfx(Phaser.Utils.Array.GetRandom(['whisper', 'scratch', 'murmur']));
+    this.ui.glitch(lv >= 3 ? 320 : 200);
+    const t = this.guiltText = this.add.text(Phaser.Math.Between(90, W - 90), Phaser.Math.Between(90, H - 170), Phaser.Utils.Array.GetRandom(GUILT_VOICES),
+      textStyle(14, '#b46a6a', { fontStyle: 'italic' })).setOrigin(0.5).setScrollFactor(0).setDepth(97).setAlpha(0);
+    this.tweens.add({ targets: t, alpha: 0.75, duration: 500, hold: 900, yoyo: true, onComplete: () => { t.destroy(); if (this.guiltText === t) this.guiltText = null; } });
+    if (lv >= 3) {
+      // 시야각 왜곡: 화면이 살짝 기울었다 돌아온다
+      const cam = this.cameras.main;
+      this.guiltWarp = this.tweens.addCounter({
+        from: 0, to: 1, duration: 1400, ease: 'Sine.easeInOut',
+        onUpdate: tw => { const v = Math.sin(tw.getValue() * Math.PI); cam.setRotation(v * 0.035 * (this.warpSign ||= 1)); cam.setZoom(1 + v * 0.04); },
+        onComplete: () => { cam.setRotation(0); cam.setZoom(1); this.warpSign = -this.warpSign; this.guiltWarp = null; },
+      });
+    }
+  }
+
+  // 키 반전: 심장 소리·흔들림으로 예고한 뒤 잠깐 좌우 또는 상하 이동이 뒤집힌다
+  invertKeys() {
+    sfx('heart');
+    this.cameras.main.shake(350, 0.005);
+    this.invertTimer = this.time.delayedCall(450, () => {
+      if (this.busy || this.chase || this.hidden || this.over) return;
+      this.invert = Phaser.Math.RND.pick(['lr', 'ud']);
+      this.ui.glitch(150);
+      this.invertTimer = this.time.delayedCall(GUILT_INVERT_MS, () => { this.invert = null; this.invertTimer = null; });
+    });
+  }
+
+  // 이벤트·추격이 시작되면 진행 중인 죄책감 연출(떠오른 글자·화면 기울기·키 반전)을 바로 거둔다
+  stopGuilt() {
+    if (this.guiltText) { this.tweens.killTweensOf(this.guiltText); this.guiltText.destroy(); this.guiltText = null; }
+    if (this.guiltWarp) { this.guiltWarp.stop(); this.guiltWarp = null; this.cameras.main.setRotation(0).setZoom(1); }
+    this.invertTimer?.remove();
+    this.invertTimer = null;
+    this.invert = null;
+  }
+
+  // 반전 중이면 방향을 뒤집는다 (추격 중에는 반전하지 않는다)
+  guiltDir(dir) {
+    if (!this.invert || this.chase) return dir;
+    const flip = this.invert === 'lr' ? { left: 'right', right: 'left' } : { up: 'down', down: 'up' };
+    return flip[dir] || dir;
   }
 
   // 손전등 빛 가장자리의 빈 칸에 그림자가 잠깐 서 있다 사라진다 (쫓아오지 않음)
@@ -879,6 +1047,7 @@ export default class Explore extends Phaser.Scene {
 
   // ── 사물함 ──
   enterLocker(o) {
+    this.stopGuilt();
     this.hidden = true;
     sfx('locker');
     this.player.setVisible(false);
@@ -901,6 +1070,7 @@ export default class Explore extends Phaser.Scene {
 
   // ── 추격 ──
   startChase() {
+    this.stopGuilt();
     const pc = state.flags.pendingChase;
     if (!pc || this.chase) return;
     const sprite = this.add.image(cx(pc.spawn.x), cx(pc.spawn.y), 'shadow').setDepth(3).setAlpha(0);
@@ -1076,6 +1246,17 @@ export default class Explore extends Phaser.Scene {
     if (!runAfter) return;
     if (pc.after) this.run(this.getScript(pc.after));
     else this.updateObjective();
+  }
+
+  // 함정: 그림자가 from 칸에서 순식간에 덮쳐 와 붙잡는다 (스크립트 { t: 'shadowStrike', from: { x, y } })
+  async shadowStrike(a) {
+    this.ui.hideDialog();
+    const s = this.add.image(cx(a.from.x), cx(a.from.y), 'shadow').setDepth(10.5).setAlpha(0);
+    sfx('slam');
+    await new Promise(r => this.tweens.add({ targets: s, alpha: 0.95, duration: 250, onComplete: r }));
+    await new Promise(r => this.tweens.add({ targets: s, x: this.player.x, y: this.player.y, duration: a.ms || 450, ease: 'Quad.easeIn', onComplete: r }));
+    this.caught();
+    return 'stop';
   }
 
   caught() {
