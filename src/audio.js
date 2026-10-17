@@ -2,7 +2,9 @@
 let ctx = null;
 let master = null;
 let noiseBuf = null;
+let bus = null;  // sfx(name, vol, muffle) 호출 동안만 쓰는 출력 (음량·먹먹함). 평소엔 master
 const loops = {};
+const dest = () => bus || master;
 
 // 전체 볼륨 (0~1). 기억 노트의 설정 탭에서 바꾸고, 브라우저에 기억해 둔다.
 const VOLUME_KEY = 'ithope_volume';
@@ -53,7 +55,7 @@ function noise(t, { freq = 800, q = 1, type = 'bandpass', peak = 0.3, a = 0.005,
   f.type = type; f.frequency.value = freq; f.Q.value = q;
   const g = ctx.createGain();
   env(g.gain, t, a, peak, d);
-  s.connect(f).connect(g).connect(master);
+  s.connect(f).connect(g).connect(dest());
   s.start(t, Math.random());
   s.stop(t + a + d + 0.05);
 }
@@ -72,7 +74,7 @@ function tone(t, { freq = 440, to = null, type = 'sine', peak = 0.2, a = 0.01, d
   }
   const g = ctx.createGain();
   env(g.gain, t, a, peak, d);
-  o.connect(g).connect(master);
+  o.connect(g).connect(dest());
   o.start(t); o.stop(t + a + d + 0.05);
 }
 
@@ -133,6 +135,19 @@ const SFX = {
   unlock: t => { noise(t, { freq: 3000, q: 3, peak: 0.2, d: 0.04 }); noise(t + 0.09, { freq: 2200, q: 3, peak: 0.25, d: 0.05 }); return 0.2; },
   locker: t => { noise(t, { type: 'lowpass', freq: 900, peak: 0.3, d: 0.18 }); tone(t, { freq: 180, to: 140, type: 'square', peak: 0.04, d: 0.15 }); return 0.25; },
   heart: t => { tone(t, { freq: 62, peak: 0.6, d: 0.14 }); tone(t + 0.24, { freq: 55, peak: 0.45, d: 0.16 }); return 0.5; },
+  // 그림자: 무겁게 디디고 끌리는 발소리 / 들이쉬고 길게 내쉬는 거친 숨 + 낮은 울음
+  shadowStep: t => {
+    noise(t, { type: 'lowpass', freq: 170, q: 0.8, peak: 0.5, d: 0.16 });
+    tone(t, { freq: 60, to: 38, peak: 0.3, d: 0.14 });
+    noise(t + 0.06, { freq: 650, q: 2.5, peak: 0.07, a: 0.02, d: 0.14 });
+    return 0.22;
+  },
+  breath: t => {
+    noise(t, { freq: 1100, q: 1.2, peak: 0.1, a: 0.3, d: 0.2 });
+    noise(t + 0.55, { freq: 480, q: 1.4, peak: 0.16, a: 0.06, d: 0.5 });
+    tone(t + 0.55, { freq: 92, to: 74, type: 'sawtooth', peak: 0.02, a: 0.08, d: 0.45, vib: 3 });
+    return 1.1;
+  },
   chime: t => { tone(t, { freq: 1320, peak: 0.06, a: 0.01, d: 1.0 }); tone(t, { freq: 1980, peak: 0.03, a: 0.01, d: 0.8 }); return 1; },
   alarm: t => { for (let i = 0; i < 6; i++) tone(t + i * 0.3, { freq: i % 2 ? 740 : 980, type: 'square', peak: 0.06, a: 0.01, d: 0.26 }); return 1.8; },
   bang: t => {
@@ -151,9 +166,20 @@ export function playNote(n) {
   tone(t, { freq: NOTE_HZ[n - 1] * 2, peak: 0.03, a: 0.005, d: 0.4 });
 }
 
-export function sfx(name) {
-  if (!ctx || !SFX[name]) return 0;
-  return SFX[name](ctx.currentTime + 0.02);
+// vol: 0~1 음량 배율 (0이면 재생하지 않음), muffle: 벽 너머처럼 높은 소리를 깎는다
+export function sfx(name, vol = 1, muffle = false) {
+  if (!ctx || !SFX[name] || vol <= 0) return 0;
+  if (vol >= 1 && !muffle) return SFX[name](ctx.currentTime + 0.02);
+  const g = ctx.createGain();
+  g.gain.value = Math.min(1, vol);
+  if (muffle) {
+    const f = ctx.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.value = 900;
+    f.connect(g);
+    bus = f;
+  } else bus = g;
+  g.connect(master);
+  try { return SFX[name](ctx.currentTime + 0.02); } finally { bus = null; }
 }
 
 export function startLoop(name) {

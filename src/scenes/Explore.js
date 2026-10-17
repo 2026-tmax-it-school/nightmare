@@ -19,6 +19,9 @@ const MOVE_MS = 150;
 const CAM_EASE_MS = 350; // 방 고정 ↔ 따라가기 전환 시간
 const CHASE_STEP_MS = 250;
 const CHASE_GIVE_UP_MS = 4500;
+// 그림자 소리 (GDD 4.6): 이 칸 수보다 멀면 들리지 않는다. 숨소리 간격은 멀 때 → 가까울 때
+const SHADOW_HEAR = 12;
+const BREATH_FAR_MS = 1800, BREATH_NEAR_MS = 800;
 // 부정 수치 (GDD 4.4)
 const DENIAL_HAUNT = 30;   // 이상이면 가끔 환각
 const DENIAL_PHANTOM = 60; // 이상이면 환각 때 그림자 환영도
@@ -124,6 +127,7 @@ export default class Explore extends Phaser.Scene {
     this.events.once('shutdown', () => {
       this.input.keyboard.off('keydown', this.onKey, this);
       this.chaseTimer?.remove();
+      this.breathTimer?.remove();
       stopLoop('chase');
     });
 
@@ -745,6 +749,28 @@ export default class Explore extends Phaser.Scene {
     this.chase = { x: pc.spawn.x, y: pc.spawn.y, sprite, lost: 0, step: pc.step || CHASE_STEP_MS };
     startLoop('chase');
     this.chaseTimer = this.time.addEvent({ delay: this.chase.step, loop: true, callback: this.chaseStep, callbackScope: this });
+    this.breathTimer = this.time.delayedCall(400, this.breathe, [], this);
+  }
+
+  // 그림자가 얼마나 가까운지 (0 = 들리지 않을 만큼 멂, 1 = 바로 옆)
+  shadowNear() {
+    const c = this.chase;
+    if (!c) return 0;
+    return Math.max(0, 1 - Math.hypot(c.x - this.tx, c.y - this.ty) / SHADOW_HEAR);
+  }
+
+  // 그림자 소리: 가까울수록 크게. 숨어 있으면 사물함 문 너머로 먹먹하게 들린다
+  shadowSfx(name) {
+    const p = this.shadowNear();
+    if (p > 0) sfx(name, 0.1 + 0.9 * p * p, this.hidden);
+  }
+
+  // 숨소리는 발걸음과 따로 돈다. 가까울수록 간격이 짧아진다
+  breathe() {
+    if (!this.chase || this.over) return;
+    if (!this.busy) this.shadowSfx('breath');
+    const delay = Phaser.Math.Linear(BREATH_FAR_MS, BREATH_NEAR_MS, this.shadowNear());
+    this.breathTimer = this.time.delayedCall(delay, this.breathe, [], this);
   }
 
   chaseStep() {
@@ -763,7 +789,7 @@ export default class Explore extends Phaser.Scene {
     }
     if (!next) return;
     [c.x, c.y] = next;
-    sfx('thud');
+    this.shadowSfx('shadowStep');
     this.tweens.add({ targets: c.sprite, x: cx(c.x), y: cx(c.y), duration: c.step - 20 });
     if (!this.hidden && c.x === this.tx && c.y === this.ty) this.caught();
   }
@@ -798,6 +824,7 @@ export default class Explore extends Phaser.Scene {
     const c = this.chase;
     const pc = state.flags.pendingChase;
     this.chaseTimer.remove();
+    this.breathTimer?.remove();
     this.chase = null;
     stopLoop('chase');
     this.tweens.add({ targets: c.sprite, alpha: 0, duration: 600, onComplete: () => c.sprite.destroy() });
@@ -813,6 +840,7 @@ export default class Explore extends Phaser.Scene {
     this.over = true;
     this.busy = true;
     this.chaseTimer?.remove();
+    this.breathTimer?.remove();
     stopLoop('chase');
     sfx('slam');
     const cam = this.cameras.main;
