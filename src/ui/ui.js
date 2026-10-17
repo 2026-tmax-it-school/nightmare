@@ -159,14 +159,26 @@ export class UI {
       const c = this.fixed(this.s.add.container(W - 14, 12), 96);
       const bg = this.s.add.graphics();
       const head = this.s.add.text(-PW + 10, 7, '', textStyle(12, '#a8a1b0'));
-      const bar = this.s.add.text(-10, 7, '', textStyle(12, '#c9a46a')).setOrigin(1, 0);
+      // 진행도 칸은 글자(■□)로 쓰면 글꼴에 따라 윗부분이 잘려서 직접 그린다
+      const bar = this.s.add.graphics();
+      const count = this.s.add.text(-10, 7, '', textStyle(12, '#c9a46a')).setOrigin(1, 0);
       const body = this.s.add.text(-PW + 10, 28, '', textStyle(12, '#d8cfb4', { wordWrap: { width: PW - 20, useAdvancedWrap: true } }));
-      c.add([bg, head, bar, body]);
-      this.obj = { c, bg, head, bar, body, bottom: 0 };
+      c.add([bg, head, bar, count, body]);
+      this.obj = { c, bg, head, bar, count, body, bottom: 0 };
     }
     const o = this.obj;
     o.head.setText(p ? `${p.ch.title} · ${p.ch.sub}` : '');
-    o.bar.setText(p && p.total ? `${'■'.repeat(p.done)}${'□'.repeat(p.total - p.done)}  ${p.done}/${p.total}` : '');
+    o.count.setText(p && p.total ? `${p.done}/${p.total}` : '');
+    o.bar.clear();
+    if (p && p.total) {
+      const S = 8, G = 3;
+      const y = 7 + Math.round((o.count.height - S) / 2);
+      let x = -10 - o.count.width - 8 - p.total * (S + G) + G;
+      for (let i = 0; i < p.total; i++, x += S + G) {
+        if (i < p.done) o.bar.fillStyle(0xc9a46a, 1).fillRect(x, y, S, S);
+        else o.bar.lineStyle(1, 0xc9a46a, 0.7).strokeRect(x + 0.5, y + 0.5, S - 1, S - 1);
+      }
+    }
     const text = '▶ ' + hint;
     if (o.body.text !== text) {
       // 할 일이 바뀌면 잠깐 밝게 눈에 띄게 한다

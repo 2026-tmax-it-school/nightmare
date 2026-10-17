@@ -69,6 +69,7 @@ export default class Explore extends Phaser.Scene {
       this.objects.set(key(o.x, o.y), obj);
     }
     this.buildRails();
+    this.buildSparkles();
     this.decals = (m.graffiti || []).map(g => {
       const t = this.add.text(g.x * TILE, g.y * TILE, g.text, textStyle(15, '#8e1616', { fontStyle: 'bold' }))
         .setDepth(1).setAlpha(0.85).setAngle(g.angle ?? 0);
@@ -282,6 +283,8 @@ export default class Explore extends Phaser.Scene {
     }
     // 다른 방의 2칸 가구가 벽 칸으로 윗부분만 비치지 않도록, 바닥 칸이 가려진 가구는 통째로 숨긴다
     for (const o of this.objects?.values() || []) o.img?.setVisible(shown[o.y][o.x]);
+    this.shown = shown;
+    if (this.sparkles) this.updateSparkles();
     // 벽 앞면은 그 벽 아래 방에 있을 때만 앞면. 위쪽 방 안에서 보면 같은 벽이 윗면(두꺼운 벽)으로 보인다
     if (this.textures.exists('wall_face')) {
       for (let y = 0; y < this.rows - 1; y++) for (let x = 0; x < this.cols; x++) {
@@ -401,6 +404,70 @@ export default class Explore extends Phaser.Scene {
     return this.objects.get(key(this.tx + dx, this.ty + dy));
   }
 
+  // ── 반짝임 (GDD 4.7): 아직 조사하지 않은 물건은 멀리서도 보이게 작은 빛이 깜빡인다 ──
+  // 같은 방의 같은 스크립트 물건(책상 16개, 피아노 좌우 등)은 하나로 묶어 대표 한 칸에만 띄운다.
+  // 조사 결과의 갈래(if 조건들)가 마지막으로 본 때와 달라지면 다시 반짝인다 (예: 전화 후 알코올램프)
+  buildSparkles() {
+    this.sparkles = new Map();
+    for (const o of this.objects.values()) {
+      if (!o.script || o.hide) continue;
+      const g = `${typeof o.script === 'string' ? o.script : key(o.x, o.y)}@${this.roomOf(o.x, o.y)}`;
+      o.sparkleKey = g;
+      if (this.sparkles.has(g)) continue;
+      // 조사 표시(focus)와 같은 모서리 괄호가 반짝인다. 어둠(10) 아래에 그려 손전등 시야 밖에선 보이지 않는다
+      const b = this.add.graphics().setDepth(9.7).setPosition(cx(o.x), cx(o.y));
+      b.lineStyle(2, 0xffe2a0, 1);
+      const h = TILE / 2 - 1, l = 7;
+      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        b.lineBetween(sx * h, sy * h, sx * (h - l), sy * h);
+        b.lineBetween(sx * h, sy * h, sx * h, sy * (h - l));
+      }
+      b.setAlpha(0.15);
+      this.tweens.add({ targets: b, alpha: 0.85, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: Phaser.Math.Between(0, 1400) });
+      this.sparkles.set(g, { o, parts: [b] });
+    }
+  }
+
+  // 벽·창 칸에 놓인 조사 지점은 맞닿은 바닥의 방으로 친다
+  roomOf(x, y) {
+    const at = (x, y) => (x < 0 || y < 0 || x >= this.cols || y >= this.rows ? -1 : this.room[y][x]);
+    if (at(x, y) >= 0) return at(x, y);
+    for (const [dx, dy] of Object.values(DIRS)) if (at(x + dx, y + dy) >= 0) return at(x + dx, y + dy);
+    return -1;
+  }
+
+  // 스크립트가 지금 어느 갈래로 실행될지 (if 결과를 이어 붙인 문자열). choice·puzzle 안쪽은 보지 않는다
+  scriptSig(list, depth = 0) {
+    let s = '';
+    for (const a of list || []) {
+      if (a.t === 'if') { const ok = checkCond(a.cond); s += (ok ? 'T' : 'F') + this.scriptSig(ok ? a.then : a.else, depth + 1); }
+      else if (a.t === 'call' && depth < 5) s += this.scriptSig(this.getScript(a.name), depth + 1);
+    }
+    return s;
+  }
+
+  seenOf() {
+    state.seen ||= {};
+    return (state.seen[this.mapId] ||= {});
+  }
+
+  updateSparkles() {
+    const seen = this.seenOf();
+    for (const [g, { o, parts }] of this.sparkles) {
+      const fresh = this.interactable(o) && seen[g] !== this.scriptSig(this.resolve(o.script));
+      const on = fresh && !this.hidden && !!this.shown?.[o.y]?.[o.x];
+      parts.forEach(p => p.setVisible(on));
+    }
+  }
+
+  // 조사: 스크립트가 끝난 뒤의 갈래를 본 것으로 기록한다 (조사하면서 바뀐 플래그까지 반영)
+  async examine(o) {
+    await this.run(this.resolve(o.script));
+    if (!o.sparkleKey || this.over) return;
+    this.seenOf()[o.sparkleKey] = this.scriptSig(this.resolve(o.script));
+    this.updateSparkles();
+  }
+
   interactable(o) {
     return !!o && (o.hide || (o.script && !(o.door && flag('open_' + o.door))));
   }
@@ -423,7 +490,7 @@ export default class Explore extends Phaser.Scene {
       const o = this.frontObj();
       if (!this.interactable(o)) return;
       if (o.hide) return this.enterLocker(o);
-      this.run(this.resolve(o.script));
+      this.examine(o);
     } else if (e.code === 'Escape' && !this.hidden && !this.chase) {
       this.openNotebook();
     } else if (e.code === 'KeyQ' && !this.hidden && !this.chase) {
@@ -545,9 +612,11 @@ export default class Explore extends Phaser.Scene {
     return { ch, marks, done: marks.filter(Boolean).length, total: marks.length };
   }
 
+  // 진행이 바뀔 때마다(스크립트·사물함·추격 후) 목표 패널과 반짝임을 함께 갱신한다
   updateObjective() {
     this.ui.objective(this.progress(), this.hint());
     this.ui.obj.c.setVisible(!this.hidden);
+    this.updateSparkles();
   }
 
   // ── 스크립트 전용 동작 ──
