@@ -18,7 +18,8 @@ const TILE_FALLBACK = { floor_pc: 'floor_tile' };
 const MOVE_MS = 150;
 const CAM_EASE_MS = 350; // 방 고정 ↔ 따라가기 전환 시간
 const CHASE_STEP_MS = 250;
-const CHASE_GIVE_UP_MS = 4500;
+const CHASE_WANDER_MS = 2500; // 숨은 뒤 그림자가 주변을 서성이는 시간
+const CHASE_LEAVE_DIST = 10;  // 서성인 뒤 숨은 곳에서 이 칸 수 이상 떨어진 복도까지 걸어 나가 사라진다
 // 그림자 소리 (GDD 4.6): 이 칸 수보다 멀면 들리지 않는다. 숨소리 간격은 멀 때 → 가까울 때
 const SHADOW_HEAR = 12;
 const BREATH_FAR_MS = 1800, BREATH_NEAR_MS = 800;
@@ -778,20 +779,62 @@ export default class Explore extends Phaser.Scene {
     if (!c || this.busy || this.over) return;
     let next;
     if (this.hidden) {
-      // 숨은 동안엔 주변을 서성이다 사라진다
+      // 숨은 동안엔 주변을 서성이다가, 방 밖 복도로 걸어 나가 멀어진 뒤 사라진다
       c.lost += c.step;
-      if (c.lost >= CHASE_GIVE_UP_MS) return this.endChase();
-      const opts = Object.values(DIRS).map(([dx, dy]) => [c.x + dx, c.y + dy]).filter(([x, y]) => this.passable(x, y) && !this.railBetween(c.x, c.y, x, y));
-      next = opts.length ? Phaser.Utils.Array.GetRandom(opts) : null;
+      if (c.lost < CHASE_WANDER_MS) {
+        const opts = Object.values(DIRS).map(([dx, dy]) => [c.x + dx, c.y + dy]).filter(([x, y]) => this.passable(x, y) && !this.railBetween(c.x, c.y, x, y));
+        // 방금 온 칸으로 바로 되돌아가지 않아야 제자리에서 떨지 않는다
+        const fwd = opts.filter(([x, y]) => !(x === c.px && y === c.py));
+        next = fwd.length ? Phaser.Utils.Array.GetRandom(fwd) : opts[0] || null;
+      } else {
+        c.exit ??= this.chaseExit(c.x, c.y);
+        if (!c.exit || (c.x === c.exit[0] && c.y === c.exit[1])) return this.endChase();
+        next = this.pathStep(c.x, c.y, c.exit[0], c.exit[1]);
+        if (!next) return this.endChase();
+      }
     } else {
       c.lost = 0;
+      c.exit = null;
       next = this.pathStep(c.x, c.y, this.tx, this.ty);
     }
     if (!next) return;
+    [c.px, c.py] = [c.x, c.y];
     [c.x, c.y] = next;
     this.shadowSfx('shadowStep');
     this.tweens.add({ targets: c.sprite, x: cx(c.x), y: cx(c.y), duration: c.step - 20 });
     if (!this.hidden && c.x === this.tx && c.y === this.ty) this.caught();
+  }
+
+  // 시작점에서 갈 수 있는 칸까지의 거리 (BFS)
+  distFrom(sx, sy) {
+    const dist = new Map([[key(sx, sy), 0]]);
+    const q = [[sx, sy]];
+    while (q.length) {
+      const [x, y] = q.shift();
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const nx = x + dx, ny = y + dy, k = key(nx, ny);
+        if (dist.has(k) || !this.passable(nx, ny) || this.railBetween(x, y, nx, ny)) continue;
+        dist.set(k, dist.get(key(x, y)) + 1);
+        q.push([nx, ny]);
+      }
+    }
+    return dist;
+  }
+
+  // 그림자가 떠나갈 칸: 숨은 곳에서 CHASE_LEAVE_DIST 이상 떨어진 복도 중 그림자에게 가장 가까운 칸.
+  // 교실·방에 숨었으면 문을 지나 복도로, 복도에 숨었으면 복도를 따라 멀어진다.
+  // 그런 복도가 없으면 숨은 곳에서 가장 먼 칸으로 간다.
+  chaseExit(sx, sy) {
+    const fromHide = this.distFrom(this.tx, this.ty);
+    const fromShadow = this.distFrom(sx, sy);
+    let best = null, bestD = Infinity, far = null, farD = -1;
+    for (const [k, d] of fromShadow) {
+      const [x, y] = k.split(',').map(Number);
+      const h = fromHide.get(k) ?? Infinity;
+      if (h >= CHASE_LEAVE_DIST && d < bestD && this.map.legend[this.grid[y][x]] === 'floor_corridor') [best, bestD] = [[x, y], d];
+      if (h !== Infinity && h > farD) [far, farD] = [[x, y], h];
+    }
+    return best || far;
   }
 
   // BFS로 목표까지의 다음 한 칸
