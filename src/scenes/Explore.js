@@ -35,6 +35,7 @@ const HAUNT_EVERY_S = 30;  // 환각 최소 간격(초), 여기에 0~15초를 �
 const GUILT_HAUNT_S = { 2: [35, 55], 3: [18, 30] };
 const GUILT_INVERT_EVERY_S = [45, 75];
 const GUILT_INVERT_MS = 2500;
+const GUILT_CALM_S = 10; // 대화·이벤트·추격이 끝난 뒤 죄책감 연출을 쉬는 시간(초)
 // 환청과 함께 화면에 잠깐 떠오르는 목소리 (도윤 / 가해자들)
 const GUILT_VOICES = ['……재민아.', '거기 있지?', '문 열어 줘.', '약속했잖아.', '왜 모른 척했어?', '야, 윤재민. 너도 웃기지?', '너도 웃었잖아.', '그냥 가자. 아무도 몰라.'];
 
@@ -745,6 +746,7 @@ export default class Explore extends Phaser.Scene {
   getScript(name) { return this.map.scripts[name]; }
 
   async run(list) {
+    this.stopGuilt(); // 대화·이벤트가 시작되면 죄책감 연출을 바로 거둔다
     this.busy = true;
     this.updatePrompt();
     if ((await runScript(this, list)) === 'stop') return;
@@ -767,6 +769,7 @@ export default class Explore extends Phaser.Scene {
   }
 
   async openNotebook() {
+    this.stopGuilt();
     this.busy = true;
     this.updatePrompt();
     sfx('beep');
@@ -856,6 +859,7 @@ export default class Explore extends Phaser.Scene {
     if (this.busy || this.hidden || this.chase || state.denial < DENIAL_HAUNT) return;
     if (++this.haunt < HAUNT_EVERY_S) return;
     this.haunt = -Phaser.Math.Between(0, 15);
+    this.guiltWait = Math.max(this.guiltWait, 8); // 부정 수치 환각과 죄책감 환청이 겹치지 않게
     sfx('follow');
     this.ui.glitch(250);
     if (state.denial >= DENIAL_PHANTOM) this.phantom();
@@ -869,7 +873,10 @@ export default class Explore extends Phaser.Scene {
   }
 
   guiltTick() {
-    if (this.over || !this.map.dark || this.busy || this.hidden || this.chase) return;
+    if (this.over || !this.map.dark) return;
+    // 대화·이벤트·퍼즐·추격·사물함 중엔 나오던 연출도 거두고, 끝난 뒤에도 잠시 쉬었다가 다시 시작한다
+    if (this.busy || this.hidden || this.chase || state.flags.pendingChase) { this.stopGuilt(); this.guiltCalm = GUILT_CALM_S; return; }
+    if (this.guiltCalm > 0) { this.guiltCalm--; return; }
     const lv = guiltLevel();
     if (lv < 2) return;
     if (--this.guiltWait <= 0) { this.guiltWait = this.guiltDelay(); this.guiltHaunt(lv); }
@@ -883,16 +890,16 @@ export default class Explore extends Phaser.Scene {
   guiltHaunt(lv) {
     sfx(Phaser.Utils.Array.GetRandom(['whisper', 'scratch', 'murmur']));
     this.ui.glitch(lv >= 3 ? 320 : 200);
-    const t = this.add.text(Phaser.Math.Between(90, W - 90), Phaser.Math.Between(90, H - 170), Phaser.Utils.Array.GetRandom(GUILT_VOICES),
+    const t = this.guiltText = this.add.text(Phaser.Math.Between(90, W - 90), Phaser.Math.Between(90, H - 170), Phaser.Utils.Array.GetRandom(GUILT_VOICES),
       textStyle(14, '#b46a6a', { fontStyle: 'italic' })).setOrigin(0.5).setScrollFactor(0).setDepth(97).setAlpha(0);
-    this.tweens.add({ targets: t, alpha: 0.75, duration: 500, hold: 900, yoyo: true, onComplete: () => t.destroy() });
+    this.tweens.add({ targets: t, alpha: 0.75, duration: 500, hold: 900, yoyo: true, onComplete: () => { t.destroy(); if (this.guiltText === t) this.guiltText = null; } });
     if (lv >= 3) {
       // 시야각 왜곡: 화면이 살짝 기울었다 돌아온다
       const cam = this.cameras.main;
-      this.tweens.addCounter({
+      this.guiltWarp = this.tweens.addCounter({
         from: 0, to: 1, duration: 1400, ease: 'Sine.easeInOut',
         onUpdate: tw => { const v = Math.sin(tw.getValue() * Math.PI); cam.setRotation(v * 0.035 * (this.warpSign ||= 1)); cam.setZoom(1 + v * 0.04); },
-        onComplete: () => { cam.setRotation(0); cam.setZoom(1); this.warpSign = -this.warpSign; },
+        onComplete: () => { cam.setRotation(0); cam.setZoom(1); this.warpSign = -this.warpSign; this.guiltWarp = null; },
       });
     }
   }
@@ -901,12 +908,21 @@ export default class Explore extends Phaser.Scene {
   invertKeys() {
     sfx('heart');
     this.cameras.main.shake(350, 0.005);
-    this.time.delayedCall(450, () => {
-      if (this.busy || this.chase || this.over) return;
+    this.invertTimer = this.time.delayedCall(450, () => {
+      if (this.busy || this.chase || this.hidden || this.over) return;
       this.invert = Phaser.Math.RND.pick(['lr', 'ud']);
       this.ui.glitch(150);
-      this.time.delayedCall(GUILT_INVERT_MS, () => { this.invert = null; });
+      this.invertTimer = this.time.delayedCall(GUILT_INVERT_MS, () => { this.invert = null; this.invertTimer = null; });
     });
+  }
+
+  // 이벤트·추격이 시작되면 진행 중인 죄책감 연출(떠오른 글자·화면 기울기·키 반전)을 바로 거둔다
+  stopGuilt() {
+    if (this.guiltText) { this.tweens.killTweensOf(this.guiltText); this.guiltText.destroy(); this.guiltText = null; }
+    if (this.guiltWarp) { this.guiltWarp.stop(); this.guiltWarp = null; this.cameras.main.setRotation(0).setZoom(1); }
+    this.invertTimer?.remove();
+    this.invertTimer = null;
+    this.invert = null;
   }
 
   // 반전 중이면 방향을 뒤집는다 (추격 중에는 반전하지 않는다)
@@ -942,6 +958,7 @@ export default class Explore extends Phaser.Scene {
 
   // ── 사물함 ──
   enterLocker(o) {
+    this.stopGuilt();
     this.hidden = true;
     sfx('locker');
     this.player.setVisible(false);
@@ -962,6 +979,7 @@ export default class Explore extends Phaser.Scene {
 
   // ── 추격 ──
   startChase() {
+    this.stopGuilt();
     const pc = state.flags.pendingChase;
     if (!pc || this.chase) return;
     const sprite = this.add.image(cx(pc.spawn.x), cx(pc.spawn.y), 'shadow').setDepth(3).setAlpha(0);
