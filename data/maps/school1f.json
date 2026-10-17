@@ -461,10 +461,14 @@
       { "t": "text", "text": "교무실을 나서는 순간, 과학실 쪽에서 쾅— 무언가 부딪히는 소리." },
       { "t": "sfx", "name": "follow", "wait": true },
       { "t": "text", "who": "재민", "text": "……또 왔어. 이번엔, 더 빨라." },
-      { "t": "chase", "id": "chase3", "spawn": { "x": 22, "y": 12 }, "step": 200, "after": "afterChase3" }
+      { "t": "chase", "id": "chase3", "spawn": { "x": 22, "y": 12 }, "step": 160, "hide": "struggle", "sparedScript": "sparedChase3", "after": "afterChase3" }
+    ],
+    "sparedChase3": [
+      { "t": "text", "who": "재민", "text": "……제발." },
+      { "t": "text", "who": "재민", "text": "제발, 제발, 제발……!" }
     ],
     "afterChase3": [
-      { "t": "text", "text": "……발소리가 멀어졌다." },
+      { "t": "text", "text": "……조용해졌다. 그림자는 어디에도 없다." },
       { "t": "text", "text": "복도 바닥에 그을린 명찰이 하나 떨어져 있다. 「윤재민」." },
       { "t": "text", "who": "재민", "text": "……저건, 그날의 나야." },
       { "t": "text", "who": "재민", "text": "과학실 열쇠가 있다. 과학실은 복도 건너편, 화장실 옆이다." }
