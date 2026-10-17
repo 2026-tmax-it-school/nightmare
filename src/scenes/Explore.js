@@ -16,6 +16,7 @@ const depthAt = (y, player = false) => 2 + y / 100 + (player ? 0.005 : 0);
 const TILE_FALLBACK = { floor_pc: 'floor_tile' };
 
 const MOVE_MS = 150;
+const CAM_EASE_MS = 350; // 방 고정 ↔ 따라가기 전환 시간
 const CHASE_STEP_MS = 250;
 const CHASE_GIVE_UP_MS = 4500;
 // 부정 수치 (GDD 4.4)
@@ -96,7 +97,7 @@ export default class Explore extends Phaser.Scene {
     const mw = this.cols * TILE, mh = this.rows * TILE;
     this.camFixedMap = mw <= W && mh <= H;
     if (this.camFixedMap) cam.centerOn(mw / 2, mh / 2);
-    else { cam.setBounds(0, 0, mw, mh); this.camRoom = undefined; this.updateCamera(true); }
+    else { this.camRoom = undefined; this.updateCamera(true); }
 
     if (m.ambient) {
       this.add.rectangle(0, 0, mw, mh, Phaser.Display.Color.HexStringToColor(m.ambient.color).color, m.ambient.alpha).setOrigin(0).setDepth(9);
@@ -139,7 +140,8 @@ export default class Explore extends Phaser.Scene {
     this.time.delayedCall(550, () => this.runEnter());
   }
 
-  update() {
+  update(time, delta) {
+    this.stepCamera(delta);
     if (this.dark) this.drawDark();
     this.lockerView?.update(this.chase, this.tx, this.ty);
     // 위를 볼 때는 머리 위 E가 조사 대상을 가리므로 대상 칸 위로 올린다
@@ -297,7 +299,8 @@ export default class Explore extends Phaser.Scene {
   }
 
   // ── 카메라: 화면에 다 들어오는 방에 들어서면 그 방을 화면 가운데에 고정하고(목표 패널·대화창에 가리지 않게),
-  // 복도처럼 화면보다 큰 곳에선 플레이어를 따라간다. 문 칸에선 바꾸지 않는다. instant: 이동 없이 바로 맞춘다 ──
+  // 복도처럼 화면보다 큰 곳에선 플레이어를 따라간다. 문 칸에선 바꾸지 않는다. instant: 이동 없이 바로 맞춘다
+  // 실제 이동은 stepCamera()가 매 프레임 한다. 여기선 목표(방 / 따라가기)만 바꾸고 전환을 시작한다 ──
   updateCamera(instant = false) {
     if (this.camFixedMap) return;
     let id = this.room[this.ty]?.[this.tx] ?? -1;
@@ -307,24 +310,41 @@ export default class Explore extends Phaser.Scene {
     const target = fits ? id : null;
     if (target === this.camRoom && !instant) return;
     this.camRoom = target;
+    this.camEase(instant ? 0 : CAM_EASE_MS);
+  }
+
+  // 지금 위치에서 새 목표까지 ms 동안 부드럽게 옮긴다 (0이면 바로)
+  camEase(ms) {
     const cam = this.cameras.main;
     cam.stopFollow();
-    if (fits) {
-      // 맵 가장자리 방도 가운데에 오도록 경계를 끈다 (방 밖은 방 단위 시야로 가려져 있다)
-      cam.useBounds = false;
-      const x = (b.x0 + b.x1 + 1) * TILE / 2, y = (b.y0 + b.y1 + 1) * TILE / 2;
-      if (instant) cam.centerOn(x, y);
-      else cam.pan(x, y, 250, 'Sine.easeOut', true);
-      return;
-    }
-    cam.useBounds = true;
-    // lerp 1: 카메라가 늦게 따라오면 멈춘 뒤에도 화면이 미끄러져 한 발 더 가는 것처럼 느껴진다
-    if (instant) { cam.startFollow(this.player, true, 1, 1); return; }
+    // 경계는 stepCamera가 직접 맞춘다. Phaser 경계를 켜고 끄면 그 순간 화면이 튄다
+    cam.useBounds = false;
+    this.camFrom = { x: cam.midPoint.x, y: cam.midPoint.y };
+    this.camT = ms ? 0 : 1;
+    this.camMs = ms;
+    this.stepCamera(0);
+  }
+
+  // 방 고정: 방 가운데 / 따라가기: 플레이어 (맵 밖이 보이지 않게 가장자리에서 멈춘다)
+  camTarget() {
+    const b = this.camRoom != null && this.roomBox[this.camRoom];
+    if (b) return [(b.x0 + b.x1 + 1) * TILE / 2, (b.y0 + b.y1 + 1) * TILE / 2];
     const mw = this.cols * TILE, mh = this.rows * TILE;
-    const px = Phaser.Math.Clamp(this.player.x, W / 2, mw - W / 2), py = Phaser.Math.Clamp(this.player.y, H / 2, mh - H / 2);
-    cam.pan(px, py, 200, 'Sine.easeOut', true, (c, p) => {
-      if (p === 1 && this.camRoom === null) cam.startFollow(this.player, true, 1, 1);
-    });
+    return [Phaser.Math.Clamp(this.player.x, W / 2, mw - W / 2), Phaser.Math.Clamp(this.player.y, H / 2, mh - H / 2)];
+  }
+
+  // 전환 중엔 출발점과 (움직이는) 목표 사이를 이어서, 끝나는 순간 목표와 정확히 겹친다 → 끝에서 튀지 않는다.
+  // 전환이 끝나면 바로 붙어 따라간다: 늦게 따라오면 멈춘 뒤에도 화면이 미끄러져 한 발 더 가는 것처럼 느껴진다
+  stepCamera(dt) {
+    if (this.camFixedMap || this.pastLayer || !this.camFrom) return; // 과거 겹쳐보기 중엔 그쪽이 카메라를 움직인다
+    let [x, y] = this.camTarget();
+    if (this.camT < 1) {
+      this.camT = Math.min(1, this.camT + dt / this.camMs);
+      const e = Phaser.Math.Easing.Sine.InOut(this.camT);
+      x = this.camFrom.x + (x - this.camFrom.x) * e;
+      y = this.camFrom.y + (y - this.camFrom.y) * e;
+    }
+    this.cameras.main.centerOn(Math.round(x), Math.round(y));
   }
 
   // 벽: 아래가 바닥이면 앞면(정면에서 본 벽), 아니면 윗면 — 완성 그래픽이 있을 때만
@@ -548,7 +568,7 @@ export default class Explore extends Phaser.Scene {
     this.pastLayer = null;
     const cam = this.cameras.main;
     if (this.camFixedMap) { cam.useBounds = true; cam.centerOn(this.cols * TILE / 2, this.rows * TILE / 2); }
-    else this.updateCamera(true); // 방 고정 / 따라가기를 원래대로
+    else this.camEase(CAM_EASE_MS); // 방 고정 / 따라가기로 부드럽게 돌아온다
     this.dark?.setVisible(true);
     sfx('glitch');
     this.tweens.add({ targets: layer, alpha: 0, duration: 400, onComplete: () => layer.forEach(o => o.destroy()) });
