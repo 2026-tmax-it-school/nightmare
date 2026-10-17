@@ -6,6 +6,7 @@ import { runScript } from '../script.js';
 import { UI, textStyle, isConfirm, dirOf } from '../ui/ui.js';
 import { sfx, startLoop, stopLoop, stopAllLoops } from '../audio.js';
 import { LockerView } from '../ui/locker.js';
+import { MirrorView } from '../ui/mirror.js';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const key = (x, y) => `${x},${y}`;
@@ -751,6 +752,8 @@ export default class Explore extends Phaser.Scene {
     this.updatePrompt();
     if ((await runScript(this, list)) === 'stop') return;
     this.ui.hideDialog();
+    // 거울 화면은 스크립트가 끝나면 닫힌다
+    if (this.mirrorView) { const v = this.mirrorView; this.mirrorView = null; await v.destroy(); }
     this.busy = false;
     this.updatePrompt();
     this.updateObjective();
@@ -824,6 +827,11 @@ export default class Explore extends Phaser.Scene {
       case 'resumeChase': return this.startChase();
       case 'pastOn': return this.pastOn(a.id);
       case 'pastOff': return this.pastOff();
+      // 화장실 거울 1인칭 화면: 처음이면 열고, 열려 있으면 얼굴·김·금만 바꾼다
+      case 'mirror':
+        if (this.mirrorView) return this.mirrorView.set(a);
+        this.mirrorView = new MirrorView(this, a);
+        return this.ui.wait(250);
       case 'ghost': return this.ghost(a);
     }
   }

@@ -314,19 +314,22 @@
     ],
 
     "mirror": [
+      { "t": "mirror" },
       {
         "t": "if", "cond": { "flag": "frag4" },
-        "then": [{ "t": "text", "text": "금이 간 거울. 이제는 지금의 내 얼굴만 비친다." }],
+        "then": [{ "t": "mirror", "cracked": true }, { "t": "text", "text": "금이 간 거울. 이제는 지금의 내 얼굴만 비친다." }],
         "else": [
           {
             "t": "if", "cond": { "notFlag": "p5" },
             "then": [{ "t": "text", "text": "물때 낀 거울. 내 얼굴이 흐릿하게 비친다." }],
             "else": [
+              { "t": "mirror", "face": "young" },
               { "t": "text", "text": "거울에 비친 얼굴이… 어리다." },
               { "t": "text", "text": "교복. 앳된 얼굴. 열일곱 살의 나." },
               { "t": "effect", "name": "glitch" },
               { "t": "text", "text": "거울 속의 내가, 천천히 입을 움직인다." },
               { "t": "text", "who": "거울 속의 재민", "text": "너는 기억하고 있어." },
+              { "t": "mirror", "cracked": true },
               { "t": "effect", "name": "crack" },
               { "t": "memory", "lines": ["“재민아, 너도 웃기지?”", "“……응.”", "(타는 냄새)", "“재민아… 거기 있지?”"] },
               { "t": "text", "who": "재민", "text": "……아니야. 난 몰라. 난……" },
