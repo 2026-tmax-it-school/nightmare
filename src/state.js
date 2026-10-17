@@ -4,7 +4,8 @@ import { DEV } from './constants.js';
 const SAVE_KEY = 'ithope_save_v1' + (DEV ? '_dev' : '');
 
 function fresh() {
-  return { flags: {}, clues: [], items: [], fragments: [], denial: 0, map: null, pos: null, dir: 'down' };
+  // seen: 조사한 물건과 그때의 조사 결과 갈래 (반짝임 표시용, Explore.updateSparkles)
+  return { flags: {}, clues: [], items: [], fragments: [], denial: 0, map: null, pos: null, dir: 'down', seen: {} };
 }
 
 export const state = fresh();
