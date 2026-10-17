@@ -319,7 +319,8 @@
               { "t": "text", "who": "재민", "text": "……아니야. 난 몰라. 난……" },
               { "t": "flag", "key": "frag4" },
               { "t": "fragment", "n": 4 },
-              { "t": "text", "who": "재민", "text": "거울… 1층 화장실에도 거울이 있었지." }
+              { "t": "text", "who": "재민", "text": "거울… 1층 화장실에도 거울이 있었지." },
+              { "t": "effect", "name": "uncrack" }
             ]
           }
         ]
