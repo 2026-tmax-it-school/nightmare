@@ -1,8 +1,8 @@
 // 화면 고정 UI: 대화창, 선택지, 알림, 연출, 퍼즐, 추리, 기억 노트
-import { W, H, FONT, DEV } from '../constants.js';
+import { W, H, FONT } from '../constants.js';
 import { DB } from '../db.js';
 import { state, addDenial, checkCond } from '../state.js';
-import { sfx, playNote, getVolume, setVolume, trialOn, setTrial } from '../audio.js';
+import { sfx, playNote, getVolume, setVolume } from '../audio.js';
 
 // pixelArt 캔버스가 창 크기에 맞춰 최근접 필터로 확대되면, 해상도가 낮은 작은 글자는
 // 가는 획이 샘플링에서 통째로 빠져 다른 글자처럼 깨져 보인다 → 텍스트를 더 높은 해상도로 미리 그려 둔다
@@ -905,13 +905,7 @@ export class UI {
         if (tab === 3) return DB.people.filter(e => checkCond(e.cond));
         if (tab === 4) return DB.timeline.filter(e => checkCond(e.cond));
         if (tab === SETTINGS) {
-          const vol = { name: `전체 볼륨  ${Math.round(getVolume() * 100)}%`, desc: '↑↓ 로 볼륨을 조절합니다.\n바꾼 값은 이 브라우저에 기억됩니다.' };
-          // 새 소리 시험 스위치 (GDD 4.7, 이슈 #66) — 개발자 모드에서만 보인다
-          if (!DEV) return [vol];
-          return [vol, {
-            name: `새 소리 (시험)  ${trialOn() ? '켜짐' : '꺼짐'}`,
-            desc: `${vol.desc}\n\n[개발자 모드] E로 새 소리를 켜고 끕니다.\n아이템·단서·문·잡힘·따돌림 효과음과 장소별 배경음이 바뀝니다.\n일반 플레이에서는 늘 지금 소리입니다.`,
-          }];
+          return [{ name: `전체 볼륨  ${Math.round(getVolume() * 100)}%`, desc: '↑↓ 로 볼륨을 조절합니다.\n바꾼 값은 이 브라우저에 기억됩니다.' }];
         }
         // 생각하기: 지금 할 일 + 이번 장의 단계 체크리스트 (data/objectives.json)
         const steps = (prog?.ch.steps || []).map((s, i) => ({
@@ -922,7 +916,7 @@ export class UI {
       };
       const draw = () => {
         tabTexts.forEach((t, i) => t.setColor(i === tab ? '#ffffff' : '#6d6875'));
-        keys.setText(tab === SETTINGS ? `←→ 탭   ↑↓ 볼륨   ${DEV ? 'E 새 소리   ' : ''}ESC 닫기` : '←→ 탭   ↑↓ 선택   ESC 닫기');
+        keys.setText(tab === SETTINGS ? '←→ 탭   ↑↓ 볼륨   ESC 닫기' : '←→ 탭   ↑↓ 선택   ESC 닫기');
         list.removeAll(true);
         const es = entries();
         idx = Math.min(idx, Math.max(0, es.length - 1));
@@ -941,7 +935,6 @@ export class UI {
         if (d === 'left') { tab = (tab + tabs.length - 1) % tabs.length; idx = first = 0; sfx('tick'); }
         else if (d === 'right') { tab = (tab + 1) % tabs.length; idx = first = 0; sfx('tick'); }
         else if (tab === SETTINGS && (d === 'up' || d === 'down')) { setVolume(getVolume() + (d === 'up' ? 0.1 : -0.1)); sfx('tick'); }
-        else if (tab === SETTINGS && DEV && isConfirm(e)) { setTrial(!trialOn()); idx = 1; sfx('itemGet'); }
         else if (d === 'up') { if (idx > 0) { idx--; sfx('tick'); } }
         else if (d === 'down') { if (idx < last) { idx++; sfx('tick'); } }
         else if (e.code === 'Escape') { off(); c.destroy(); resolve(); return; }
