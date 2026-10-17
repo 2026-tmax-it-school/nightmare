@@ -225,9 +225,14 @@ export default class Explore extends Phaser.Scene {
     this.updatePrompt();
     this.steps = (this.steps || 0) + 1;
     if (this.steps % 2 === 0) sfx('step');
+    // 걷는 그림(player_<방향>_1~4)이 있으면 한 칸에 두 장씩, 걸음마다 다음 두 장으로 넘긴다
+    const walk = `player_${this.dir}_`;
+    const anim = this.textures.exists(walk + '1');
+    const first = this.steps % 2 ? 3 : 1;
     this.tweens.add({
       targets: this.player, x: cx(nx), y: cx(ny), duration: MOVE_MS,
-      onComplete: () => { this.moving = false; this.afterMove(); },
+      onUpdate: tw => { if (anim) this.player.setTexture(walk + (first + (tw.progress < 0.5 ? 0 : 1))); },
+      onComplete: () => { this.player.setTexture('player_' + this.dir); this.moving = false; this.afterMove(); },
     });
   }
 
