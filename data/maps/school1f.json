@@ -161,7 +161,6 @@
     { "x": 6, "y": 7, "tex": "desk", "script": "desk" },
     { "x": 8, "y": 7, "tex": "desk", "script": "desk" },
     { "x": 1, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
-    { "x": 9, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
 
     { "x": 14, "y": 1, "tex": "board", "script": "board12" },
     { "x": 15, "y": 1, "tex": "board", "script": "board12" },
@@ -189,7 +188,6 @@
     { "x": 24, "y": 1, "tex": "board", "script": "board13" },
     { "x": 25, "y": 1, "tex": "board", "script": "board13" },
     { "x": 26, "y": 1, "tex": "board", "script": "board13" },
-    { "x": 29, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
     { "x": 25, "y": 2, "tex": "lectern", "script": "lectern" },
     { "x": 22, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 24, "y": 4, "tex": "desk", "script": "desk" },
@@ -225,7 +223,6 @@
 
     { "x": 10, "y": 10, "tex": "locker", "hide": true, "view": "corridor" },
     { "x": 20, "y": 10, "tex": "locker", "hide": true, "view": "corridor" },
-    { "x": 30, "y": 10, "tex": "locker", "hide": true, "view": "corridor" },
 
     { "x": 1, "y": 14, "tex": "cabinet", "script": "shoebox" },
     { "x": 1, "y": 15, "tex": "cabinet", "script": "shoebox" },
@@ -235,7 +232,6 @@
     { "x": 13, "y": 14, "tex": "monitor", "script": "monitor" },
     { "x": 15, "y": 14, "tex": "keybox", "script": "keybox" },
     { "x": 10, "y": 16, "tex": "logdesk", "script": "logdesk" },
-    { "x": 9, "y": 18, "tex": "locker", "hide": true, "view": "guardroom" },
 
     { "x": 18, "y": 14, "tex": "mirror", "script": "mirror" },
     { "x": 20, "y": 14, "tex": "mirror", "script": "mirror" },
