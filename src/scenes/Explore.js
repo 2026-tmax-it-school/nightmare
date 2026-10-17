@@ -403,8 +403,14 @@ export default class Explore extends Phaser.Scene {
     this.sightAt = null;
     // 가구·반짝임은 그 칸이 시야에 들어올 때만 보인다 (다른 방의 2칸 가구가 벽 칸으로 윗부분만 비치지 않게)
     const ox = cx(this.tx), oy = cx(this.ty);
+    // 벽 칸에 붙은 물건(창문 등)은 그 벽이 시야에 보이면 함께 보인다 — 벽을 비추는 광선과 같은 기준
     const shown = this.grid.map(r => r.map(() => null));
+    let wallHits;
     for (const o of this.objects?.values() || []) {
+      if (shown[o.y][o.x] === null && this.opaque[o.y]?.[o.x]) {
+        wallHits ??= this.castSight(ox, oy).hits;
+        shown[o.y][o.x] = wallHits.has(o.y * this.cols + o.x) || this.seeTile(ox, oy, o.x, o.y);
+      }
       shown[o.y][o.x] ??= this.seeTile(ox, oy, o.x, o.y);
       o.img?.setVisible(shown[o.y][o.x]);
     }
