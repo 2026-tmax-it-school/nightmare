@@ -19,10 +19,10 @@ async function exec(h, a) {
     case 'loop': return a.stop ? stopLoop(a.name) : startLoop(a.name);
     case 'flag': setFlag(a.key, 'value' in a ? a.value : true); return;
     case 'clue':
-      if (addClue(a.id)) { sfx('item'); h.ui.toast(`단서 획득 — ${DB.clues[a.id].name}`); }
+      if (addClue(a.id)) { sfx('clueGet'); h.ui.toast(`단서 획득 — ${DB.clues[a.id].name}`); }
       return;
     case 'item':
-      if (addItem(a.id)) { sfx('item'); h.ui.toast(`소지품 획득 — ${DB.items[a.id].name}`); }
+      if (addItem(a.id)) { sfx('itemGet'); h.ui.toast(`소지품 획득 — ${DB.items[a.id].name}`); }
       return;
     case 'take': // 소지품을 잃는다 (버리기, 부서짐 등)
       if (removeItem(a.id) && a.toast !== false) h.ui.toast(`소지품 잃음 — ${DB.items[a.id].name}`);
