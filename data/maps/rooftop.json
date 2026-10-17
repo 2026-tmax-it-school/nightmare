@@ -28,6 +28,10 @@
   "graffiti": [
     { "x": 6.2, "y": 7.3, "text": "내일 과학실 ㄱ", "angle": -6, "cond": { "flag": "stage1" } }
   ],
+  "_gates": "방 순서: { x, y, w?, h?, dir, cond, text } = 그 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 text 독백. cond가 없으면 늘 막는다 (GDD 4.7)",
+  "gates": [
+    { "x": 7, "y": 10, "h": 2, "dir": "left", "cond": { "item": "keyOffice" }, "text": "……아직 내려갈 수 없어. 옥상에서 할 일이 남아 있어." }
+  ],
   "triggers": [
     { "x": 7, "y": 10, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" },
     { "x": 10, "y": 8, "w": 1, "h": 1, "once": "ch3_start", "script": "roof_intro" }

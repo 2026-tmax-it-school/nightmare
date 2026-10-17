@@ -93,9 +93,9 @@ export default class Explore extends Phaser.Scene {
 
     const cam = this.cameras.main;
     const mw = this.cols * TILE, mh = this.rows * TILE;
-    if (mw <= W && mh <= H) cam.centerOn(mw / 2, mh / 2);
-    // lerp 1: 카메라가 늦게 따라오면 멈춘 뒤에도 화면이 미끄러져 한 발 더 가는 것처럼 느껴진다
-    else { cam.setBounds(0, 0, mw, mh); cam.startFollow(this.player, true, 1, 1); }
+    this.camFixedMap = mw <= W && mh <= H;
+    if (this.camFixedMap) cam.centerOn(mw / 2, mh / 2);
+    else { cam.setBounds(0, 0, mw, mh); this.camRoom = undefined; this.updateCamera(true); }
 
     if (m.ambient) {
       this.add.rectangle(0, 0, mw, mh, Phaser.Display.Color.HexStringToColor(m.ambient.color).color, m.ambient.alpha).setOrigin(0).setDepth(9);
@@ -131,6 +131,7 @@ export default class Explore extends Phaser.Scene {
     this.updatePrompt();
     this.updateArea();
     this.updateRooms();
+    this.updateObjective();
     this.haunt = 0;
     this.time.addEvent({ delay: 1000, loop: true, callback: this.denialTick, callbackScope: this });
     cam.fadeIn(500);
@@ -176,6 +177,8 @@ export default class Explore extends Phaser.Scene {
     const nx = this.tx + dx, ny = this.ty + dy;
     if (this.chase && this.chase.x === nx && this.chase.y === ny) return this.caught();
     if (!this.passable(nx, ny) || this.railBetween(this.tx, this.ty, nx, ny)) { this.updatePrompt(); return; }
+    const gate = this.gateAt(nx, ny, dir);
+    if (gate) return this.gateBlocked(gate, nx, ny);
     this.moving = true;
     this.tx = nx;
     this.ty = ny;
@@ -188,6 +191,23 @@ export default class Explore extends Phaser.Scene {
       targets: this.player, x: cx(nx), y: cx(ny), duration: MOVE_MS,
       onComplete: () => { this.moving = false; this.afterMove(); },
     });
+  }
+
+  // ── 방 순서 (GDD 4.7): map.gates의 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 독백을 띄운다 ──
+  // 나올 때(반대 방향)는 막지 않는다. cond가 없으면 늘 막는다 (진행과 상관없는 방)
+  gateAt(x, y, dir) {
+    return (this.map.gates || []).find(g => g.dir === dir && x >= g.x && x < g.x + (g.w || 1) && y >= g.y && y < g.y + (g.h || 1) && !(g.cond && checkCond(g.cond)));
+  }
+
+  gateBlocked(g, x, y) {
+    this.updatePrompt();
+    // 키를 누르고 있는 동안 매 프레임 다시 뜨지 않도록, 다른 칸으로 움직일 때까지 한 번만 알린다
+    if (this.gateHit === key(x, y)) return;
+    this.gateHit = key(x, y);
+    sfx('thud');
+    // 추격 중엔 대화창으로 시간을 멈추지 않고 알림만
+    if (this.chase) this.ui.toast(g.text);
+    else this.run([{ t: 'text', who: '재민', text: g.text }]);
   }
 
   // ── 그래픽 선택 ──
@@ -221,13 +241,17 @@ export default class Explore extends Phaser.Scene {
   // ── 방 단위 시야: 지금 있는 방(벽·문으로 나뉜 바닥 덩어리)과 그 둘레 벽만 보이고 나머지는 가린다 ──
   buildRooms() {
     this.room = this.grid.map(r => r.map(() => -1));
+    this.roomBox = []; // 방마다 바닥 칸의 경계 상자 (카메라 고정용)
     let id = 0;
     for (let y = 0; y < this.rows; y++) for (let x = 0; x < this.cols; x++) {
       if (this.room[y][x] >= 0 || !this.isFloor(x, y)) continue;
       const q = [[x, y]];
       this.room[y][x] = id;
+      const b = this.roomBox[id] = { x0: x, y0: y, x1: x, y1: y };
       while (q.length) {
         const [qx, qy] = q.pop();
+        b.x0 = Math.min(b.x0, qx); b.x1 = Math.max(b.x1, qx);
+        b.y0 = Math.min(b.y0, qy); b.y1 = Math.max(b.y1, qy);
         for (const [dx, dy] of Object.values(DIRS)) {
           const nx = qx + dx, ny = qy + dy;
           if (this.isFloor(nx, ny) && this.room[ny][nx] < 0) { this.room[ny][nx] = id; q.push([nx, ny]); }
@@ -267,6 +291,37 @@ export default class Explore extends Phaser.Scene {
         t.setTexture(ids.includes(at(x, y + 1)) ? 'wall_face' : 'wall_top');
       }
     }
+  }
+
+  // ── 카메라: 화면에 다 들어오는 방에 들어서면 그 방을 화면 가운데에 고정하고(목표 패널·대화창에 가리지 않게),
+  // 복도처럼 화면보다 큰 곳에선 플레이어를 따라간다. 문 칸에선 바꾸지 않는다. instant: 이동 없이 바로 맞춘다 ──
+  updateCamera(instant = false) {
+    if (this.camFixedMap) return;
+    let id = this.room[this.ty]?.[this.tx] ?? -1;
+    if (id < 0) { if (!instant) return; id = this.camRoom ?? -1; }
+    const b = this.roomBox[id];
+    const fits = !!b && (b.x1 - b.x0 + 1) * TILE <= W && (b.y1 - b.y0 + 1) * TILE <= H;
+    const target = fits ? id : null;
+    if (target === this.camRoom && !instant) return;
+    this.camRoom = target;
+    const cam = this.cameras.main;
+    cam.stopFollow();
+    if (fits) {
+      // 맵 가장자리 방도 가운데에 오도록 경계를 끈다 (방 밖은 방 단위 시야로 가려져 있다)
+      cam.useBounds = false;
+      const x = (b.x0 + b.x1 + 1) * TILE / 2, y = (b.y0 + b.y1 + 1) * TILE / 2;
+      if (instant) cam.centerOn(x, y);
+      else cam.pan(x, y, 250, 'Sine.easeOut', true);
+      return;
+    }
+    cam.useBounds = true;
+    // lerp 1: 카메라가 늦게 따라오면 멈춘 뒤에도 화면이 미끄러져 한 발 더 가는 것처럼 느껴진다
+    if (instant) { cam.startFollow(this.player, true, 1, 1); return; }
+    const mw = this.cols * TILE, mh = this.rows * TILE;
+    const px = Phaser.Math.Clamp(this.player.x, W / 2, mw - W / 2), py = Phaser.Math.Clamp(this.player.y, H / 2, mh - H / 2);
+    cam.pan(px, py, 200, 'Sine.easeOut', true, (c, p) => {
+      if (p === 1 && this.camRoom === null) cam.startFollow(this.player, true, 1, 1);
+    });
   }
 
   // 벽: 아래가 바닥이면 앞면(정면에서 본 벽), 아니면 윗면 — 완성 그래픽이 있을 때만
@@ -309,8 +364,10 @@ export default class Explore extends Phaser.Scene {
   }
 
   afterMove() {
+    this.gateHit = null;
     this.player.setDepth(depthAt(this.ty, true));
     this.updateRooms();
+    this.updateCamera();
     state.pos = { x: this.tx, y: this.ty };
     state.dir = this.dir;
     if (this.chase && this.chase.x === this.tx && this.chase.y === this.ty) return this.caught();
@@ -413,7 +470,6 @@ export default class Explore extends Phaser.Scene {
       const fx = figs.reduce((s, f) => s + cx(f.x), 0) / figs.length;
       const fy = figs.reduce((s, f) => s + cx(f.y), 0) / figs.length;
       const top = Math.min(...figs.map(f => cx(f.y))); // 가장 위 인물의 이름표가 화면 밖으로 나가지 않게
-      this.pastFollow = !!cam._follow;
       cam.stopFollow();
       cam.useBounds = false;
       cam.pan(fx, Math.min(fy + 90, top + H / 2 - 50), 500, 'Sine.easeInOut');
@@ -424,10 +480,8 @@ export default class Explore extends Phaser.Scene {
     const layer = this.pastLayer || [];
     this.pastLayer = null;
     const cam = this.cameras.main;
-    cam.useBounds = true;
-    if (this.pastFollow) cam.startFollow(this.player, true, 1, 1);
-    else cam.centerOn(this.cols * TILE / 2, this.rows * TILE / 2);
-    this.pastFollow = false;
+    if (this.camFixedMap) { cam.useBounds = true; cam.centerOn(this.cols * TILE / 2, this.rows * TILE / 2); }
+    else this.updateCamera(true); // 방 고정 / 따라가기를 원래대로
     this.dark?.setVisible(true);
     sfx('glitch');
     this.tweens.add({ targets: layer, alpha: 0, duration: 400, onComplete: () => layer.forEach(o => o.destroy()) });
@@ -454,6 +508,7 @@ export default class Explore extends Phaser.Scene {
     this.ui.hideDialog();
     this.busy = false;
     this.updatePrompt();
+    this.updateObjective();
   }
 
   async runEnter() {
@@ -472,7 +527,7 @@ export default class Explore extends Phaser.Scene {
     this.busy = true;
     this.updatePrompt();
     sfx('beep');
-    await this.ui.notebook(this.hint());
+    await this.ui.notebook(this.hint(), this.progress());
     this.busy = false;
     this.updatePrompt();
   }
@@ -480,6 +535,19 @@ export default class Explore extends Phaser.Scene {
   hint() {
     const h = (DB.hints[this.mapId] || []).find(h => checkCond(h.cond));
     return h ? h.text : '……';
+  }
+
+  // 현재 장 = start 조건을 만족하는 마지막 장 (data/objectives.json)
+  progress() {
+    const ch = [...DB.objectives].reverse().find(c => checkCond(c.start));
+    if (!ch) return null;
+    const marks = ch.steps.map(s => !!s.done && checkCond(s.done));
+    return { ch, marks, done: marks.filter(Boolean).length, total: marks.length };
+  }
+
+  updateObjective() {
+    this.ui.objective(this.progress(), this.hint());
+    this.ui.obj.c.setVisible(!this.hidden);
   }
 
   // ── 스크립트 전용 동작 ──
@@ -564,6 +632,7 @@ export default class Explore extends Phaser.Scene {
     sfx('locker');
     this.player.setVisible(false);
     this.updatePrompt();
+    this.updateObjective();
     this.lockerView = new LockerView(this, o.view);
   }
 
@@ -574,6 +643,7 @@ export default class Explore extends Phaser.Scene {
     this.lockerView?.destroy();
     this.lockerView = null;
     this.updatePrompt();
+    this.updateObjective();
   }
 
   // ── 추격 ──
@@ -646,6 +716,7 @@ export default class Explore extends Phaser.Scene {
     setFlag('pendingChase', null);
     saveGame();
     if (pc.after) this.run(this.getScript(pc.after));
+    else this.updateObjective();
   }
 
   caught() {

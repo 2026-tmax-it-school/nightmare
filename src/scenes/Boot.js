@@ -11,6 +11,7 @@ export default class Boot extends Phaser.Scene {
     this.load.json('clues', 'data/clues.json');
     this.load.json('puzzles', 'data/puzzles.json');
     this.load.json('hints', 'data/hints.json');
+    this.load.json('objectives', 'data/objectives.json');
     this.load.json('cutscenes', 'data/cutscenes.json');
     for (const id of MAPS) this.load.json('map_' + id, `data/maps/${id}.json`);
     if (DEV) this.load.json('checkpoints', 'data/checkpoints.json');
@@ -35,6 +36,7 @@ export default class Boot extends Phaser.Scene {
     Object.assign(DB.puzzles, puzzles.puzzles);
     Object.assign(DB.deductions, puzzles.deductions);
     Object.assign(DB.hints, json('hints'));
+    DB.objectives = json('objectives').chapters;
     Object.assign(DB.cutscenes, json('cutscenes'));
     for (const id of MAPS) DB.maps[id] = json('map_' + id);
     if (DEV) DB.checkpoints = json('checkpoints').checkpoints;

@@ -1,0 +1,69 @@
+{
+  "_comment": "목표 패널(GDD 4.7). 현재 장 = start 조건을 만족하는 마지막 장. 진행도 = done 조건을 만족한 단계 수 (done이 없으면 끝나지 않는 단계). 지금 할 일 문구는 hints.json.",
+  "chapters": [
+    {
+      "title": "프롤로그", "sub": "침실", "start": {},
+      "steps": [
+        { "name": "현관 옆 우편함 살펴보기", "done": { "clue": "card" } },
+        { "name": "명함에 적힌 곳으로 가기" }
+      ]
+    },
+    {
+      "title": "1장", "sub": "1층", "start": { "flag": "ch1_start" },
+      "steps": [
+        { "name": "1학년 3반 — 교탁의 출석부", "done": { "flag": "read_attendance" } },
+        { "name": "1학년 3반 — 자리 배치도 추리", "done": { "flag": "p1" } },
+        { "name": "1학년 3반 — 그 아이의 책상", "done": { "flag": "frag1" } },
+        { "name": "경비실 — 열쇠함 열기", "done": { "flag": "p2" } },
+        { "name": "그림자에게서 숨기", "done": { "flag": "chase1_done" } }
+      ]
+    },
+    {
+      "title": "2장", "sub": "2층", "start": { "flag": "ch2_start" },
+      "steps": [
+        { "name": "음악실 — 피아노 연주", "done": { "flag": "p3" } },
+        { "name": "음악실 — 피아노 의자 속 일기장", "done": { "flag": "frag2" } },
+        { "name": "컴퓨터실 — PC 로그인", "done": { "flag": "pc_unlocked" } },
+        { "name": "컴퓨터실 — 단톡방 닉네임 맞추기", "done": { "flag": "p4" } },
+        { "name": "그림자에게서 숨기", "done": { "flag": "chase2_done" } },
+        { "name": "방송실 — 테이프 순서 맞추기", "done": { "flag": "p5" } },
+        { "name": "2층 화장실 — 거울", "done": { "flag": "frag4" } }
+      ]
+    },
+    {
+      "title": "3장", "sub": "옥상", "start": { "flag": "ch3_start" },
+      "steps": [
+        { "name": "옥상 — 흩어진 단서 4개", "done": { "clue": ["roof_butts", "roof_ball", "roof_comic", "roof_tag"] } },
+        { "name": "난간 앞 — 그날 기억 재구성", "done": { "flag": "p6" } },
+        { "name": "소화기함 — 교무실 열쇠", "done": { "item": "keyOffice" } }
+      ]
+    },
+    {
+      "title": "4장", "sub": "교무실", "start": { "flag": "open_staff" },
+      "steps": [
+        { "name": "교무실 — 서류함", "done": { "flag": "read_report" } },
+        { "name": "교무실 — 엎어진 액자", "done": { "flag": "read_photo" } },
+        { "name": "교무실 — 담임 책상 서랍", "done": { "flag": "drawer_open" } },
+        { "name": "교무실 — 먹칠된 문서 대조", "done": { "flag": "p7" } },
+        { "name": "그림자에게서 숨기", "done": { "flag": "chase3_done" } }
+      ]
+    },
+    {
+      "title": "5장", "sub": "과학실", "start": { "flag": "open_science" },
+      "steps": [
+        { "name": "과학실 — 준비실 문 살펴보기", "done": { "clue": "prep_door" } },
+        { "name": "준비실 문 앞 — 그날 겹쳐 보기 (Q)", "done": { "flag": "past_prep" } },
+        { "name": "준비실 문 앞 — 그날의 순서 맞추기", "done": { "flag": "p8" } },
+        { "name": "최종 추리", "done": { "flag": "frag7" } }
+      ]
+    },
+    {
+      "title": "6장", "sub": "남겨진 것", "start": { "flag": "got_bag" },
+      "steps": [
+        { "name": "준비실 — 도윤의 가방", "done": { "flag": "got_bag" } },
+        { "name": "걸려 온 전화", "done": { "flag": "called" } },
+        { "name": "가방을 어떻게 할지 정하기" }
+      ]
+    }
+  ]
+}
