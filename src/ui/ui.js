@@ -137,6 +137,30 @@ export class UI {
     return i;
   }
 
+  // ── 노크: Space로 두드린 횟수를 센다. 마지막으로 두드리고 잠시 멈추면 끝난다 ──
+  knock() {
+    this.hideDialog();
+    const c = this.fixed(this.s.add.container(W / 2, H - 92), 130);
+    c.add(this.s.add.rectangle(0, 0, 360, 74, 0x0a0a0f, 0.94).setStrokeStyle(2, 0x5d5a66));
+    c.add(this.s.add.text(0, -18, 'Space: 문을 두드린다', textStyle(14, '#c9b89a')).setOrigin(0.5));
+    const marks = this.s.add.text(0, 14, '', textStyle(18, '#e8e2d6')).setOrigin(0.5);
+    c.add(marks);
+    return new Promise(res => {
+      let n = 0, idle;
+      const done = () => { off(); idle?.remove(false); this.wait(300).then(() => { c.destroy(); res(n); }); };
+      const off = this.listen(e => {
+        if (e.code !== 'Space' || e.repeat) return;
+        n++;
+        sfx('knock');
+        this.s.cameras.main.shake(60, 0.002);
+        marks.setText(Array(n).fill('똑').join(' · '));
+        idle?.remove(false);
+        idle = this.s.time.delayedCall(1400, done);
+      });
+      idle = this.s.time.delayedCall(8000, done); // 아무것도 안 두드리면 그만둔 것으로 본다
+    });
+  }
+
   // ── 알림 · 배너 ──
   toast(msg) {
     // 목표 패널이 있으면 그 아래부터 쌓는다

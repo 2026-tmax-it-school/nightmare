@@ -104,8 +104,8 @@
     { "x": 2, "y": 12, "tex": "mirror", "script": "mirror" },
     { "x": 3, "y": 12, "tex": "mirror", "script": "mirror" },
     { "x": 9, "y": 13, "tex": "stall", "script": "stall" },
-    { "x": 9, "y": 14, "tex": "stall", "script": "stall" },
-    { "x": 9, "y": 15, "tex": "stall", "script": "stall" }
+    { "x": 9, "y": 14, "tex": "stall", "script": "stall_knock" },
+    { "x": 9, "y": 15, "tex": "stall", "script": "stall_clogged" }
   ],
   "scripts": {
     "stairs_down": [
@@ -342,7 +342,57 @@
         ]
       }
     ],
+    "stall_knock": [
+      {
+        "t": "if", "cond": { "flag": "knock_open" },
+        "then": [{ "t": "stall", "kind": "knock" }, { "t": "text", "text": "문이 반쯤 열린 칸. 안은 비어 있다. 문 안쪽 아래에 손톱으로 긁은 자국이 길게 나 있다." }],
+        "else": [
+          {
+            "t": "if", "cond": { "notFlag": "p5" },
+            "then": [{ "t": "text", "text": "이 칸만 안에서 잠겨 있다. ……안에 누가 있나?" }],
+            "else": [
+              { "t": "text", "text": "이 칸만 안에서 잠겨 있다." },
+              { "t": "sfx", "name": "knock" }, { "t": "wait", "ms": 450 },
+              { "t": "sfx", "name": "knock" }, { "t": "wait", "ms": 450 },
+              { "t": "sfx", "name": "knock" }, { "t": "wait", "ms": 700 },
+              { "t": "text", "text": "……똑, 똑, 똑. 안쪽에서 누군가 문을 두드린다." },
+              { "t": "text", "who": "재민", "text": "테이프에서 들었던… 그 소리랑 같아." },
+              {
+                "t": "choice", "prompt": "두드려서 대답할까?",
+                "options": [
+                  {
+                    "label": "대답한다",
+                    "then": [
+                      {
+                        "t": "knock", "n": 3,
+                        "success": [
+                          { "t": "wait", "ms": 700 },
+                          { "t": "sfx", "name": "unlock" }, { "t": "wait", "ms": 300 },
+                          { "t": "sfx", "name": "creak" },
+                          { "t": "flag", "key": "knock_open" },
+                          { "t": "stall", "kind": "knock" },
+                          { "t": "text", "text": "딸깍. 잠금이 풀리고, 칸막이 문이 스르르 열린다." },
+                          { "t": "text", "text": "……아무도 없다. 문 안쪽 아래에 손톱으로 긁은 자국만 길게 나 있다." },
+                          { "t": "sfx", "name": "whisper" },
+                          { "t": "text", "who": "재민", "text": "누가… 여기 갇혀 있었던 것 같아. 왜 이렇게 숨이 막히지." }
+                        ],
+                        "fail": [
+                          { "t": "wait", "ms": 600 },
+                          { "t": "text", "text": "……두드리는 소리가 뚝 끊겼다. 대답이 맞지 않았던 걸까." }
+                        ]
+                      }
+                    ]
+                  },
+                  { "label": "그만둔다", "then": [{ "t": "text", "text": "……못 들은 척, 문에서 한 발 물러선다." }] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
     "stall": [
+      { "t": "stall", "kind": "graffiti" },
       { "t": "text", "text": "칸막이 안은 비어 있다. 문 안쪽에 「피아노 왕자 전용 ㅋ」이라는 낙서." },
       {
         "t": "if", "cond": { "guiltAtLeast": 3 },
@@ -354,6 +404,11 @@
           }
         ]
       }
+    ],
+    "stall_clogged": [
+      { "t": "stall", "kind": "clogged" },
+      { "t": "text", "text": "막힌 변기에 물이 고여 있다. 젖은 교과서 한 권이 처박혀 있다." },
+      { "t": "text", "text": "표지의 이름 칸만 칼로 도려내져 있다." }
     ],
 
     "door_roof": [

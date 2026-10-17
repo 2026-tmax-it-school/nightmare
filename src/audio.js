@@ -249,6 +249,8 @@ const SFX = {
   gust: t => { noise(t, { freq: 450, q: 0.8, peak: 0.12, a: 1.2, d: 1.6 }); return 2.8; },
   chime: t => { tone(t, { freq: 1320, peak: 0.06, a: 0.01, d: 1.0 }); tone(t, { freq: 1980, peak: 0.03, a: 0.01, d: 0.8 }); return 1; },
   alarm: t => { for (let i = 0; i < 6; i++) tone(t + i * 0.3, { freq: i % 2 ? 740 : 980, type: 'square', peak: 0.06, a: 0.01, d: 0.26 }); return 1.8; },
+  // 칸막이 문을 두드리는 소리 한 번 (2층 화장실 노크)
+  knock: t => { noise(t, { type: 'lowpass', freq: 520, q: 1.2, peak: 0.5, d: 0.08 }); tone(t, { freq: 140, to: 90, peak: 0.25, d: 0.09 }); return 0.15; },
   bang: t => {
     for (let i = 0; i < 4; i++) noise(t + i * 0.32, { type: 'lowpass', freq: 300, peak: 0.55, d: 0.16 });
     for (let i = 0; i < 6; i++) noise(t + 1.6 + i * 0.22, { freq: 520, q: 2, peak: 0.3 - i * 0.045, d: 0.07 });

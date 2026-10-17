@@ -260,7 +260,7 @@
     { "x": 18, "y": 14, "tex": "mirror", "script": "mirror" },
     { "x": 20, "y": 14, "tex": "mirror", "script": "mirror" },
     { "x": 21, "y": 17, "tex": "stall", "script": "stall" },
-    { "x": 21, "y": 18, "tex": "stall", "script": "stall" },
+    { "x": 21, "y": 18, "tex": "stall", "script": "stall_burnt" },
 
 
     { "x": 23, "y": 14, "tex": "chemshelf", "script": "chemshelf" },
@@ -1045,15 +1045,20 @@
     "stall": [
       {
         "t": "if", "cond": { "guiltAtLeast": 3 },
-        "then": [{ "t": "text", "text": "칸막이 문이 조금 열려 있다. ……이 문을 밖에서 붙잡고 있던 게 나였다. 안에서 두드리는 소리가 그칠 때까지." }],
+        "then": [{ "t": "stall", "kind": "scratch" }, { "t": "text", "text": "칸막이 문이 조금 열려 있다. ……이 문을 밖에서 붙잡고 있던 게 나였다. 안에서 두드리는 소리가 그칠 때까지." }],
         "else": [
           {
             "t": "if", "cond": { "guiltAtLeast": 2 },
-            "then": [{ "t": "text", "text": "칸막이 문이 조금 열려 있다. 문 안쪽에 손톱으로 긁은 자국이 빼곡하다." }],
-            "else": [{ "t": "text", "text": "칸막이 문이 조금 열려 있다. ……안은 비어 있다." }]
+            "then": [{ "t": "stall", "kind": "scratch" }, { "t": "text", "text": "칸막이 문이 조금 열려 있다. 문 안쪽에 손톱으로 긁은 자국이 빼곡하다." }],
+            "else": [{ "t": "stall", "kind": "empty" }, { "t": "text", "text": "칸막이 문이 조금 열려 있다. ……안은 비어 있다." }]
           }
         ]
       }
+    ],
+    "stall_burnt": [
+      { "t": "stall", "kind": "burnt" },
+      { "t": "text", "text": "이 칸만 타일 벽이 시커멓게 그을려 있다." },
+      { "t": "text", "text": "……희미하게 탄내가 난다. 십 년이나 지났는데." }
     ],
     "stairs": [
       {
