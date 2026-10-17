@@ -98,10 +98,8 @@
     { "x": 27, "y": 1, "tex": "console", "script": "console" },
     { "x": 28, "y": 1, "tex": "console", "script": "console" },
     { "x": 30, "y": 1, "tex": "tapedeck", "script": "tapedeck" },
-    { "x": 32, "y": 6, "tex": "locker", "hide": true, "view": "broadcast" },
 
     { "x": 11, "y": 8, "tex": "locker", "hide": true, "view": "corridor" },
-    { "x": 23, "y": 8, "tex": "locker", "hide": true, "view": "corridor" },
 
     { "x": 2, "y": 12, "tex": "mirror", "script": "mirror" },
     { "x": 3, "y": 12, "tex": "mirror", "script": "mirror" },
