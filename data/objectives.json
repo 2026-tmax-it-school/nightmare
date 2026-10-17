@@ -34,7 +34,7 @@
       "title": "3장", "sub": "옥상", "start": { "flag": "ch3_start" },
       "steps": [
         { "name": "옥상 — 흩어진 단서 4개", "done": { "clue": ["roof_butts", "roof_ball", "roof_comic", "roof_tag"] } },
-        { "name": "난간 앞 — 그날 기억 재구성", "done": { "flag": "p6" } },
+        { "name": "위쪽 난간의 「7.13」 낙서 — 그날 기억 재구성", "done": { "flag": "p6" } },
         { "name": "소화기함 — 교무실 열쇠", "done": { "item": "keyOffice" } }
       ]
     },
