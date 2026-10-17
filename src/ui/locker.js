@@ -159,10 +159,9 @@ export class LockerView {
     this.drawDoor(door);
 
     this.view = scene.add.container(0, 0, [outside, this.figure, door]);
-    this.root = scene.add.container(0, 0, [
-      this.view,
-      scene.add.text(W / 2, H - 30, '사물함 안에 숨어 있다 — E: 나가기', textStyle(12, '#6f6878')).setOrigin(0.5),
-    ]).setScrollFactor(0).setDepth(90).setAlpha(0);
+    // 안내 문구는 미니게임(그림자가 문 앞에 섰을 때) 동안 숨긴다 — 그동안은 나갈 수 없다
+    this.hint = scene.add.text(W / 2, H - 30, '사물함 안에 숨어 있다 — E: 나가기', textStyle(12, '#6f6878')).setOrigin(0.5);
+    this.root = scene.add.container(0, 0, [this.view, this.hint]).setScrollFactor(0).setDepth(90).setAlpha(0);
 
     scene.tweens.add({ targets: this.root, alpha: 1, duration: 180 });
     // 숨소리에 맞춰 시야가 천천히 오르내린다

@@ -58,7 +58,7 @@
     {
       "id": "chase2", "label": "2장 — 2층 추격 (사물함 앞)", "from": "p4", "scene": "Explore", "map": "school2f",
       "flags": ["pc_unlocked", "p4"], "clues": ["chatlog"], "fragments": [3],
-      "set": { "pendingChase": { "id": "chase2", "spawn": { "x": 32, "y": 9 }, "after": "afterChase2" } },
+      "set": { "pendingChase": { "id": "chase2", "spawn": { "x": 32, "y": 9 }, "hide": "breath", "after": "afterChase2" } },
       "pos": { "x": 11, "y": 9, "dir": "up" }
     },
     {
@@ -109,6 +109,12 @@
       "id": "frag6", "label": "4장 — 조각 6 이후 (교무실 문 안쪽, 나가면 추격)", "from": "p7", "scene": "Explore", "map": "school1f",
       "flags": ["drawer_open", "p7", "frag6"], "clues": ["counsel"], "fragments": [6], "items": ["keyScience"],
       "pos": { "x": 35, "y": 8, "dir": "down" }
+    },
+    {
+      "id": "chase3", "label": "4장 — 3번째 추격 (교무실 문 앞, 그림자 접근 중)", "from": "frag6", "scene": "Explore", "map": "school1f",
+      "flags": ["chase3_start"],
+      "set": { "pendingChase": { "id": "chase3", "spawn": { "x": 22, "y": 12 }, "step": 160, "hide": "struggle", "sparedScript": "sparedChase3", "after": "afterChase3" } },
+      "pos": { "x": 35, "y": 10, "dir": "up" }
     },
     {
       "id": "science", "label": "4장 — 추격 후 과학실 문 앞", "from": "frag6", "scene": "Explore", "map": "school1f",
