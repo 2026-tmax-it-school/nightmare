@@ -79,7 +79,7 @@
     {
       "id": "roof", "label": "2장 — 옥상 계단 앞", "from": "mirror2f", "scene": "Explore", "map": "school2f",
       "flags": ["frag4"], "fragments": [4],
-      "pos": { "x": 32, "y": 13, "dir": "up" }
+      "pos": { "x": 31, "y": 12, "dir": "right" }
     },
     {
       "id": "rooftop", "label": "3장 — 옥상 도착", "from": "roof", "scene": "Explore", "map": "rooftop",
@@ -93,7 +93,7 @@
     {
       "id": "frag5", "label": "3장 — 조각 5 이후 (소화기함 앞)", "from": "p6", "scene": "Explore", "map": "rooftop",
       "flags": ["p6"], "clues": ["plan713"], "fragments": [5],
-      "pos": { "x": 11, "y": 10, "dir": "down" }
+      "pos": { "x": 12, "y": 8, "dir": "left" }
     },
     {
       "id": "office", "label": "4장 — 1층 귀환 후 교무실 문 앞", "from": "frag5", "scene": "Explore", "map": "school1f",

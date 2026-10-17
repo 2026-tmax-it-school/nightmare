@@ -21,6 +21,7 @@ function person(g, { skin = 0xe2c3a3, hair = 0x15141a, top = 0x34405a, bottom = 
 
 export function makeTextures(scene) {
   const make = (key, draw, w = T, h = T) => {
+    if (scene.textures.exists(key)) return; // assets/sprites의 완성 그래픽이 있으면 그걸 쓴다
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     draw(g);
     g.generateTexture(key, w, h);
@@ -47,6 +48,23 @@ export function makeTextures(scene) {
     g.fillStyle(0x34343a).fillRect(0, 0, T, T);
     g.fillStyle(0x45454c);
     for (let y = 2; y < T; y += 8) g.fillRect(0, y, T, 4);
+  });
+  // 계단 난간 (두 칸 사이 경계에 가로로 놓인다): 녹슨 쇠 손잡이 + 기둥, 여러 칸 이으면 한 줄로 이어진다
+  make('rail_h', g => {
+    g.fillStyle(0x000000, 0.35).fillRect(0, 13, T, 3);
+    g.fillStyle(0x2a2c30).fillRect(14, 4, 4, 10);
+    g.fillStyle(0x3a3d42).fillRect(0, 2, T, 4);
+    g.fillStyle(0x6b6f76).fillRect(0, 2, T, 1);
+    g.fillStyle(0x5a3e2a).fillRect(0, 5, T, 1);
+    g.fillStyle(0x3a3d42).fillRect(0, 9, T, 2);
+  }, T, 16);
+  // 옆으로 난 계단 (단이 세로줄로 보인다)
+  make('floor_stairs_side', g => {
+    g.fillStyle(0x34343a).fillRect(0, 0, T, T);
+    g.fillStyle(0x45454c);
+    for (let x = 2; x < T; x += 8) g.fillRect(x, 0, 4, T);
+    g.fillStyle(0x8a7a3a);
+    for (let x = 6; x < T; x += 8) g.fillRect(x, 0, 1, T);
   });
   make('floor_room', g => {
     g.fillStyle(0x4c4036).fillRect(0, 0, T, T);

@@ -1,0 +1,22 @@
+{
+  "_comment": "tools/sprites.py 설정. box는 원본 이미지 안의 [x0, y0, x1, y1]. 원본은 assets/source/ (Git 미포함)",
+  "wall_top": { "src": "walls.png", "box": [340, 16, 496, 172] },
+  "wall_face": { "src": "walls.png", "box": [528, 16, 684, 172] },
+  "floor_corridor": { "src": "corridor_terrazzo.webp", "box": [30, 30, 994, 994], "patch": [[860, 860, 90, 90, 0, -200]] },
+  "floor_wood": { "src": "floors.png", "box": [520, 16, 1008, 504], "trim": [0, 0, 0, 40] },
+  "floor_tile": { "src": "floors.png", "box": [20, 520, 504, 1008] },
+  "floor_pc": { "src": "pc_floor.webp", "box": [12, 16, 504, 504] },
+  "floor_pc_2": { "src": "pc_floor.webp", "box": [524, 16, 1012, 504] },
+  "floor_pc_3": { "src": "pc_floor.webp", "box": [524, 524, 960, 1008] },
+  "floor_stairs_side": { "src": "stairs_side2.webp", "box": [156, 80, 1100, 1176] },
+  "floor_stairs": { "src": "floors.png", "box": [520, 524, 1008, 1008], "patch": [[860, 870, 80, 80, 0, -121]] },
+  "locker": { "src": "lockers_doors.png", "box": [120, 4, 196, 184], "mode": "object", "size": [30, 54], "fill": true },
+  "locker_back": { "src": "lockers_doors.png", "box": [480, 4, 556, 184], "mode": "object", "size": [30, 54], "fill": true },
+  "door_open": { "src": "lockers_doors.png", "box": [68, 204, 256, 352], "mode": "stretch", "frame": true, "clear_dark": [0.45, 0.06, 0.94, 0.94, 150] },
+  "door_locked": { "src": "door_locked.png", "box": [24, 8, 296, 168], "mode": "stretch", "frame": true },
+  "chemshelf": { "src": "science.webp", "box": [24, 20, 320, 512], "mode": "object", "size": [32, 64] },
+  "labtable": { "src": "science.webp", "box": [344, 244, 680, 512], "mode": "object" },
+  "lamp": { "src": "science.webp", "box": [688, 236, 1020, 512], "mode": "object" },
+  "bag": { "src": "science.webp", "box": [4, 516, 340, 768], "mode": "object", "cutout": { "kind": "blue" }, "scale": 0.8 },
+  "trash": { "src": "science.webp", "box": [344, 516, 684, 768], "mode": "object", "trim": [6, 6, 6, 6], "cutout": { "kind": "border", "tol": 55 }, "scale": 0.8 }
+}

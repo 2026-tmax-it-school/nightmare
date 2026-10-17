@@ -1,0 +1,78 @@
+{
+ "wall_top": [
+  32,
+  32
+ ],
+ "wall_face": [
+  32,
+  32
+ ],
+ "floor_corridor": [
+  32,
+  32
+ ],
+ "floor_wood": [
+  32,
+  32
+ ],
+ "floor_tile": [
+  32,
+  32
+ ],
+ "floor_pc": [
+  32,
+  32
+ ],
+ "floor_pc_2": [
+  32,
+  32
+ ],
+ "floor_pc_3": [
+  32,
+  32
+ ],
+ "floor_stairs_side": [
+  32,
+  32
+ ],
+ "floor_stairs": [
+  32,
+  32
+ ],
+ "locker": [
+  30,
+  54
+ ],
+ "locker_back": [
+  30,
+  54
+ ],
+ "door_open": [
+  32,
+  32
+ ],
+ "door_locked": [
+  32,
+  32
+ ],
+ "chemshelf": [
+  32,
+  64
+ ],
+ "labtable": [
+  32,
+  32
+ ],
+ "lamp": [
+  32,
+  32
+ ],
+ "bag": [
+  32,
+  32
+ ],
+ "trash": [
+  32,
+  32
+ ]
+}

@@ -3,9 +3,9 @@
   "bgm": "wind",
   "dark": true,
   "legend": {
-    "F": "fence", "r": "floor_roof", "#": "wall", "=": "floor_stairs"
+    "F": "fence", "r": "floor_roof", "#": "wall", "L": "door_locked", "=": "floor_stairs", "|": "floor_stairs_side", ".": "floor_corridor", "D": "door_open"
   },
-  "solid": ["F", "#"],
+  "solid": ["F", "#", "L"],
   "grid": [
     "FFFFFFFFFFFFFFFFFFFF",
     "FrrrrrrrrrrrrrrrrrrF",
@@ -16,37 +16,28 @@
     "FrrrrrrrrrrrrrrrrrrF",
     "FrrrrrrrrrrrrrrrrrrF",
     "FrrrrrrrrrrrrrrrrrrF",
-    "FrrrrrrrrrrrrrrrrrrF",
-    "FrrrrrrrrrrrrrrrrrrF",
-    "FrrrrrrrrrrrrrrrrrrF",
-    "#########=##########"
+    "Frrrrr####L##rrrrrrF",
+    "Frrrrr#|||..#rrrrrrF",
+    "Frrrrr#|||..#rrrrrrF",
+    "####################"
   ],
-  "spawn": { "x": 9, "y": 11, "dir": "up" },
+  "spawn": { "x": 10, "y": 10, "dir": "up" },
   "areas": [
     { "name": "옥상", "x": 0, "y": 0, "w": 20, "h": 13 }
   ],
   "graffiti": [
     { "x": 6.2, "y": 7.3, "text": "내일 과학실 ㄱ", "angle": -6, "cond": { "flag": "stage1" } }
   ],
-  "onEnter": {
-    "once": "ch3_start",
-    "script": [
-      { "t": "chapter", "title": "3장", "sub": "옥상" },
-      { "t": "save" },
-      { "t": "text", "text": "옥상. 차가운 바람이 분다." },
-      { "t": "text", "text": "녹슨 펜스 너머로 불 꺼진 마을이 내려다보인다." },
-      { "t": "text", "who": "재민", "text": "……여기, 와 본 적 있어. 누군가랑 같이." }
-    ]
-  },
   "triggers": [
-    { "x": 9, "y": 12, "w": 1, "h": 1, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" }
+    { "x": 7, "y": 10, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" },
+    { "x": 10, "y": 8, "w": 1, "h": 1, "once": "ch3_start", "script": "roof_intro" }
   ],
   "past": [
     {
       "id": "roof", "x": 1, "y": 1, "w": 18, "h": 11, "flag": "past_roof",
       "figures": [
         { "x": 5, "y": 3, "label": "일등" }, { "x": 10, "y": 2, "label": "럭키7" },
-        { "x": 15, "y": 7, "label": "텐" }, { "x": 9, "y": 11, "label": "재민" }
+        { "x": 15, "y": 7, "label": "텐" }, { "x": 10, "y": 8, "label": "재민" }
       ],
       "script": [
         { "t": "text", "text": "7월 13일, 방과후의 옥상이 겹쳐 보인다." },
@@ -64,13 +55,33 @@
     { "x": 10, "y": 1, "tex": "ball", "script": "clue_ball" },
     { "x": 15, "y": 6, "tex": "roofbench", "script": "bench" },
     { "x": 16, "y": 6, "tex": "comic", "script": "clue_comic" },
-    { "x": 7, "y": 11, "tex": "tag", "script": "clue_tag" },
-    { "x": 11, "y": 11, "tex": "extbox", "script": "extbox" },
+    { "x": 10, "y": 9, "door": "roof", "script": "door_roof" },
+    { "x": 9, "y": 8, "tex": "tag", "script": "clue_tag" },
+    { "x": 11, "y": 8, "tex": "extbox", "script": "extbox" },
     { "x": 13, "y": 0, "script": "carving" }
   ],
   "scripts": {
+    "door_roof": [
+      {
+        "t": "if", "cond": { "item": "keyRoof" },
+        "then": [
+          { "t": "openDoor", "id": "roof" },
+          { "t": "text", "text": "옥상 열쇠를 돌리자, 녹슨 철문이 바람에 밀려 열린다." },
+          { "t": "text", "text": "차가운 밤공기. 밖에서 누군가 기다리고 있는 것 같다." },
+          { "t": "text", "who": "재민", "text": "……나가자." }
+        ],
+        "else": [{ "t": "text", "text": "녹슨 철문. 잠겨 있다. 「옥상 출입 금지」" }]
+      }
+    ],
+    "roof_intro": [
+      { "t": "chapter", "title": "3장", "sub": "옥상" },
+      { "t": "save" },
+      { "t": "text", "text": "옥상. 차가운 바람이 분다." },
+      { "t": "text", "text": "녹슨 펜스 너머로 불 꺼진 마을이 내려다보인다." },
+      { "t": "text", "who": "재민", "text": "……여기, 와 본 적 있어. 누군가랑 같이." }
+    ],
     "stairs_down": [
-      { "t": "goto", "scene": "Explore", "map": "school2f", "pos": { "x": 32, "y": 13, "dir": "down" } }
+      { "t": "goto", "scene": "Explore", "map": "school2f", "pos": { "x": 31, "y": 12, "dir": "left" } }
     ],
 
     "tank": [{ "t": "text", "text": "녹슨 물탱크. 두드리면 텅 빈 소리가 난다." }],

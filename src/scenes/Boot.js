@@ -14,6 +14,11 @@ export default class Boot extends Phaser.Scene {
     this.load.json('cutscenes', 'data/cutscenes.json');
     for (const id of MAPS) this.load.json('map_' + id, `data/maps/${id}.json`);
     if (DEV) this.load.json('checkpoints', 'data/checkpoints.json');
+    // 완성된 그래픽 (tools/sprites.py가 만든 목록). 목록에 있는 것만 이미지로, 나머지는 textures.js의 임시 그래픽
+    this.load.on('filecomplete-json-sprites', (key, type, list) => {
+      for (const name of Object.keys(list)) this.load.image(name, `assets/sprites/${name}.png`);
+    });
+    this.load.json('sprites', 'assets/sprites/manifest.json');
   }
 
   create() {

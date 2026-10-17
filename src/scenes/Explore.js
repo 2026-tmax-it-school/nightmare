@@ -10,6 +10,10 @@ import { LockerView } from '../ui/locker.js';
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const key = (x, y) => `${x},${y}`;
 const cx = t => t * TILE + TILE / 2;
+// 가구·플레이어의 앞뒤 순서: 화면 아래쪽(앞)에 있을수록 위에 그린다. 바닥 장식(1)보다 위, 조사 표시(4)보다 아래.
+const depthAt = (y, player = false) => 2 + y / 100 + (player ? 0.005 : 0);
+// 그림이 아직 없는 타일은 비슷한 타일로 대신 그린다
+const TILE_FALLBACK = { floor_pc: 'floor_tile' };
 
 const MOVE_MS = 150;
 const CHASE_STEP_MS = 250;
@@ -45,14 +49,26 @@ export default class Explore extends Phaser.Scene {
     this.areaName = null;
     this.ui = new UI(this);
 
-    this.tiles = this.grid.map((row, y) => row.map((ch, x) => this.add.image(cx(x), cx(y), m.legend[ch] || 'wall').setDepth(0)));
+    this.tiles = this.grid.map((row, y) => row.map((ch, x) => this.add.image(cx(x), cx(y), this.tileTex(x, y)).setDepth(0)));
+    // 문 칸 밑에 문 너머 바닥을 깔아, 열린 문의 빈 곳으로 바닥이 보이게 한다 (정면 문 = 위쪽 칸이 문 너머)
+    this.grid.forEach((row, y) => row.forEach((ch, x) => {
+      if (!(m.legend[ch] || '').startsWith('door')) return;
+      const beyond = [[x, y - 1], [x, y + 1], [x - 1, y], [x + 1, y]].find(([bx, by]) => this.isFloor(bx, by));
+      // 문 너머는 어둡게 — 문짝(나무)과 구분되고 안쪽 공간처럼 보인다
+      if (beyond) this.add.image(cx(x), cx(y), this.tileTex(...beyond)).setDepth(-1).setTint(0x55505a);
+    }));
+    this.buildRooms();
     this.objects = new Map();
     for (const o of m.objects) {
       const obj = { ...o };
-      if (o.tex) obj.img = this.add.image(cx(o.x), cx(o.y), o.tex).setDepth(2);
+      if (o.tex) {
+        // 2칸 높이 가구(32×64)는 바닥 칸을 기준으로 위로 솟는다. 앞에 있는(아래쪽) 것이 뒤의 것을 가린다.
+        obj.img = this.add.image(cx(o.x), (o.y + 1) * TILE, this.objTex(o)).setOrigin(0.5, 1).setDepth(depthAt(o.y));
+      }
       if (o.door && flag('open_' + o.door)) this.tiles[o.y][o.x].setTexture('door_open');
       this.objects.set(key(o.x, o.y), obj);
     }
+    this.buildRails();
     this.decals = (m.graffiti || []).map(g => {
       const t = this.add.text(g.x * TILE, g.y * TILE, g.text, textStyle(15, '#8e1616', { fontStyle: 'bold' }))
         .setDepth(1).setAlpha(0.85).setAngle(g.angle ?? 0);
@@ -73,7 +89,7 @@ export default class Explore extends Phaser.Scene {
     // 도착 직후 저장해도 이전 맵의 좌표가 남지 않도록 바로 기록
     state.pos = { x: this.tx, y: this.ty };
     state.dir = this.dir;
-    this.player = this.add.image(cx(this.tx), cx(this.ty), 'player_' + this.dir).setDepth(3);
+    this.player = this.add.image(cx(this.tx), cx(this.ty), 'player_' + this.dir).setDepth(depthAt(this.ty, true));
 
     const cam = this.cameras.main;
     const mw = this.cols * TILE, mh = this.rows * TILE;
@@ -114,6 +130,7 @@ export default class Explore extends Phaser.Scene {
     this.applyStage();
     this.updatePrompt();
     this.updateArea();
+    this.updateRooms();
     this.haunt = 0;
     this.time.addEvent({ delay: 1000, loop: true, callback: this.denialTick, callbackScope: this });
     cam.fadeIn(500);
@@ -158,10 +175,12 @@ export default class Explore extends Phaser.Scene {
     const [dx, dy] = DIRS[dir];
     const nx = this.tx + dx, ny = this.ty + dy;
     if (this.chase && this.chase.x === nx && this.chase.y === ny) return this.caught();
-    if (!this.passable(nx, ny)) { this.updatePrompt(); return; }
+    if (!this.passable(nx, ny) || this.railBetween(this.tx, this.ty, nx, ny)) { this.updatePrompt(); return; }
     this.moving = true;
     this.tx = nx;
     this.ty = ny;
+    // 아래로 갈 때 미리 앞쪽 깊이로 올려야 이동 중에 가구 밑으로 파고들지 않는다
+    this.player.setDepth(depthAt(Math.max(ny, ny - dy), true));
     this.updatePrompt();
     this.steps = (this.steps || 0) + 1;
     if (this.steps % 2 === 0) sfx('step');
@@ -169,6 +188,114 @@ export default class Explore extends Phaser.Scene {
       targets: this.player, x: cx(nx), y: cx(ny), duration: MOVE_MS,
       onComplete: () => { this.moving = false; this.afterMove(); },
     });
+  }
+
+  // ── 그래픽 선택 ──
+  isWall(x, y) {
+    if (x < 0 || y < 0 || x >= this.cols || y >= this.rows) return true;
+    return this.map.legend[this.grid[y][x]] === 'wall';
+  }
+
+  // ── 난간: 칸이 아니라 위아래 두 칸 사이의 경계를 막는다 (map.rails: { x, y, w } = y줄 아래쪽 경계) ──
+  buildRails() {
+    this.rails = new Set();
+    for (const r of this.map.rails || []) {
+      for (let x = r.x; x < r.x + (r.w || 1); x++) {
+        this.rails.add(key(x, r.y));
+        // 위쪽 칸(r.y)에 선 사람보다 앞에, 아래쪽 칸에 선 사람보다 뒤에 그린다
+        const img = this.add.image(cx(x), (r.y + 1) * TILE, 'rail_h').setDepth(depthAt(r.y) + 0.008);
+        this.objects.set('rail' + key(x, r.y), { x, y: r.y, img });
+      }
+    }
+  }
+
+  railBetween(x1, y1, x2, y2) {
+    return x1 === x2 && Math.abs(y1 - y2) === 1 && this.rails?.has(key(x1, Math.min(y1, y2)));
+  }
+
+  isFloor(x, y) {
+    if (x < 0 || y < 0 || x >= this.cols || y >= this.rows) return false;
+    return (this.map.legend[this.grid[y][x]] || '').startsWith('floor');
+  }
+
+  // ── 방 단위 시야: 지금 있는 방(벽·문으로 나뉜 바닥 덩어리)과 그 둘레 벽만 보이고 나머지는 가린다 ──
+  buildRooms() {
+    this.room = this.grid.map(r => r.map(() => -1));
+    let id = 0;
+    for (let y = 0; y < this.rows; y++) for (let x = 0; x < this.cols; x++) {
+      if (this.room[y][x] >= 0 || !this.isFloor(x, y)) continue;
+      const q = [[x, y]];
+      this.room[y][x] = id;
+      while (q.length) {
+        const [qx, qy] = q.pop();
+        for (const [dx, dy] of Object.values(DIRS)) {
+          const nx = qx + dx, ny = qy + dy;
+          if (this.isFloor(nx, ny) && this.room[ny][nx] < 0) { this.room[ny][nx] = id; q.push([nx, ny]); }
+        }
+      }
+      id++;
+    }
+    this.roomMask = this.add.graphics().setDepth(8);
+    this.roomKey = null;
+  }
+
+  updateRooms() {
+    const at = (x, y) => (x < 0 || y < 0 || x >= this.cols || y >= this.rows ? -1 : this.room[y][x]);
+    // 문 칸에 서 있으면 양쪽 방을 모두 보여 준다
+    let ids = [at(this.tx, this.ty)];
+    if (ids[0] < 0) ids = Object.values(DIRS).map(([dx, dy]) => at(this.tx + dx, this.ty + dy));
+    ids = [...new Set(ids.filter(i => i >= 0))].sort();
+    const k = ids.join();
+    if (!ids.length || k === this.roomKey) return;
+    this.roomKey = k;
+    const g = this.roomMask.clear().fillStyle(0x000000, 1);
+    const shown = this.grid.map(r => r.map(() => false));
+    for (let y = 0; y < this.rows; y++) for (let x = 0; x < this.cols; x++) {
+      let seen = false;
+      for (let dy = -1; dy <= 1 && !seen; dy++) for (let dx = -1; dx <= 1 && !seen; dx++) seen = ids.includes(at(x + dx, y + dy));
+      shown[y][x] = seen;
+      if (!seen) g.fillRect(x * TILE, y * TILE, TILE, TILE);
+    }
+    // 다른 방의 2칸 가구가 벽 칸으로 윗부분만 비치지 않도록, 바닥 칸이 가려진 가구는 통째로 숨긴다
+    for (const o of this.objects?.values() || []) o.img?.setVisible(shown[o.y][o.x]);
+    // 벽 앞면은 그 벽 아래 방에 있을 때만 앞면. 위쪽 방 안에서 보면 같은 벽이 윗면(두꺼운 벽)으로 보인다
+    if (this.textures.exists('wall_face')) {
+      for (let y = 0; y < this.rows - 1; y++) for (let x = 0; x < this.cols; x++) {
+        const t = this.tiles[y][x];
+        if (t.texture.key !== 'wall_face' && t.texture.key !== 'wall_top') continue;
+        if (this.tileTex(x, y) !== 'wall_face') continue;
+        t.setTexture(ids.includes(at(x, y + 1)) ? 'wall_face' : 'wall_top');
+      }
+    }
+  }
+
+  // 벽: 아래가 바닥이면 앞면(정면에서 본 벽), 아니면 윗면 — 완성 그래픽이 있을 때만
+  tileTex(x, y) {
+    let tex = this.map.legend[this.grid[y][x]] || 'wall';
+    if (!this.textures.exists(tex)) tex = TILE_FALLBACK[tex] || 'wall'; // 아직 그림이 없는 타일
+    if (tex === 'floor_stairs') {
+      // 2칸 폭 계단: 왼쪽·오른쪽 가장자리 그림이 있으면 쓴다
+      const same = dx => this.map.legend[this.grid[y][x + dx]] === 'floor_stairs';
+      if (!same(-1) && same(1) && this.textures.exists('floor_stairs_l')) return 'floor_stairs_l';
+      if (same(-1) && !same(1) && this.textures.exists('floor_stairs_r')) return 'floor_stairs_r';
+      return tex;
+    }
+    if (tex.startsWith('floor')) {
+      // 같은 바닥의 낡은 변형(_2, _3)을 칸 위치로 정해 섞는다 — 매번 같은 자리에 같은 변형
+      const r = (((x * 73856093) ^ (y * 19349663)) >>> 0) % 100;
+      const v = r < 9 ? '_2' : r < 18 ? '_3' : '';
+      return v && this.textures.exists(tex + v) ? tex + v : tex;
+    }
+    if (tex !== 'wall' || !this.textures.exists('wall_face')) return tex;
+    // 아래가 바닥일 때만 앞면. 세로 벽에 난 문·창(준비실 문, 2층 창) 위 칸은 윗면으로 둔다
+    const below = y + 1 < this.rows && this.map.legend[this.grid[y + 1][x]];
+    return below && below.startsWith('floor') ? 'wall_face' : 'wall_top';
+  }
+
+  // 사물함: 아래쪽 벽에 붙어 있으면 뒷면(지붕이 보이는 쪽)
+  objTex(o) {
+    if (o.tex === 'locker' && this.textures.exists('locker_back') && this.isWall(o.x, o.y + 1) && !this.isWall(o.x, o.y - 1)) return 'locker_back';
+    return o.tex;
   }
 
   passable(x, y) {
@@ -182,6 +309,8 @@ export default class Explore extends Phaser.Scene {
   }
 
   afterMove() {
+    this.player.setDepth(depthAt(this.ty, true));
+    this.updateRooms();
     state.pos = { x: this.tx, y: this.ty };
     state.dir = this.dir;
     if (this.chase && this.chase.x === this.tx && this.chase.y === this.ty) return this.caught();
@@ -418,7 +547,7 @@ export default class Explore extends Phaser.Scene {
       if (d >= 6) continue;
       for (const [dx, dy] of Object.values(DIRS)) {
         const nx = x + dx, ny = y + dy;
-        if (dist.has(key(nx, ny)) || !this.passable(nx, ny)) continue;
+        if (dist.has(key(nx, ny)) || !this.passable(nx, ny) || this.railBetween(x, y, nx, ny)) continue;
         dist.set(key(nx, ny), d + 1);
         q.push([nx, ny]);
       }
@@ -467,7 +596,7 @@ export default class Explore extends Phaser.Scene {
       // 숨은 동안엔 주변을 서성이다 사라진다
       c.lost += c.step;
       if (c.lost >= CHASE_GIVE_UP_MS) return this.endChase();
-      const opts = Object.values(DIRS).map(([dx, dy]) => [c.x + dx, c.y + dy]).filter(([x, y]) => this.passable(x, y));
+      const opts = Object.values(DIRS).map(([dx, dy]) => [c.x + dx, c.y + dy]).filter(([x, y]) => this.passable(x, y) && !this.railBetween(c.x, c.y, x, y));
       next = opts.length ? Phaser.Utils.Array.GetRandom(opts) : null;
     } else {
       c.lost = 0;
@@ -491,6 +620,7 @@ export default class Explore extends Phaser.Scene {
         const nx = x + dx, ny = y + dy, k = key(nx, ny);
         if (prev.has(k)) continue;
         if (!(nx === gx && ny === gy) && !this.passable(nx, ny)) continue;
+        if (this.railBetween(x, y, nx, ny)) continue;
         prev.set(k, [x, y]);
         q.push([nx, ny]);
       }
