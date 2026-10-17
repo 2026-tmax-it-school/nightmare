@@ -22,6 +22,7 @@
   parts   : object를 여러 조각으로 따로 잘라 한 장에 배치한다. [{"box": [...], "at": [x, y, w, h]}, ...]
             각 조각은 비율을 지켜 at 영역 안 아래 가운데에 놓인다 (예: 거울은 벽 칸 아래쪽, 세면대는 바로 아래 바닥 칸)
   frame   : 문틀(양옆·위 어두운 나무)과 문턱(아래 회색 줄)을 둘러 벽과 구분되게 한다
+  brighten: tile·stretch 결과의 밝기를 곱한다 (예: 1.5 → 어두운 문을 밝게). 문틀은 그 뒤에 둘러서 그대로
   clear_dark : [x0, y0, x1, y1, 밝기] 결과 이미지의 이 범위(0~1 비율)에서 어두운 픽셀을 투명하게 (열린 문 너머로 바닥이 보이게)
 기본으로 tile·stretch는 가장자리를 4픽셀 더 잘라 배경색이 번진 테두리를 없앤다.
 """
@@ -146,6 +147,8 @@ def build(key, cfg):
     W, H = cfg.get('size', [32, 32])
     if mode in ('tile', 'stretch'):
         out = shrink(sub, np.ones(sub.shape[:2], bool), (W, H))
+        if cfg.get('brighten'):
+            out[..., :3] = (out[..., :3].astype(np.float32) * cfg['brighten']).clip(0, 255).astype(np.uint8)
         if cfg.get('frame'):
             add_frame(out)
         if 'clear_dark' in cfg:

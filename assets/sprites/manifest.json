@@ -87,6 +87,26 @@
   96,
   192
  ],
+ "floor_room": [
+  32,
+  32
+ ],
+ "bed_top": [
+  32,
+  32
+ ],
+ "bed_bottom": [
+  32,
+  32
+ ],
+ "mailbox": [
+  32,
+  32
+ ],
+ "homedoor": [
+  32,
+  32
+ ],
  "player_down": [
   32,
   32
