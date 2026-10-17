@@ -194,8 +194,8 @@ export default class Explore extends Phaser.Scene {
     });
   }
 
-  // ── 방 순서 (GDD 4.7): map.gates의 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 독백을 띄운다 ──
-  // 나올 때(반대 방향)는 막지 않는다. cond가 없으면 늘 막는다 (진행과 상관없는 방)
+  // ── 층 이동 막기 (GDD 4.7, 스토리 건너뛰기 방지): map.gates의 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 독백을 띄운다 ──
+  // 나올 때(반대 방향)는 막지 않는다. cond가 없으면 늘 막는다
   gateAt(x, y, dir) {
     return (this.map.gates || []).find(g => g.dir === dir && x >= g.x && x < g.x + (g.w || 1) && y >= g.y && y < g.y + (g.h || 1) && !(g.cond && checkCond(g.cond)));
   }

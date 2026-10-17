@@ -28,9 +28,9 @@
   "graffiti": [
     { "x": 6.2, "y": 7.3, "text": "내일 과학실 ㄱ", "angle": -6, "cond": { "flag": "stage1" } }
   ],
-  "_gates": "방 순서: { x, y, w?, h?, dir, cond, text } = 그 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 text 독백. cond가 없으면 늘 막는다 (GDD 4.7)",
+  "_gates": "층 이동 막기(스토리 건너뛰기 방지): { x, y, w?, h?, dir, cond, text } = 그 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 text 독백. cond가 없으면 늘 막는다 (GDD 4.7)",
   "gates": [
-    { "x": 7, "y": 10, "h": 2, "dir": "left", "cond": { "item": "keyOffice" }, "text": "……아직 내려갈 수 없어. 옥상에서 할 일이 남아 있어." }
+    { "x": 7, "y": 10, "h": 2, "dir": "left", "cond": { "item": "keyOffice" }, "text": "……발이 떨어지지 않는다. 여기서 아직 떠오르지 않은 게 있는 것 같다." }
   ],
   "triggers": [
     { "x": 7, "y": 10, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "stairs_down" },

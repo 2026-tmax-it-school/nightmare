@@ -89,14 +89,6 @@
   ],
   "_rails": "난간: { x, y, w } = y줄 아래쪽 경계를 x부터 w칸 막는다. 계단실 계단 아래쪽",
   "rails": [{ "x": 37, "y": 15, "w": 2 }],
-  "_gates": "방 순서: { x, y, w?, h?, dir, cond, text } = 그 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 text 독백. cond가 없으면 늘 막는다 (GDD 4.7)",
-  "gates": [
-    { "x": 5, "y": 9, "dir": "up", "text": "……여긴 들어갈 일이 없어. 지금 할 일부터 하자." },
-    { "x": 15, "y": 9, "dir": "up", "text": "……여긴 들어갈 일이 없어. 지금 할 일부터 하자." },
-    { "x": 12, "y": 13, "dir": "down", "cond": { "flag": "frag1" }, "text": "……경비실은 나중에. 아까부터 신경 쓰이는 교실이 있어. 1학년 3반부터 가 보자." },
-    { "x": 19, "y": 13, "dir": "down", "cond": { "flag": "frag4" }, "text": "……화장실은 지금 볼 일이 없어. 할 일부터 하자." },
-    { "x": 37, "y": 14, "h": 2, "dir": "right", "cond": { "flag": "chase1_done", "notFlag": "ret1f" }, "text": "……2층엔 이제 볼 일이 없어. 1층에서 할 일부터 하자." }
-  ],
   "triggers": [
     { "x": 24, "y": 10, "w": 3, "h": 1, "once": "near13", "script": "near13" },
     { "x": 21, "y": 1, "w": 9, "h": 8, "once": "enter13", "script": "enter13" },
@@ -754,13 +746,19 @@
         "else": [
           { "t": "text", "text": "벽에 4자리 번호 자물쇠가 달린 열쇠함이 걸려 있다." },
           {
-            "t": "puzzle", "id": "keybox",
-            "success": [
-              { "t": "flag", "key": "p2" },
-              { "t": "text", "text": "열쇠함 안에 「2층」이라 적힌 열쇠가 걸려 있다." },
-              { "t": "item", "id": "key2f" },
-              { "t": "call", "name": "stage1" }
-            ]
+            "t": "if", "cond": { "flag": ["frag1", "read_logbook"] },
+            "then": [
+              {
+                "t": "puzzle", "id": "keybox",
+                "success": [
+                  { "t": "flag", "key": "p2" },
+                  { "t": "text", "text": "열쇠함 안에 「2층」이라 적힌 열쇠가 걸려 있다." },
+                  { "t": "item", "id": "key2f" },
+                  { "t": "call", "name": "stage1" }
+                ]
+              }
+            ],
+            "else": [{ "t": "text", "who": "재민", "text": "……어떤 숫자였을까. 뭔가 있을 것 같은데, 아직 떠오르지 않는다." }]
           }
         ]
       }
