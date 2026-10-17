@@ -76,15 +76,24 @@ export default class Explore extends Phaser.Scene {
     }));
     this.buildRooms();
     this.objects = new Map();
+    this.condObjs = []; // cond가 있는 물건: 조건이 맞을 때만 맵에 놓인다 (syncObjects)
     for (const o of m.objects) {
       const obj = { ...o };
+      // 밀 수 있는 물건(push): 민 자리는 플래그 push_<id>에 남는다
+      if (o.push) {
+        obj.home = [o.x, o.y];
+        const at = state.flags['push_' + o.id];
+        if (at) [obj.x, obj.y] = at;
+      }
       if (o.tex) {
         // 2칸 높이 가구(32×64)는 바닥 칸을 기준으로 위로 솟는다. 앞에 있는(아래쪽) 것이 뒤의 것을 가린다.
-        obj.img = this.add.image(cx(o.x), (o.y + 1) * TILE, this.objTex(o)).setOrigin(0.5, 1).setDepth(depthAt(o.y));
+        obj.img = this.add.image(cx(obj.x), (obj.y + 1) * TILE, this.objTex(o)).setOrigin(0.5, 1).setDepth(depthAt(obj.y));
       }
       if (o.door && flag('open_' + o.door)) this.tiles[o.y][o.x].setTexture('door_open');
-      this.objects.set(key(o.x, o.y), obj);
+      if (o.cond) { this.condObjs.push(obj); obj.img?.setVisible(false); continue; }
+      this.objects.set(key(obj.x, obj.y), obj);
     }
+    this.syncObjects();
     this.buildRails();
     this.buildSight();
     this.buildSparkles();
@@ -202,6 +211,8 @@ export default class Explore extends Phaser.Scene {
     const [dx, dy] = DIRS[dir];
     const nx = this.tx + dx, ny = this.ty + dy;
     if (this.chase && this.chase.x === nx && this.chase.y === ny) return this.caught();
+    const po = this.objects.get(key(nx, ny));
+    if (po?.push && checkCond(po.pushCond)) return this.tryPush(po, dir);
     if (!this.passable(nx, ny) || this.railBetween(this.tx, this.ty, nx, ny)) { this.updatePrompt(); return; }
     const gate = this.gateAt(nx, ny, dir);
     if (gate) return this.gateBlocked(gate, nx, ny);
@@ -217,6 +228,64 @@ export default class Explore extends Phaser.Scene {
       targets: this.player, x: cx(nx), y: cx(ny), duration: MOVE_MS,
       onComplete: () => { this.moving = false; this.afterMove(); },
     });
+  }
+
+  // ── 밀기 (GDD 6장 맵 기믹): 걸어 들어가면 한 칸 밀리고, 나도 그 자리로 들어선다. 앞이 막혔으면 꿈쩍하지 않는다 ──
+  tryPush(o, dir) {
+    const [dx, dy] = DIRS[dir];
+    const bx = o.x + dx, by = o.y + dy;
+    // 무너지는 물건(topple) 쪽으로 밀면 그 스크립트가 실행된다 (의자 더미 → 큰 소리 → 그림자)
+    const hit = this.objects.get(key(bx, by));
+    if (hit?.topple) {
+      sfx('deskDrag');
+      this.tweens.add({ targets: o.img, x: o.img.x + dx * 6, y: o.img.y + dy * 6, duration: 80, yoyo: true });
+      return this.run(this.resolve(hit.topple));
+    }
+    const blocked = !this.isFloor(bx, by) || !this.passable(bx, by) || this.railBetween(o.x, o.y, bx, by)
+      || (this.chase && this.chase.x === bx && this.chase.y === by);
+    if (blocked) {
+      if (this.pushHit !== key(o.x, o.y)) { this.pushHit = key(o.x, o.y); sfx('thud'); }
+      this.updatePrompt();
+      return;
+    }
+    this.pushHit = null;
+    this.objects.delete(key(o.x, o.y));
+    [o.x, o.y] = [bx, by];
+    this.objects.set(key(bx, by), o);
+    setFlag('push_' + o.id, [bx, by]);
+    sfx('deskDrag');
+    o.img.setDepth(depthAt(by));
+    this.tweens.add({ targets: o.img, x: cx(bx), y: (by + 1) * TILE, duration: MOVE_MS });
+    this.tryMove(dir);
+  }
+
+  // 민 물건은 keep 플래그를 얻기 전까지, 그 방을 나가면 제자리로 돌아간다 (막혀도 다시 풀 수 있게)
+  resetPushed() {
+    const here = this.room[this.ty]?.[this.tx] ?? -1;
+    if (here < 0) return;
+    for (const o of [...this.objects.values(), ...this.condObjs]) {
+      if (!o.push || (o.keep && flag(o.keep))) continue;
+      const [hx, hy] = o.home;
+      if ((o.x === hx && o.y === hy) || this.roomOf(hx, hy) === here) continue;
+      if (this.objects.get(key(o.x, o.y)) === o) { this.objects.delete(key(o.x, o.y)); this.objects.set(key(hx, hy), o); }
+      [o.x, o.y] = [hx, hy];
+      o.img?.setPosition(cx(hx), (hy + 1) * TILE).setDepth(depthAt(hy));
+      setFlag('push_' + o.id, null);
+    }
+  }
+
+  // cond가 있는 물건을 지금 조건에 맞춰 놓거나 치운다 (스크립트 { t: 'syncObjects' }, 스크립트가 끝날 때)
+  syncObjects() {
+    // 밀 수 있게 된 책상은 끈 자국이 있는 그림(pushTex)으로 바꿔 알아볼 수 있게 한다
+    for (const o of this.objects.values()) {
+      if (o.push && o.pushTex && o.img) o.img.setTexture(checkCond(o.pushCond) ? o.pushTex : this.objTex(o));
+    }
+    for (const o of this.condObjs) {
+      const on = checkCond(o.cond);
+      const k = key(o.x, o.y);
+      if (on && this.objects.get(k) !== o) { this.objects.set(k, o); o.img?.setVisible(this.shown ? this.shown[o.y][o.x] : true); }
+      else if (!on && this.objects.get(k) === o) { this.objects.delete(k); o.img?.setVisible(false); }
+    }
   }
 
   // ── 층 이동 막기 (GDD 4.7, 스토리 건너뛰기 방지): map.gates의 칸에 dir 방향으로 들어서려 할 때 cond가 아니면 막고 독백을 띄운다 ──
@@ -545,12 +614,14 @@ export default class Explore extends Phaser.Scene {
 
   afterMove() {
     this.gateHit = null;
+    this.pushHit = null;
     this.player.setDepth(depthAt(this.ty, true));
     this.updateRooms();
     this.updateCamera();
     state.pos = { x: this.tx, y: this.ty };
     state.dir = this.dir;
     if (this.chase && this.chase.x === this.tx && this.chase.y === this.ty) return this.caught();
+    this.resetPushed();
     this.updatePrompt();
     this.updateArea();
     this.pastNotice();
@@ -569,6 +640,11 @@ export default class Explore extends Phaser.Scene {
     const a = (this.map.areas || []).find(a => this.tx >= a.x && this.tx < a.x + a.w && this.ty >= a.y && this.ty < a.y + a.h);
     if (!a || a.name === this.areaName) return;
     this.areaName = a.name;
+    // 함정이 있는 방 등은 들어설 때 자동 저장한다 (map.saveOnEnter: [{ area, cond }]) — 게임오버면 여기부터 다시
+    if ((this.map.saveOnEnter || []).some(s => s.area === a.name && checkCond(s.cond))) {
+      saveGame();
+      this.ui.toast('자동 저장됨');
+    }
     this.areaTxt.setText(a.name);
     this.tweens.killTweensOf(this.areaTxt);
     this.areaTxt.setAlpha(1);
@@ -587,7 +663,7 @@ export default class Explore extends Phaser.Scene {
   buildSparkles() {
     this.sparkles = new Map();
     for (const o of this.objects.values()) {
-      if (!o.script || o.hide) continue;
+      if (!o.script || o.hide || o.push || o.cond) continue;
       const g = `${typeof o.script === 'string' ? o.script : key(o.x, o.y)}@${this.roomOf(o.x, o.y)}`;
       o.sparkleKey = g;
       if (this.sparkles.has(g)) continue;
@@ -756,6 +832,8 @@ export default class Explore extends Phaser.Scene {
     // 거울·칸막이 안 같은 1인칭 화면은 스크립트가 끝나면 닫힌다
     if (this.closeup) { const v = this.closeup; this.closeup = null; await v.destroy(); }
     this.busy = false;
+    this.syncObjects();
+    this.applyStage(); // 스크립트로 바뀐 플래그에 맞춰 낙서·바닥 장식도 바로 보이게
     this.updatePrompt();
     this.updateObjective();
   }
@@ -818,6 +896,8 @@ export default class Explore extends Phaser.Scene {
   action(a) {
     switch (a.t) {
       case 'openDoor': return this.openDoor(a.id);
+      case 'syncObjects': return this.syncObjects();
+      case 'shadowStrike': return this.shadowStrike(a);
       case 'stage': setFlag('stage' + a.n); this.applyStage(); return;
       case 'chase':
         // 추격 직전 자동저장 → 잡히면 여기서 재시작
@@ -1128,6 +1208,17 @@ export default class Explore extends Phaser.Scene {
     saveGame();
     if (pc.after) this.run(this.getScript(pc.after));
     else this.updateObjective();
+  }
+
+  // 함정: 그림자가 from 칸에서 순식간에 덮쳐 와 붙잡는다 (스크립트 { t: 'shadowStrike', from: { x, y } })
+  async shadowStrike(a) {
+    this.ui.hideDialog();
+    const s = this.add.image(cx(a.from.x), cx(a.from.y), 'shadow').setDepth(10.5).setAlpha(0);
+    sfx('slam');
+    await new Promise(r => this.tweens.add({ targets: s, alpha: 0.95, duration: 250, onComplete: r }));
+    await new Promise(r => this.tweens.add({ targets: s, x: this.player.x, y: this.player.y, duration: a.ms || 450, ease: 'Quad.easeIn', onComplete: r }));
+    this.caught();
+    return 'stop';
   }
 
   caught() {
