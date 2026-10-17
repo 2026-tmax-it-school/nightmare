@@ -18,6 +18,8 @@
   cutout  : object인데 배경이 바닥 그림일 때 그림만 따로 떼어 내는 방법
             {"kind": "border", "tol": 55}  가장자리 바닥 색과 tol 이상 다른 가장 큰 덩어리 (볼록한 물체용)
             {"kind": "blue"}               파란빛 물체(가방 등)와 그 외곽선
+            {"kind": "flood", "tol": 60}   바깥과 이어진 배경만 지운다 (회색 격자 배경, 가구 다리 사이도 비게)
+                                             "extra": [[r, g, b], ...]로 함께 지울 색(그림 뒤 벽판 등)을 더한다
   fill    : object를 비율과 상관없이 W×H에 꽉 채운다 (예: 사물함 높이를 줄일 때)
   parts   : object를 여러 조각으로 따로 잘라 한 장에 배치한다. [{"box": [...], "at": [x, y, w, h]}, ...]
             각 조각은 비율을 지켜 at 영역 안 아래 가운데에 놓인다 (예: 거울은 벽 칸 아래쪽, 세면대는 바로 아래 바닥 칸)
@@ -99,6 +101,8 @@ def convex_rows(m):
 
 
 def cutout(sub, cfg):
+    if cfg['kind'] == 'flood':
+        return flood_cut(sub, cfg)
     if cfg['kind'] == 'border':
         edge = np.concatenate([sub[:8].reshape(-1, 3), sub[-8:].reshape(-1, 3), sub[:, :8].reshape(-1, 3), sub[:, -8:].reshape(-1, 3)])
         m = np.abs(sub - np.median(edge, axis=0)).sum(axis=2) > cfg.get('tol', 55)
@@ -106,6 +110,30 @@ def cutout(sub, cfg):
         r, g, b = sub[..., 0], sub[..., 1], sub[..., 2]
         m = (b - r > 6) | ((r + g + b < 110) & (b >= r - 4))
     return convex_rows(biggest(m))
+
+
+def flood_cut(sub, cfg):
+    """가장자리 배경색(또는 밝은 무채색 격자)과 비슷하면서 바깥과 이어진 픽셀만 배경으로 지운다."""
+    edge = np.concatenate([sub[:6].reshape(-1, 3), sub[-6:].reshape(-1, 3), sub[:, :6].reshape(-1, 3), sub[:, -6:].reshape(-1, 3)])
+    mx, mn = sub.max(axis=2), sub.min(axis=2)
+    bgish = (np.abs(sub - np.median(edge, axis=0)).sum(axis=2) < cfg.get('tol', 60)) | ((mx - mn < 20) & (mx > 165) & (mx < 250))
+    for c in cfg.get('extra', []):
+        bgish |= np.abs(sub - np.array(c)).sum(axis=2) < cfg.get('extra_tol', 22)
+    h, w = bgish.shape
+    out = np.zeros_like(bgish)
+    q = deque()
+    for y, x in [(y, x) for y in range(h) for x in (0, w - 1)] + [(y, x) for x in range(w) for y in (0, h - 1)]:
+        if bgish[y, x] and not out[y, x]:
+            out[y, x] = True
+            q.append((y, x))
+    while q:
+        y, x = q.popleft()
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            ny, nx = y + dy, x + dx
+            if 0 <= ny < h and 0 <= nx < w and not out[ny, nx] and bgish[ny, nx]:
+                out[ny, nx] = True
+                q.append((ny, nx))
+    return biggest(~out)
 
 
 def shrink(rgb, mask, size):

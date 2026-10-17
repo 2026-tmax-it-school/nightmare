@@ -26,5 +26,13 @@
   "bed_top": { "src": "bedroom.png", "box": [378, 44, 566, 251], "mode": "stretch" },
   "bed_bottom": { "src": "bedroom.png", "box": [378, 298, 566, 498], "mode": "stretch" },
   "mailbox": { "src": "bedroom.png", "box": [836, 60, 960, 204], "mode": "object", "cutout": { "kind": "border", "tol": 125 }, "scale": 0.8 },
-  "homedoor": { "src": "bedroom.png", "box": [820, 292, 982, 518], "mode": "stretch", "patch": [[918, 446, 36, 40, 0, -80]], "brighten": 1.7, "frame": true }
+  "homedoor": { "src": "bedroom.png", "box": [820, 292, 982, 518], "mode": "stretch", "patch": [[918, 446, 36, 40, 0, -80]], "brighten": 1.7, "frame": true },
+  "piano_l": { "src": "floor2.png", "box": [44, 88, 184, 308], "mode": "object", "size": [32, 64], "cutout": { "kind": "flood", "tol": 60 }, "fill": true },
+  "piano_r": { "src": "floor2.png", "box": [226, 88, 354, 308], "mode": "object", "size": [32, 64], "cutout": { "kind": "flood", "tol": 60 }, "fill": true },
+  "bench": { "src": "floor2.png", "box": [408, 124, 514, 230], "mode": "object", "cutout": { "kind": "flood", "tol": 60 }, "scale": 0.85 },
+  "stand": { "src": "floor2.png", "box": [566, 96, 666, 232], "mode": "object", "cutout": { "kind": "flood", "tol": 60 }, "scale": 0.85 },
+  "console": { "src": "floor2.png", "box": [712, 94, 850, 308], "mode": "object", "size": [32, 64], "cutout": { "kind": "flood", "tol": 60, "extra": [[163, 153, 141], [146, 137, 126]] } },
+  "tapedeck": { "src": "floor2.png", "box": [866, 94, 1004, 278], "mode": "object", "size": [32, 64], "cutout": { "kind": "flood", "tol": 60, "extra": [[163, 153, 141], [146, 137, 126]] } },
+  "pc": { "src": "floor2.png", "box": [200, 388, 334, 538], "mode": "object", "cutout": { "kind": "flood", "tol": 60 } },
+  "pc_on": { "src": "floor2.png", "box": [354, 388, 488, 538], "mode": "object", "cutout": { "kind": "flood", "tol": 60 } }
 }
