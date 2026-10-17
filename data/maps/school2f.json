@@ -1,6 +1,6 @@
 {
   "id": "school2f",
-  "bgm": "drone",
+  "bgm": "drone", "bgmTrial": "hall2",
   "dark": true,
   "legend": {
     "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "c": "floor_pc", "r": "floor_room", "=": "floor_stairs", "|": "floor_stairs_side",

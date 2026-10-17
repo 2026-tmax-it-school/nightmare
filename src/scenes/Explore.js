@@ -4,7 +4,7 @@ import { DB } from '../db.js';
 import { state, flag, setFlag, saveGame, checkCond } from '../state.js';
 import { runScript } from '../script.js';
 import { UI, textStyle, isConfirm, dirOf } from '../ui/ui.js';
-import { sfx, startLoop, stopLoop, stopAllLoops } from '../audio.js';
+import { sfx, startLoop, stopLoop, stopAllLoops, trialOn } from '../audio.js';
 import { LockerView } from '../ui/locker.js';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
@@ -132,8 +132,9 @@ export default class Explore extends Phaser.Scene {
       stopLoop('chase');
     });
 
-    stopAllLoops([m.bgm]);
-    if (m.bgm) startLoop(m.bgm);
+    this.bgm = this.bgmName();
+    stopAllLoops([this.bgm]);
+    if (this.bgm) startLoop(this.bgm);
     this.applyStage();
     this.updatePrompt();
     this.updateArea();
@@ -487,6 +488,8 @@ export default class Explore extends Phaser.Scene {
 
   // 조사: 스크립트가 끝난 뒤의 갈래를 본 것으로 기록한다 (조사하면서 바뀐 플래그까지 반영)
   async examine(o) {
+    // 잠긴 문은 먼저 손잡이를 당겨 본다 (열쇠가 있으면 이어서 열리는 소리)
+    if (o.door && !flag('open_' + o.door)) sfx('doorLocked');
     await this.run(this.resolve(o.script));
     if (!o.sparkleKey || this.over) return;
     this.seenOf()[o.sparkleKey] = this.scriptSig(this.resolve(o.script));
@@ -622,6 +625,18 @@ export default class Explore extends Phaser.Scene {
     await this.ui.notebook(this.hint(), this.progress());
     this.busy = false;
     this.updatePrompt();
+    // 설정 탭에서 새 소리 스위치를 바꿨으면 배경음도 바로 바꾼다
+    const bgm = this.bgmName();
+    if (bgm !== this.bgm) {
+      if (this.bgm) stopLoop(this.bgm);
+      if (bgm) startLoop(bgm);
+      this.bgm = bgm;
+    }
+  }
+
+  // 맵 배경음. 새 소리 시험 중이면 맵의 bgmTrial (GDD 4.7, 이슈 #66)
+  bgmName() {
+    return (trialOn() && this.map.bgmTrial) || this.map.bgm;
   }
 
   hint() {
@@ -671,7 +686,7 @@ export default class Explore extends Phaser.Scene {
 
   openDoor(id) {
     setFlag('open_' + id);
-    sfx('unlock');
+    sfx('doorOpen');
     for (const o of this.objects.values()) if (o.door === id) this.tiles[o.y][o.x].setTexture('door_open');
   }
 
@@ -870,6 +885,7 @@ export default class Explore extends Phaser.Scene {
     this.breathTimer?.remove();
     this.chase = null;
     stopLoop('chase');
+    sfx('escape');
     this.tweens.add({ targets: c.sprite, alpha: 0, duration: 600, onComplete: () => c.sprite.destroy() });
     setFlag(pc.id + '_done');
     setFlag('pendingChase', null);
@@ -885,7 +901,7 @@ export default class Explore extends Phaser.Scene {
     this.chaseTimer?.remove();
     this.breathTimer?.remove();
     stopLoop('chase');
-    sfx('slam');
+    sfx('caught');
     const cam = this.cameras.main;
     cam.shake(400, 0.02);
     cam.flash(300, 120, 0, 0);
