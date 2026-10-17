@@ -6,6 +6,7 @@ import { runScript } from '../script.js';
 import { UI, textStyle, isConfirm, dirOf } from '../ui/ui.js';
 import { sfx, startLoop, stopLoop, stopAllLoops } from '../audio.js';
 import { LockerView } from '../ui/locker.js';
+import { holdBreath, struggle, eyesShut } from '../ui/hideGame.js';
 import { MirrorView } from '../ui/mirror.js';
 import { StallView } from '../ui/stall.js';
 
@@ -901,7 +902,7 @@ export default class Explore extends Phaser.Scene {
       case 'stage': setFlag('stage' + a.n); this.applyStage(); return;
       case 'chase':
         // 추격 직전 자동저장 → 잡히면 여기서 재시작
-        setFlag('pendingChase', { id: a.id, spawn: a.spawn, after: a.after || null, step: a.step || null });
+        setFlag('pendingChase', { id: a.id, spawn: a.spawn, after: a.after || null, step: a.step || null, hide: a.hide || null, sparedScript: a.sparedScript || null });
         saveGame();
         this.ui.toast('자동 저장됨');
         return this.startChase();
@@ -1068,6 +1069,8 @@ export default class Explore extends Phaser.Scene {
     this.lockerView = null;
     this.updatePrompt();
     this.updateObjective();
+    // 그림자가 사물함 바로 앞에 서 있는데 문을 열고 나오면 붙잡힌다
+    if (this.chase && this.chase.x === this.tx && this.chase.y === this.ty) this.caught();
   }
 
   // ── 추격 ──
@@ -1077,8 +1080,9 @@ export default class Explore extends Phaser.Scene {
     if (!pc || this.chase) return;
     const sprite = this.add.image(cx(pc.spawn.x), cx(pc.spawn.y), 'shadow').setDepth(3).setAlpha(0);
     this.tweens.add({ targets: sprite, alpha: 0.95, duration: 500 });
-    // step: 그림자가 한 칸 움직이는 시간(ms). 추격마다 다르게 줄 수 있다 (GDD 4.6)
-    this.chase = { x: pc.spawn.x, y: pc.spawn.y, sprite, lost: 0, step: pc.step || CHASE_STEP_MS };
+    // step: 그림자가 한 칸 움직이는 시간(ms). hide: 숨었을 때 반응 (없음 / breath / struggle). 추격마다 다르다 (GDD 4.6)
+    // sparedScript: 문 붙잡기를 버텨 냈을 때 눈을 감기 전에 나오는 대사 (맵 스크립트 이름)
+    this.chase = { x: pc.spawn.x, y: pc.spawn.y, sprite, lost: 0, step: pc.step || CHASE_STEP_MS, hide: pc.hide || null, sparedScript: pc.sparedScript || null };
     startLoop('chase');
     this.chaseTimer = this.time.addEvent({ delay: this.chase.step, loop: true, callback: this.chaseStep, callbackScope: this });
     this.breathTimer = this.time.delayedCall(400, this.breathe, [], this);
@@ -1109,7 +1113,12 @@ export default class Explore extends Phaser.Scene {
     const c = this.chase;
     if (!c || this.busy || this.over) return;
     let next;
-    if (this.hidden) {
+    if (this.hidden && c.hide && !c.spared) {
+      // 숨는 걸 봤다: 사물함 바로 앞(플레이어 칸)까지 곧장 와서 미니게임
+      if (c.x === this.tx && c.y === this.ty) return this.lockerEncounter();
+      next = this.pathStep(c.x, c.y, this.tx, this.ty);
+      if (!next) c.spared = true; // 갈 길이 없으면 1번째 추격처럼 서성이다 떠난다
+    } else if (this.hidden) {
       // 숨은 동안엔 주변을 서성이다가, 방 밖 복도로 걸어 나가 멀어진 뒤 사라진다
       c.lost += c.step;
       if (c.lost < CHASE_WANDER_MS) {
@@ -1134,6 +1143,38 @@ export default class Explore extends Phaser.Scene {
     this.shadowSfx('shadowStep');
     this.tweens.add({ targets: c.sprite, x: cx(c.x), y: cx(c.y), duration: c.step - 20 });
     if (!this.hidden && c.x === this.tx && c.y === this.ty) this.caught();
+  }
+
+  // 사물함 앞에 선 그림자와의 미니게임 (GDD 4.6). 그동안은 사물함에서 나갈 수 없고 그림자도 멈춘다(busy)
+  async lockerEncounter() {
+    const c = this.chase;
+    this.busy = true;
+    this.lockerView?.hint.setVisible(false);
+    // 숨 참기는 심장 박동 리듬 게임이라, 추격 배경음의 박동과 섞이지 않게 잠시 멈춘다
+    if (c.hide === 'breath') stopLoop('chase');
+    const ok = await (c.hide === 'struggle' ? struggle(this) : holdBreath(this));
+    if (this.over || this.chase !== c) return;
+    if (!ok) return this.caught();
+    if (c.hide === 'struggle') return this.shutEyes(c);
+    if (c.hide === 'breath') startLoop('chase');
+    this.busy = false;
+    this.lockerView?.hint.setVisible(true);
+    // 버텨 냈다: 서성이지 않고 바로 복도로 걸어 나가 사라진다
+    c.spared = true;
+    c.lost = CHASE_WANDER_MS;
+    c.exit = null;
+  }
+
+  // 문 붙잡기를 버텨 냈다: 「제발…!」 → 눈을 질끈 감는 암전 → 눈을 뜨면 그림자가 사라져 있다 (걸어 나가지 않는다)
+  async shutEyes(c) {
+    const after = state.flags.pendingChase?.after;
+    if (c.sparedScript) await runScript(this, this.getScript(c.sparedScript));
+    this.ui.hideDialog();
+    await eyesShut(this, () => this.endChase(false));
+    if (this.over) return;
+    this.lockerView?.hint.setVisible(true);
+    if (after) this.run(this.getScript(after));
+    else { this.busy = false; this.updateObjective(); }
   }
 
   // 시작점에서 갈 수 있는 칸까지의 거리 (BFS)
@@ -1194,7 +1235,8 @@ export default class Explore extends Phaser.Scene {
     }
   }
 
-  endChase() {
+  // runAfter: false면 추격 후 스크립트를 부르는 쪽(shutEyes)이 직접 실행한다
+  endChase(runAfter = true) {
     const c = this.chase;
     const pc = state.flags.pendingChase;
     this.chaseTimer.remove();
@@ -1206,6 +1248,7 @@ export default class Explore extends Phaser.Scene {
     setFlag(pc.id + '_done');
     setFlag('pendingChase', null);
     saveGame();
+    if (!runAfter) return;
     if (pc.after) this.run(this.getScript(pc.after));
     else this.updateObjective();
   }

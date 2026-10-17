@@ -261,7 +261,7 @@
           { "t": "sfx", "name": "follow", "wait": true },
           { "t": "text", "who": "재민", "text": "……또 그 발소리." },
           { "t": "text", "text": "복도 저편에서 무언가가 다가온다. 숨을 곳을 찾아야 한다." },
-          { "t": "chase", "id": "chase2", "spawn": { "x": 32, "y": 9 }, "after": "afterChase2" }
+          { "t": "chase", "id": "chase2", "spawn": { "x": 32, "y": 9 }, "hide": "breath", "after": "afterChase2" }
         ]
       }
     ],
