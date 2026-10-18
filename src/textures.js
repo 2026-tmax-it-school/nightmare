@@ -228,6 +228,71 @@ export function makeTextures(scene) {
     g.fillStyle(0x4d3b28).fillRect(15, 5, 2, 18);
     g.fillStyle(0x6a7f99, 0.6).fillRect(8, 7, 1, 5).fillRect(20, 11, 1, 6).fillRect(11, 15, 1, 5);
   });
+  // 침실 (GDD 6장 프롤로그 침실): 가구·바닥 소품·벽 장식
+  make('nightstand', g => {
+    g.fillStyle(0x4a3626).fillRect(5, 14, 22, 15);
+    g.fillStyle(0x5c4430).fillRect(5, 14, 22, 3);
+    g.fillStyle(0x2e2218).fillRect(7, 20, 18, 1);
+    g.fillStyle(0xb59b5a).fillRect(15, 23, 2, 2);
+    // 멈춘 탁상시계
+    g.fillStyle(0x2a2a2e).fillRect(10, 5, 12, 10);
+    g.fillStyle(0xd8d0bc).fillRect(11, 6, 10, 8);
+    g.fillStyle(0x1a1a1a).fillRect(15, 7, 1, 4).fillRect(15, 10, 3, 1);
+  });
+  make('chair', g => {
+    g.fillStyle(0x4a3424).fillRect(9, 4, 14, 10);
+    g.fillStyle(0x5c4430).fillRect(9, 4, 14, 2);
+    g.fillStyle(0x6a4c30).fillRect(8, 15, 16, 5);
+    g.fillStyle(0x3a2818).fillRect(9, 20, 2, 9).fillRect(21, 20, 2, 9);
+  });
+  make('dresser', g => {
+    g.fillStyle(0x4f3a28).fillRect(3, 4, 26, 25);
+    g.fillStyle(0x624832).fillRect(3, 4, 26, 3);
+    g.fillStyle(0x34261a).fillRect(5, 12, 22, 1).fillRect(5, 19, 22, 1);
+    g.fillStyle(0xb59b5a).fillRect(15, 9, 2, 2).fillRect(15, 15, 2, 2).fillRect(15, 23, 2, 2);
+  });
+  make('desk_diary', g => {
+    g.fillStyle(0x5c4027).fillRect(4, 22, 3, 7).fillRect(25, 22, 3, 7);
+    g.fillStyle(0x7a5a38).fillRect(3, 9, 26, 14);
+    g.fillStyle(0x8d6a44).fillRect(3, 9, 26, 3);
+    g.fillStyle(0xd8cfb4).fillRect(8, 11, 8, 9).fillRect(17, 11, 8, 9);
+    g.fillStyle(0x7a6a4a).fillRect(16, 11, 1, 9);
+    g.fillStyle(0x4a4038).fillRect(9, 13, 5, 1).fillRect(9, 15, 6, 1).fillRect(18, 13, 5, 1).fillRect(18, 17, 4, 1);
+  });
+  make('rug', g => {
+    g.fillStyle(0x4a2e2e).fillRect(2, 6, 28, 22);
+    g.fillStyle(0x5e3a36).fillRect(4, 8, 24, 18);
+    g.fillStyle(0x4a2e2e).fillRect(8, 12, 16, 10);
+  });
+  make('slippers', g => {
+    g.fillStyle(0x3a4a5e).fillRoundedRect(7, 12, 7, 13, 3);
+    g.fillStyle(0x3a4a5e).fillRoundedRect(18, 15, 7, 13, 3);
+    g.fillStyle(0x2a3646).fillRect(8, 13, 5, 4).fillRect(19, 16, 5, 4);
+  });
+  make('papers', g => {
+    g.fillStyle(0xcfc6ae).fillRect(5, 14, 10, 8).fillRect(16, 19, 11, 8);
+    g.fillStyle(0xbdb49c).fillRect(12, 8, 9, 7);
+    g.fillStyle(0x3a3430).fillRect(7, 16, 6, 1).fillRect(18, 21, 4, 4).fillRect(14, 10, 4, 1);
+  });
+  make('box', g => {
+    g.fillStyle(0x000000, 0.25).fillRect(5, 26, 24, 4);
+    g.fillStyle(0x8a6a44).fillRect(4, 10, 24, 18);
+    g.fillStyle(0x9c7a50).fillRect(4, 10, 24, 4);
+    g.fillStyle(0xbcae88).fillRect(14, 10, 4, 18);
+    g.fillStyle(0xe8e2d6).fillRect(7, 17, 5, 4);
+  });
+  make('photo_wall', g => { // 비뚤어진 액자 (벽 칸)
+    g.fillStyle(0x3a2817).fillTriangle(9, 9, 23, 7, 24, 22).fillTriangle(9, 9, 24, 22, 10, 24);
+    g.fillStyle(0xbdb49c).fillTriangle(11, 11, 22, 9, 22, 20).fillTriangle(11, 11, 22, 20, 12, 22);
+    g.fillStyle(0x5a6a7a).fillRect(13, 13, 3, 6);
+    g.fillStyle(0x8a826c).fillRect(18, 11, 4, 9);
+  });
+  make('mirror_wall', g => { // 낡은 거울 (벽 칸)
+    g.fillStyle(0x5a4a38).fillRect(9, 4, 14, 22);
+    g.fillStyle(0x6e8290).fillRect(11, 6, 10, 18);
+    g.fillStyle(0xa8bcc6, 0.5).fillRect(13, 8, 2, 8);
+    g.fillStyle(0x3a3a3a, 0.6).fillRect(17, 15, 3, 1).fillRect(12, 20, 4, 1);
+  });
   make('mailbox', g => {
     g.fillStyle(0x7a2a2a).fillRect(8, 8, 16, 14);
     g.fillStyle(0x5a1e1e).fillRect(10, 12, 12, 2);

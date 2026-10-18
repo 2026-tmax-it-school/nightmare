@@ -9,6 +9,7 @@ import { LockerView } from '../ui/locker.js';
 import { holdBreath, struggle, eyesShut } from '../ui/hideGame.js';
 import { MirrorView } from '../ui/mirror.js';
 import { StallView } from '../ui/stall.js';
+import { PhotoView } from '../ui/photo.js';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const key = (x, y) => `${x},${y}`;
@@ -19,6 +20,7 @@ const depthAt = (y, player = false) => 2 + y / 100 + (player ? 0.005 : 0);
 const TILE_FALLBACK = { floor_pc: 'floor_tile' };
 
 const MOVE_MS = 150;
+const WINDOW_PANES = [[6, 3, 9, 14], [18, 3, 8, 14]]; // 창 그림(window_home) 유리 두 칸 [x, y, w, h] — 비가 내리는 곳
 const SIGHT_R = 640;      // 레이캐스팅 시야 거리(px). 어두운 맵에선 손전등이 실제 범위를 정한다
 const SIGHT_EPS = 0.0005; // 벽 모서리 양옆으로 쏘는 광선의 각도 차 — 모서리 너머까지 시야가 이어진다
 const WALL_TOP_TINT = 0x9aa6bc; // 위에서 내려다본 벽 줄의 문·창 색조 — 그림은 알아보이되 그늘진 벽 윗면과 어울리게
@@ -88,13 +90,18 @@ export default class Explore extends Phaser.Scene {
       }
       if (o.tex) {
         // 2칸 높이 가구(32×64)는 바닥 칸을 기준으로 위로 솟는다. 앞에 있는(아래쪽) 것이 뒤의 것을 가린다.
-        obj.img = this.add.image(cx(obj.x), (obj.y + 1) * TILE, this.objTex(o)).setOrigin(0.5, 1).setDepth(depthAt(obj.y));
+        // lift / dx: 그림만 위로 / 옆으로 옮긴다(px). 낮은 가구를 벽에 붙이거나 큰 카펫을 방 가운데 둘 때. 막히는 칸은 그대로
+        // flat: 바닥에 깔린 것(카펫·종이 등)은 플레이어보다 아래에 그린다
+        obj.img = this.add.image(cx(obj.x) + (o.dx || 0), (obj.y + 1) * TILE - (o.lift || 0), this.objTex(o)).setOrigin(0.5, 1)
+          .setDepth(o.flat ? 1.2 : depthAt(obj.y));
       }
       if (o.door && flag('open_' + o.door)) this.tiles[o.y][o.x].setTexture('door_open');
       if (o.cond) { this.condObjs.push(obj); obj.img?.setVisible(false); continue; }
       this.objects.set(key(obj.x, obj.y), obj);
     }
     this.syncObjects();
+    this.rainWins = [...this.objects.values()].filter(o => o.rain && o.img);
+    this.rainG = this.add.graphics().setDepth(2.0005);
     this.buildRails();
     this.buildSight();
     this.buildSparkles();
@@ -118,7 +125,9 @@ export default class Explore extends Phaser.Scene {
     // 도착 직후 저장해도 이전 맵의 좌표가 남지 않도록 바로 기록
     state.pos = { x: this.tx, y: this.ty };
     state.dir = this.dir;
-    this.player = this.add.image(cx(this.tx), cx(this.ty), 'player_' + this.dir).setDepth(depthAt(this.ty, true));
+    this.player = this.add.image(cx(this.tx), this.playerY(this.tx, this.ty), 'player_' + this.dir).setDepth(depthAt(this.ty, true));
+    // 그림자 맵에선 플레이어 발밑에도 그림자 (카펫 위에서 떠 보이지 않게). 위치는 update()가 맞춘다
+    if (m.shadows) this.playerShadow = this.add.ellipse(0, 0, 20, 6, 0x000000, 0.3).setDepth(1.5);
 
     const cam = this.cameras.main;
     const mw = this.cols * TILE, mh = this.rows * TILE;
@@ -126,6 +135,28 @@ export default class Explore extends Phaser.Scene {
     if (this.camFixedMap) cam.centerOn(mw / 2, mh / 2);
     else { this.camRoom = undefined; this.updateCamera(true); }
 
+    // 가구 밑 그림자 (맵 옵션 shadows): 바닥에 놓인 물건 아래에 옅은 그림자. 바닥에 깔린 것(flat)·벽에 거는 것(벽 칸이고 lift 없음)은 제외
+    // 벽 칸에 두고 lift로 바닥까지 내려 그린 가구(앞 칸을 지나갈 수 있게 한 침실 가구)는 그림자가 있다
+    if (m.shadows) {
+      const g = this.add.graphics().setDepth(1.5);
+      for (const o of m.objects) {
+        if (!o.tex || o.flat || (!this.isFloor(o.x, o.y) && !o.lift)) continue;
+        // 그림의 실제 폭에 맞춘 그림자 (좁은 협탁은 작게, 책상은 넓게)
+        const w = Math.min(TILE + 4, (this.textures.get(this.objTex(o)).getSourceImage().width || TILE) - 2);
+        g.fillStyle(0x000000, 0.36).fillEllipse(cx(o.x) + (o.dx || 0), (o.y + 1) * TILE - 2 - (o.lift || 0), w, 9);
+      }
+    }
+    // 은은한 빛 (맵 옵션 lights): 창으로 드는 달빛 등. { x, y, r(px), color, alpha } — 칸 가운데 기준, 가장자리로 갈수록 옅어진다
+    for (const l of m.lights || []) {
+      const g = this.add.graphics().setDepth(8.8).setBlendMode(Phaser.BlendModes.ADD);
+      const c = Phaser.Display.Color.HexStringToColor(l.color || '#8aa0c8').color;
+      for (let i = 8; i >= 1; i--) g.fillStyle(c, (l.alpha ?? 0.05)).fillEllipse(cx(l.x), cx(l.y), l.r * 2 * i / 8, l.r * 1.4 * i / 8);
+    }
+    // 가장자리 어둡게 (맵 옵션 vignette = 진하기): 겹치는 띠라 구석이 가장 어둡다
+    if (m.vignette) {
+      const g = this.add.graphics().setDepth(8.9);
+      for (let i = 0; i < 8; i++) g.lineStyle(6, 0x000000, m.vignette * (1 - i / 8)).strokeRect(3 + i * 6, 3 + i * 6, mw - 6 - i * 12, mh - 6 - i * 12);
+    }
     if (m.ambient) {
       this.add.rectangle(0, 0, mw, mh, Phaser.Display.Color.HexStringToColor(m.ambient.color).color, m.ambient.alpha).setOrigin(0).setDepth(9);
     }
@@ -134,14 +165,18 @@ export default class Explore extends Phaser.Scene {
     this.promptTxt = this.add.text(0, 0, 'E', textStyle(11, '#111111', { backgroundColor: '#d8cfb4', padding: { x: 4, y: 1 } }))
       .setOrigin(0.5).setDepth(12).setVisible(false);
     // 조사 대상 칸 표시: 모서리 괄호 테두리가 은은하게 깜빡인다
-    this.focus = this.add.graphics().setDepth(4).setVisible(false);
-    this.focus.lineStyle(2, 0xd8cfb4, 1);
+    // 방 조명(ambient 9) 위에 그려야 밝은 방에서도 흐려지지 않는다. 어둠(10) 아래라 손전등 밖에선 보이지 않는다
+    // 어두운 외곽선 위에 흰색 — 밝은 벽·바닥에서도 외곽선 덕분에 눈에 띈다
+    this.focus = this.add.graphics().setDepth(9.6).setVisible(false);
     const h = TILE / 2, l = 9;
-    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-      this.focus.lineBetween(sx * h, sy * h, sx * (h - l), sy * h);
-      this.focus.lineBetween(sx * h, sy * h, sx * h, sy * (h - l));
+    for (const [w, c, a] of [[4, 0x120c06, 0.7], [2, 0xffffff, 1]]) {
+      this.focus.lineStyle(w, c, a);
+      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        this.focus.lineBetween(sx * h, sy * h, sx * (h - l), sy * h);
+        this.focus.lineBetween(sx * h, sy * h, sx * h, sy * (h - l));
+      }
     }
-    this.tweens.add({ targets: this.focus, alpha: 0.4, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: this.focus, alpha: 0.6, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     this.areaTxt = this.add.text(14, 12, '', textStyle(13, '#a8a1b0', { backgroundColor: 'rgba(0,0,0,0.55)', padding: { x: 8, y: 4 } }))
       .setScrollFactor(0).setDepth(95).setAlpha(0);
 
@@ -174,6 +209,8 @@ export default class Explore extends Phaser.Scene {
 
   update(time, delta) {
     this.stepCamera(delta);
+    this.playerShadow?.setPosition(this.player.x, this.player.y + 14);
+    if (this.rainWins.length) this.drawWindowRain(delta);
     this.drawSight();
     if (this.dark) this.drawDark();
     this.lockerView?.update(this.chase, this.tx, this.ty);
@@ -232,7 +269,7 @@ export default class Explore extends Phaser.Scene {
     const anim = this.textures.exists(walk + '1');
     const first = this.steps % 2 ? 3 : 1;
     this.tweens.add({
-      targets: this.player, x: cx(nx), y: cx(ny), duration: MOVE_MS,
+      targets: this.player, x: cx(nx), y: this.playerY(nx, ny), duration: MOVE_MS,
       onUpdate: tw => { if (anim) this.player.setTexture(walk + (first + (tw.progress < 0.5 ? 0 : 1))); },
       onComplete: () => { this.player.setTexture('player_' + this.dir); this.moving = false; this.afterMove(); },
     });
@@ -693,17 +730,20 @@ export default class Explore extends Phaser.Scene {
   buildSparkles() {
     this.sparkles = new Map();
     for (const o of this.objects.values()) {
-      if (!o.script || o.hide || o.push || o.cond) continue;
+      if (!o.script || o.hide || o.push || o.cond || o.sparkle === false) continue; // sparkle: false = 조사는 되지만 표시는 안 함
       const g = `${typeof o.script === 'string' ? o.script : key(o.x, o.y)}@${this.roomOf(o.x, o.y)}`;
       o.sparkleKey = g;
       if (this.sparkles.has(g)) continue;
       // 조사 표시(focus)와 같은 모서리 괄호가 반짝인다. 어둠(10) 아래에 그려 손전등 시야 밖에선 보이지 않는다
-      const b = this.add.graphics().setDepth(9.7).setPosition(cx(o.x), cx(o.y));
-      b.lineStyle(2, 0xffe2a0, 1);
+      // 색은 조사 표시(focus)와 같다: 어두운 외곽선 위에 흰색
+      const b = this.add.graphics().setDepth(9.7).setPosition(...this.markAt(o));
       const h = TILE / 2 - 1, l = 7;
-      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-        b.lineBetween(sx * h, sy * h, sx * (h - l), sy * h);
-        b.lineBetween(sx * h, sy * h, sx * h, sy * (h - l));
+      for (const [w, c, a] of [[4, 0x120c06, 0.7], [2, 0xffffff, 1]]) {
+        b.lineStyle(w, c, a);
+        for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+          b.lineBetween(sx * h, sy * h, sx * (h - l), sy * h);
+          b.lineBetween(sx * h, sy * h, sx * h, sy * (h - l));
+        }
       }
       b.setAlpha(0.15);
       this.tweens.add({ targets: b, alpha: 0.85, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: Phaser.Math.Between(0, 1400) });
@@ -762,7 +802,42 @@ export default class Explore extends Phaser.Scene {
     const on = !this.hidden && !this.busy && this.interactable(o);
     this.promptTxt.setVisible(on);
     this.focus.setVisible(on);
-    if (on) this.focus.setPosition(cx(o.x), cx(o.y));
+    if (on) this.focus.setPosition(...this.markAt(o));
+  }
+
+  // 창 너머 비 (물건 옵션 rain: true): 창 그림의 유리 두 칸 안에서 빗줄기가 떨어진다. 좌표는 32×32 창 그림 기준.
+  // 거울 속 창의 비(mirror.js)와 같은 방식: 1px 줄을 옅게, 픽셀 칸에 맞춰 그린다 (1px 미만은 화면에서 깜빡여 어색하다).
+  // 빗방울마다 자리·속도·길이·진하기가 달라 같은 무늬가 되풀이되지 않는다
+  drawWindowRain(delta) {
+    const g = this.rainG;
+    g.clear();
+    const drop = ([px, py, pw, ph], d = {}) => Object.assign(d, {
+      x: px + Math.floor(Math.random() * pw), y: py - Math.random() * ph, v: 0.02 + Math.random() * 0.025, len: 2 + Math.floor(Math.random() * 3), a: 0.15 + Math.random() * 0.3,
+    });
+    for (const o of this.rainWins) {
+      o.drops ??= WINDOW_PANES.flatMap(p => Array.from({ length: 8 }, () => Object.assign(drop(p), { pane: p, y: p[1] + Math.random() * p[3] })));
+      if (!o.img?.visible) continue;
+      const ox = o.img.x - o.img.width / 2, oy = o.img.y - o.img.height;
+      for (const d of o.drops) {
+        const [, py, , ph] = d.pane;
+        d.y += d.v * delta;
+        if (d.y > py + ph) drop(d.pane, d);
+        const y = Math.round(d.y), top = Math.max(y, py), bot = Math.min(y + d.len, py + ph);
+        if (bot > top) g.fillStyle(0x8aa0bc, d.a).fillRect(Math.round(ox) + d.x, Math.round(oy) + top, 1, bot - top);
+      }
+    }
+  }
+
+  // 플레이어를 그릴 높이: 맵 옵션 wallHug(px)가 있으면 바로 위가 벽인 줄에서 그만큼 위로 그린다
+  // (침실처럼 가구를 벽 아랫부분까지 올린 방에서 캐릭터도 벽에 붙어 보이게)
+  playerY(x, y) {
+    return cx(y) - (this.map.wallHug && this.isWall(x, y - 1) ? this.map.wallHug : 0);
+  }
+
+  // 조사 표시·반짝임 위치: 보통은 칸 가운데, lift로 그림을 옮긴 물건은 그림 가운데
+  markAt(o) {
+    if (!o.lift || !o.img) return [cx(o.x), cx(o.y)];
+    return [o.img.x, o.img.y - o.img.height / 2];
   }
 
   onKey(e) {
@@ -940,8 +1015,9 @@ export default class Explore extends Phaser.Scene {
       case 'pastOff': return this.pastOff();
       // 1인칭 화면 — 화장실 거울: 처음이면 열고, 열려 있으면 얼굴·김·금만 바꾼다 / 칸막이 안
       case 'mirror':
-      case 'stall': {
-        const View = a.t === 'mirror' ? MirrorView : StallView;
+      case 'stall':
+      case 'photo': {
+        const View = { mirror: MirrorView, stall: StallView, photo: PhotoView }[a.t];
         if (this.closeup instanceof View) return this.closeup.set(a);
         this.closeup?.destroy();
         this.closeup = new View(this, a);
