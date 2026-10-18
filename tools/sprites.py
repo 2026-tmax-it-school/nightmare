@@ -20,7 +20,12 @@
             {"kind": "blue"}               파란빛 물체(가방 등)와 그 외곽선
             {"kind": "flood", "tol": 60}   바깥과 이어진 배경만 지운다 (회색 격자 배경, 가구 다리 사이도 비게)
                                              "extra": [[r, g, b], ...]로 함께 지울 색(그림 뒤 벽판 등)을 더한다
-  fill    : object를 비율과 상관없이 W×H에 꽉 채운다 (예: 사물함 높이를 줄일 때)
+                                             "gray": false  밝은 무채색을 배경으로 보지 않는다 (회색 금속 의자 등)
+                                             "holes": [x0, y0, x1, y1]  이 범위(0~1 비율)에선 갇힌 배경(책상 다리 사이)도 지운다
+                                             "all": true  떨어진 덩어리도 모두 남긴다 (위아래 두 판으로 된 게시판)
+  fill    : object를 비율과 상관없이 W×H에 꽉 채운다 (예: 사물함 높이를 줄일 때). [w, h]면 그 크기로 (top과 함께 쓰면 벽 윗부분에만 거는 창)
+  top     : object를 아래가 아니라 위에서 이 픽셀만큼 내려 붙인다 (벽에 거는 물건, 예: 열쇠함)
+  keep_box: box를 그림 경계로 좁히지 않고 그대로 쓴다. 나란히 붙는 두 그림의 높이·선을 맞출 때 (침실 책상 두 칸)
   parts   : object를 여러 조각으로 따로 잘라 한 장에 배치한다. [{"box": [...], "at": [x, y, w, h]}, ...]
             각 조각은 비율을 지켜 at 영역 안 아래 가운데에 놓인다 (예: 거울은 벽 칸 아래쪽, 세면대는 바로 아래 바닥 칸)
   frame   : 문틀(양옆·위 어두운 나무)과 문턱(아래 회색 줄)을 둘러 벽과 구분되게 한다
@@ -116,7 +121,9 @@ def flood_cut(sub, cfg):
     """가장자리 배경색(또는 밝은 무채색 격자)과 비슷하면서 바깥과 이어진 픽셀만 배경으로 지운다."""
     edge = np.concatenate([sub[:6].reshape(-1, 3), sub[-6:].reshape(-1, 3), sub[:, :6].reshape(-1, 3), sub[:, -6:].reshape(-1, 3)])
     mx, mn = sub.max(axis=2), sub.min(axis=2)
-    bgish = (np.abs(sub - np.median(edge, axis=0)).sum(axis=2) < cfg.get('tol', 60)) | ((mx - mn < 20) & (mx > 165) & (mx < 250))
+    bgish = np.abs(sub - np.median(edge, axis=0)).sum(axis=2) < cfg.get('tol', 60)
+    if cfg.get('gray', True):
+        bgish |= (mx - mn < 20) & (mx > 165) & (mx < 250)
     for c in cfg.get('extra', []):
         bgish |= np.abs(sub - np.array(c)).sum(axis=2) < cfg.get('extra_tol', 22)
     h, w = bgish.shape
@@ -133,7 +140,11 @@ def flood_cut(sub, cfg):
             if 0 <= ny < h and 0 <= nx < w and not out[ny, nx] and bgish[ny, nx]:
                 out[ny, nx] = True
                 q.append((ny, nx))
-    return biggest(~out)
+    if 'holes' in cfg:  # 이 범위(0~1 비율) 안에서는 바깥과 이어지지 않은 배경(다리 사이 틈)도 지운다
+        fx0, fy0, fx1, fy1 = cfg['holes']
+        ys, xs = slice(round(fy0 * h), round(fy1 * h)), slice(round(fx0 * w), round(fx1 * w))
+        out[ys, xs] |= bgish[ys, xs]
+    return ~out if cfg.get('all') else biggest(~out)
 
 
 def shrink(rgb, mask, size):
@@ -166,7 +177,7 @@ def build(key, cfg):
         img[y:y + h, x:x + w] = img[y + dy:y + dy + h, x + dx:x + dx + w]
     if 'parts' in cfg:
         return build_parts(img, cfg)
-    x0, y0, x1, y1 = tight(img, cfg['box'])
+    x0, y0, x1, y1 = cfg['box'] if cfg.get('keep_box') else tight(img, cfg['box'])
     mode = cfg.get('mode', 'tile')
     edge = 4 if mode in ('tile', 'stretch') else 0
     l, t, r, b = cfg.get('trim', [0, 0, 0, 0])
@@ -189,16 +200,17 @@ def build(key, cfg):
         mask = cutout(sub, cfg['cutout'])
     else:
         mask = (np.abs(sub - img[2, 2]).sum(axis=2) > BG_DIST) & ~magentaish(sub)
-    ys, xs = np.nonzero(mask)
-    sub, mask = sub[ys.min():ys.max() + 1, xs.min():xs.max() + 1], mask[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    if not cfg.get('keep_box'):
+        ys, xs = np.nonzero(mask)
+        sub, mask = sub[ys.min():ys.max() + 1, xs.min():xs.max() + 1], mask[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
     sh, sw = mask.shape
     scale = min(W / sw, H / sh) * cfg.get('scale', 1)
     tw, th = max(1, round(sw * scale)), max(1, round(sh * scale))
     if cfg.get('fill'):
-        tw, th = W, H
+        tw, th = cfg['fill'] if isinstance(cfg['fill'], list) else (W, H)
     small = shrink(sub, mask, (tw, th))
     canvas = np.zeros((H, W, 4), np.uint8)
-    ox, oy = (W - tw) // 2, H - th
+    ox, oy = (W - tw) // 2, cfg.get('top', H - th)
     canvas[oy:oy + th, ox:ox + tw] = small
     return clean_edge(canvas)
 

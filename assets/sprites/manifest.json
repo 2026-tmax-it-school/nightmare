@@ -218,5 +218,57 @@
  "player_right_4": [
   32,
   32
+ ],
+ "desk_home": [
+  32,
+  25
+ ],
+ "desk_diary": [
+  32,
+  25
+ ],
+ "chair": [
+  32,
+  32
+ ],
+ "nightstand": [
+  32,
+  32
+ ],
+ "window_home": [
+  32,
+  32
+ ],
+ "dresser": [
+  32,
+  32
+ ],
+ "shelf_home": [
+  32,
+  40
+ ],
+ "rug": [
+  128,
+  96
+ ],
+ "slippers": [
+  32,
+  32
+ ],
+ "papers": [
+  32,
+  32
+ ],
+ "box": [
+  32,
+  32
+ ],
+ "photo_wall": [
+  32,
+  32
+ ],
+ "mirror_wall": [
+  32,
+  32
  ]
 }

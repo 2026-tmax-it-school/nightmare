@@ -26,13 +26,31 @@
       { "t": "text", "text": "[ 이동: WASD / 방향키    조사: E / Space    기억 노트: ESC ]" }
     ]
   },
+  "shadows": true,
+  "vignette": 0.22,
+  "wallHug": 12,
+  "lights": [
+    { "x": 4, "y": 2, "r": 44, "color": "#8aa0c8", "alpha": 0.022 },
+    { "x": 7, "y": 2, "r": 44, "color": "#8aa0c8", "alpha": 0.022 }
+  ],
+  "_layout": "GDD 6장 프롤로그 침실. 위쪽 줄 낮은 가구는 lift로 벽에 붙이고, 의자는 책상 앞으로 올려 넣었다(그래서 의자 칸은 지나갈 수 있음). 협탁·책상·책장·서랍장은 벽 칸(y 0)에 두어 그 앞 칸을 지나갈 수 있게 하고 그 칸에서 위를 보고 조사한다. 카펫은 4×3칸, dx로 방 정가운데. 방 가운데(x4~7, y3~5)와 현관 앞(9,6)(9,7)은 비워 둔다. 벽 칸 물건은 바로 아래 칸이 비어 있어야 조사할 수 있다",
   "objects": [
-    { "x": 1, "y": 1, "tex": "bed_top", "script": "bed" },
-    { "x": 1, "y": 2, "tex": "bed_bottom", "script": "bed" },
-    { "x": 4, "y": 0, "tex": "window", "script": "window" },
-    { "x": 7, "y": 0, "tex": "window", "script": "window" },
-    { "x": 5, "y": 1, "tex": "desk", "script": "desk" },
-    { "x": 9, "y": 1, "tex": "shelf", "script": "shelf" },
+    { "x": 1, "y": 1, "tex": "bed_top", "script": "bed", "lift": 6 },
+    { "x": 1, "y": 2, "tex": "bed_bottom", "script": "bed", "lift": 6 },
+    { "x": 2, "y": 0, "tex": "nightstand", "script": "clock", "sparkle": false, "lift": -10 },
+    { "x": 3, "y": 0, "tex": "photo_wall", "script": "photo", "sparkle": false },
+    { "x": 4, "y": 0, "tex": "window_home", "script": "window", "rain": true },
+    { "x": 7, "y": 0, "tex": "window_home", "script": "window", "rain": true },
+    { "x": 8, "y": 0, "tex": "mirror_wall", "script": "mirror", "sparkle": false },
+    { "x": 5, "y": 0, "tex": "desk_home", "script": "desk", "lift": -12 },
+    { "x": 6, "y": 0, "tex": "desk_diary", "script": "diary", "sparkle": false, "lift": -12 },
+    { "x": 5, "y": 1, "tex": "chair", "solid": false, "lift": 13 },
+    { "x": 9, "y": 0, "tex": "shelf_home", "script": "shelf", "lift": -12 },
+    { "x": 10, "y": 0, "tex": "dresser", "script": "dresser", "sparkle": false, "lift": -7 },
+    { "x": 1, "y": 3, "tex": "slippers", "solid": false, "flat": true },
+    { "x": 5, "y": 5, "tex": "rug", "solid": false, "flat": true, "dx": 16 },
+    { "x": 7, "y": 1, "tex": "papers", "solid": false, "flat": true, "lift": 4 },
+    { "x": 10, "y": 4, "tex": "box", "script": "box", "sparkle": false },
     { "x": 10, "y": 7, "tex": "mailbox", "script": "mailbox" },
     { "x": 9, "y": 8, "script": "homedoor" }
   ],
@@ -40,6 +58,37 @@
     "bed": [{ "t": "text", "text": "이불이 식은땀에 젖어 있다." }],
     "window": [{ "t": "text", "text": "창밖에 비가 내리고 있다." }],
     "desk": [{ "t": "text", "text": "회사 서류가 쌓여 있다. 며칠째 제대로 잠을 못 잤다." }],
+    "clock": [
+      { "t": "text", "text": "협탁 위 탁상시계가 3시 52분에 멈춰 있다." },
+      { "t": "text", "who": "재민", "text": "건전지를 갈아도…… 꼭 이 시각에 멈춘다." }
+    ],
+    "diary": [
+      { "t": "text", "text": "펼쳐진 수첩. 상담 선생님이 써 보라던 꿈 일기다." },
+      { "t": "text", "text": "「학교 복도. 누군가 앞에서 뛰어간다. 얼굴은 보이지 않는다.」" },
+      { "t": "text", "text": "「오늘은 피아노 소리가 들렸다. 아는 곡 같은데, 제목이 떠오르지 않는다.」" },
+      { "t": "text", "text": "마지막 장에, 꾹꾹 눌러쓴 글씨가 있다. 「열어 줘」" },
+      { "t": "text", "who": "재민", "text": "……이건 내가 쓴 게 아닌데." }
+    ],
+    "dresser": [
+      { "t": "text", "text": "서랍장 맨 아래 칸. 양말 뭉치 밑에 녹슨 작은 열쇠가 있다." },
+      { "t": "text", "text": "꼬리표에 숫자 하나. 「13」" },
+      { "t": "text", "who": "재민", "text": "어디 열쇠였지……. 버리지 못한 이유도 기억나지 않는다." }
+    ],
+    "photo": [
+      { "t": "photo" },
+      { "t": "text", "text": "비뚤게 걸린 액자. 중학교 졸업식 사진이다." },
+      { "t": "text", "text": "사진 오른쪽이 안쪽으로 접혀 있다. 내 옆에 서 있던 누군가가 가려져 있다." },
+      { "t": "text", "who": "재민", "text": "……내가 접었나? 접은 기억은 없는데." }
+    ],
+    "mirror": [
+      { "t": "mirror", "place": "bedroom" },
+      { "t": "text", "text": "얼룩진 거울. 눈 밑이 검게 꺼져 있다." },
+      { "t": "text", "who": "재민", "text": "……꼴이 말이 아니군." }
+    ],
+    "box": [
+      { "t": "text", "text": "매직으로 「고1」이라고 적힌 이삿짐 상자. 전학 올 때 싼 그대로다." },
+      { "t": "text", "who": "재민", "text": "십 년째 테이프도 안 뜯었네. ……왠지 열고 싶지 않다." }
+    ],
     "shelf": [
       { "t": "text", "text": "책장에 중학교 졸업앨범이 꽂혀 있다. 고등학교 앨범은… 없다." },
       { "t": "text", "who": "재민", "text": "전학을 갔으니까. ……그랬던가?" }
