@@ -1,4 +1,4 @@
-// 컷신: 배경(임시 색 + CG 설명) · 대사 · 효과음 · 자막. CG 이미지가 준비되면 bg.image로 교체.
+// 컷신: 배경(CG 그림 또는 임시 색 + CG 설명) · 대사 · 효과음 · 자막. CG는 bg의 image → assets/cg/<image>.png
 import { W, H } from '../constants.js';
 import { DB } from '../db.js';
 import { runScript } from '../script.js';
@@ -13,6 +13,7 @@ export default class Cutscene extends Phaser.Scene {
   create() {
     this.ui = new UI(this);
     this.bg = this.add.rectangle(0, 0, W, H, 0x000000).setOrigin(0);
+    this.cg = this.add.image(0, 0, '__DEFAULT').setOrigin(0).setDisplaySize(W, H).setVisible(false);
     this.label = this.add.text(W / 2, H / 2 - 70, '', textStyle(13, '#55505c')).setOrigin(0.5);
     this.rainG = this.add.graphics().setDepth(5);
     this.drops = null;
@@ -39,9 +40,16 @@ export default class Cutscene extends Phaser.Scene {
   action(a) {
     switch (a.t) {
       case 'bg':
+      {
         this.bg.setFillStyle(Phaser.Display.Color.HexStringToColor(a.color).color);
-        this.label.setText(a.label || '');
+        // CG 그림이 있으면 그림, 없으면 임시 색 + CG 설명
+        const key = a.image && 'cg_' + a.image;
+        const has = key && this.textures.exists(key);
+        if (has) this.cg.setTexture(key).setDisplaySize(W, H);
+        this.cg.setVisible(!!has);
+        this.label.setText(has ? '' : a.label || '');
         return;
+      }
       case 'caption': return this.caption(a.text, a.ms || 1800);
       case 'rain':
         if (a.stop) { this.drops = null; this.rainG.clear(); stopLoop('rain'); return; }

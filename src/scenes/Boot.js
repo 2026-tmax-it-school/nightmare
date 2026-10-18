@@ -12,6 +12,12 @@ export default class Boot extends Phaser.Scene {
     this.load.json('puzzles', 'data/puzzles.json');
     this.load.json('hints', 'data/hints.json');
     this.load.json('objectives', 'data/objectives.json');
+    // 컷신 CG (tools/cg.py가 만든 assets/cg/<이름>.png). 컷신의 bg에 적힌 image만 불러온다
+    this.load.on('filecomplete-json-cutscenes', (key, type, data) => {
+      const names = new Set();
+      JSON.stringify(data, (k, v) => { if (v && v.t === 'bg' && v.image) names.add(v.image); return v; });
+      for (const name of names) this.load.image('cg_' + name, `assets/cg/${name}.png`);
+    });
     this.load.json('cutscenes', 'data/cutscenes.json');
     for (const id of MAPS) this.load.json('map_' + id, `data/maps/${id}.json`);
     if (DEV) this.load.json('checkpoints', 'data/checkpoints.json');
