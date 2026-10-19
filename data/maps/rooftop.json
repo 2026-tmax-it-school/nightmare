@@ -40,7 +40,7 @@
     {
       "id": "roof", "x": 1, "y": 1, "w": 18, "h": 11, "flag": "past_roof",
       "figures": [
-        { "x": 5, "y": 3, "label": "일등" }, { "x": 10, "y": 2, "label": "럭키7" },
+        { "x": 6, "y": 4, "label": "일등" }, { "x": 10, "y": 2, "label": "럭키7" },
         { "x": 15, "y": 7, "label": "텐" }, { "x": 10, "y": 8, "label": "재민" }
       ],
       "script": [
@@ -53,9 +53,11 @@
     }
   ],
   "objects": [
-    { "x": 3, "y": 2, "tex": "tank", "script": "tank" },
-    { "x": 4, "y": 2, "tex": "tank", "script": "tank" },
-    { "x": 5, "y": 2, "tex": "butts", "script": "clue_butts" },
+    { "x": 2, "y": 3, "tex": "tank", "script": "tank" },
+    { "x": 3, "y": 3, "tex": "tank_r", "script": "tank" },
+    { "x": 4, "y": 3, "tex": "tank", "script": "tank" },
+    { "x": 5, "y": 3, "tex": "tank_r", "script": "tank" },
+    { "x": 6, "y": 3, "tex": "butts", "script": "clue_butts" },
     { "x": 10, "y": 1, "tex": "ball", "script": "clue_ball" },
     { "x": 15, "y": 6, "tex": "roofbench", "script": "bench" },
     { "x": 16, "y": 6, "tex": "comic", "script": "clue_comic" },
