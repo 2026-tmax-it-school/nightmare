@@ -663,6 +663,8 @@ export default class Explore extends Phaser.Scene {
   tileTex(x, y) {
     let tex = this.map.legend[this.grid[y][x]] || 'wall';
     if (!this.textures.exists(tex)) tex = TILE_FALLBACK[tex] || 'wall'; // 아직 그림이 없는 타일
+    // 펜스가 세로로 이어지는 칸(옥상 좌우 테두리)은 위에서 본 세로 펜스 그림을 쓴다
+    if (tex === 'fence' && y > 0 && this.map.legend[this.grid[y - 1][x]] === 'fence' && this.textures.exists('fence_v')) return 'fence_v';
     if (tex === 'floor_stairs') {
       // 2칸 폭 계단: 왼쪽·오른쪽 가장자리 그림이 있으면 쓴다
       const same = dx => this.map.legend[this.grid[y][x + dx]] === 'floor_stairs';

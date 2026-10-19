@@ -41,6 +41,11 @@
   frame   : 문틀(양옆·위 어두운 나무)과 문턱(아래 회색 줄)을 둘러 벽과 구분되게 한다
   brighten: tile·stretch 결과의 밝기를 곱한다 (예: 1.5 → 어두운 문을 밝게). 문틀은 그 뒤에 둘러서 그대로
   clear_dark : [x0, y0, x1, y1, 밝기] 결과 이미지의 이 범위(0~1 비율)에서 어두운 픽셀을 투명하게 (열린 문 너머로 바닥이 보이게)
+  pixel   : 8 → 도트 한 개가 8×8 블록인 깔끔한 원본을 블록 가운데 색으로 정확히 1/8로 줄인다 (box는 블록 경계에 맞춤)
+            mode가 object면 마젠타를 지워 칸 아래 가운데에 놓고, center: true면 칸 한가운데에 놓는다 (바닥 소품)
+            align: "left" / "right"로 칸 왼쪽·오른쪽 끝에 붙인다 (두 칸짜리 그림을 반으로 나눈 벤치)
+  draw    : [[x, y, w, h, [r, g, b]], ...] 결과 위에 색 사각형을 찍는다 (AI가 못 그린 숫자 각인 등)
+  crop    : [x, y, w, h] 결과에서 이 부분만 잘라 쓴다 (두 칸짜리 그림을 칸마다 나눌 때: 물탱크 왼쪽·오른쪽)
 기본으로 tile·stretch는 가장자리를 4픽셀 더 잘라 배경색이 번진 테두리를 없앤다.
 """
 import json
@@ -192,6 +197,8 @@ def build(key, cfg):
         img[y:y + h, x:x + w] = img[y + dy:y + dy + h, x + dx:x + dx + w]
     if 'parts' in cfg:
         return build_parts(img, cfg)
+    if 'pixel' in cfg:
+        return build_pixel(img, cfg)
     x0, y0, x1, y1 = cfg['box'] if cfg.get('keep_box') else tight(img, cfg['box'])
     mode = cfg.get('mode', 'tile')
     edge = 4 if mode in ('tile', 'stretch') else 0
@@ -312,6 +319,26 @@ def landscape(sub, mask, b):
     return rot, rmask
 
 
+def build_pixel(img, cfg):
+    """도트 한 개가 n×n 블록으로 깔끔하게 그려진 원본: 블록 가운데 색을 하나씩 집어 정확히 1/n로 줄인다 (번짐 없음).
+    box는 블록 경계에 맞춘다. mode가 object면 마젠타를 지우고 W×H 칸 아래 가운데(center면 한가운데)에 놓는다."""
+    n = cfg['pixel']
+    x0, y0, x1, y1 = cfg['box']
+    small = img[y0 + n // 2:y1:n, x0 + n // 2:x1:n]
+    if cfg.get('mode', 'tile') != 'object':
+        return np.dstack([small, np.full(small.shape[:2], 255)]).astype(np.uint8)
+    keep = ~magentaish(small) & ~((small[..., 0] > 200) & (small[..., 1] < 60) & (small[..., 2] > 200))
+    ys, xs = np.nonzero(keep)
+    small, keep = small[ys.min():ys.max() + 1, xs.min():xs.max() + 1], keep[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    W, H = cfg.get('size', [32, 32])
+    th, tw = keep.shape
+    canvas = np.zeros((H, W, 4), np.uint8)
+    ox = {'left': 0, 'right': W - tw}.get(cfg.get('align'), (W - tw) // 2)
+    oy = (H - th) // 2 if cfg.get('center') else H - th
+    canvas[oy:oy + th, ox:ox + tw][keep] = np.dstack([small, np.full(keep.shape, 255)])[keep]
+    return canvas
+
+
 def build_parts(img, cfg):
     W, H = cfg.get('size', [32, 32])
     canvas = np.zeros((H, W, 4), np.uint8)
@@ -362,6 +389,11 @@ def main():
                 print(f'{key:16s} 원본 없음 — 건너뜀 ({cfg["src"]})')
             continue
         arr = build(key, cfg)
+        for x, y, w, h, rgb in cfg.get('draw', []):
+            arr[y:y + h, x:x + w] = [*rgb, 255]
+        if 'crop' in cfg:
+            x, y, w, h = cfg['crop']
+            arr = np.ascontiguousarray(arr[y:y + h, x:x + w])
         Image.fromarray(arr, 'RGBA').save(os.path.join(OUT, key + '.png'))
         made[key] = [arr.shape[1], arr.shape[0]]
         print(f'{key:16s} {arr.shape[1]}x{arr.shape[0]}')
