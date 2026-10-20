@@ -1,6 +1,8 @@
 {
   "id": "school1f",
   "bgm": "drone", "bgmTrial": "hall",
+  "shadows": true,
+  "wallHug": 12,
   "dark": true,
   "legend": {
     "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "=": "floor_stairs", "|": "floor_stairs_side",
@@ -145,7 +147,7 @@
       "id": "lab", "x": 23, "y": 14, "w": 7, "h": 5, "flag": "past_lab",
       "figures": [
         { "x": 23, "y": 15, "label": "텐" }, { "x": 24, "y": 15, "tex": "past_bottle" },
-        { "x": 25, "y": 17, "tex": "past_flame" }, { "x": 27, "y": 16, "label": "일등" },
+        { "x": 25, "y": 18, "tex": "past_flame" }, { "x": 27, "y": 16, "label": "일등" },
         { "x": 26, "y": 14, "label": "도윤" }, { "x": 29, "y": 15, "tex": "past_ext" }
       ],
       "script": [
@@ -158,9 +160,9 @@
     }
   ],
   "objects": [
-    { "x": 4, "y": 1, "tex": "board", "script": "board11" },
-    { "x": 5, "y": 1, "tex": "board", "script": "board11" },
-    { "x": 6, "y": 1, "tex": "board", "script": "board11" },
+    { "x": 4, "y": 0, "tex": "board", "script": "board11" },
+    { "x": 5, "y": 0, "tex": "board", "script": "board11" },
+    { "x": 6, "y": 0, "tex": "board", "script": "board11" },
     { "x": 5, "y": 2, "tex": "lectern", "script": [{ "t": "text", "text": "텅 빈 교탁. 오랫동안 아무도 쓰지 않은 것 같다." }] },
     { "x": 2, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 4, "y": 4, "tex": "desk", "script": "desk" },
@@ -180,9 +182,9 @@
     { "x": 8, "y": 7, "tex": "desk", "script": "desk" },
     { "x": 1, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
 
-    { "x": 14, "y": 1, "tex": "board", "script": "board12" },
-    { "x": 15, "y": 1, "tex": "board", "script": "board12" },
-    { "x": 16, "y": 1, "tex": "board", "script": "board12" },
+    { "x": 14, "y": 0, "tex": "board", "script": "board12" },
+    { "x": 15, "y": 0, "tex": "board", "script": "board12" },
+    { "x": 16, "y": 0, "tex": "board", "script": "board12" },
     { "x": 15, "y": 2, "tex": "lectern", "script": [{ "t": "text", "text": "텅 빈 교탁. 오랫동안 아무도 쓰지 않은 것 같다." }] },
     { "x": 12, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 14, "y": 4, "tex": "desk", "script": "desk" },
@@ -202,10 +204,10 @@
     { "x": 18, "y": 7, "tex": "desk", "script": "desk" },
     { "x": 11, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
 
-    { "x": 22, "y": 1, "tex": "notice", "script": "notice" },
-    { "x": 24, "y": 1, "tex": "board", "script": "board13" },
-    { "x": 25, "y": 1, "tex": "board", "script": "board13" },
-    { "x": 26, "y": 1, "tex": "board", "script": "board13" },
+    { "x": 22, "y": 0, "tex": "notice_wide", "below": true, "script": "notice" },
+    { "x": 24, "y": 0, "tex": "board", "script": "board13" },
+    { "x": 25, "y": 0, "tex": "board", "script": "board13" },
+    { "x": 26, "y": 0, "tex": "board", "script": "board13" },
     { "x": 25, "y": 2, "tex": "lectern", "script": "lectern" },
     { "x": 22, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 24, "y": 4, "tex": "desk", "script": "desk" },
@@ -234,8 +236,8 @@
     { "x": 35, "y": 4, "tex": "desk", "script": "office_desk" },
     { "x": 33, "y": 6, "tex": "desk", "script": "office_desk" },
     { "x": 35, "y": 6, "tex": "desk", "script": "office_desk" },
-    { "x": 31, "y": 1, "tex": "cabinet", "script": "office_cabinet" },
-    { "x": 32, "y": 1, "tex": "cabinet", "script": "office_cabinet" },
+    { "x": 31, "y": 0, "tex": "cabinet", "lift": -20, "script": "office_cabinet" },
+    { "x": 32, "y": 0, "tex": "cabinet", "lift": -20, "script": "office_cabinet" },
     { "x": 37, "y": 3, "tex": "desk", "script": "t_desk" },
     { "x": 38, "y": 3, "tex": "frame", "script": "t_photo" },
     { "x": 38, "y": 8, "tex": "locker", "hide": true, "view": "classroom" },
@@ -248,13 +250,14 @@
     { "x": 10, "y": 10, "tex": "locker", "hide": true, "view": "corridor" },
     { "x": 20, "y": 10, "tex": "locker", "hide": true, "view": "corridor" },
 
-    { "x": 1, "y": 14, "tex": "cabinet", "script": "shoebox" },
-    { "x": 1, "y": 15, "tex": "cabinet", "script": "shoebox" },
-    { "x": 7, "y": 15, "tex": "notice", "script": "hallnotice" },
+    { "x": 1, "y": 13, "solid": true, "script": "shoebox", "_": "신발장 윗칸: 그림은 (1,15)의 세 칸짜리 신발장이 덮는다" },
+    { "x": 1, "y": 14, "solid": true, "script": "shoebox" },
+    { "x": 1, "y": 15, "tex": "cabinet_s", "dx": -4, "shadowSide": "right", "script": "shoebox" },
+    { "x": 7, "y": 15, "tex": "notice_side", "dx": 10, "shadowSide": "left", "script": "hallnotice" },
 
-    { "x": 9, "y": 14, "tex": "cabinet", "script": "cabinet" },
+    { "x": 9, "y": 14, "tex": "cabinet", "lift": 12, "script": "cabinet" },
     { "x": 13, "y": 14, "tex": "monitor", "script": "monitor" },
-    { "x": 15, "y": 14, "tex": "keybox", "script": "keybox" },
+    { "x": 15, "y": 13, "tex": "keybox", "below": true, "script": "keybox" },
     { "x": 10, "y": 16, "tex": "logdesk", "script": "logdesk" },
 
     { "x": 18, "y": 14, "tex": "mirror", "script": "mirror" },
@@ -263,13 +266,13 @@
     { "x": 21, "y": 18, "tex": "stall", "script": "stall_burnt" },
 
 
-    { "x": 23, "y": 14, "tex": "chemshelf", "script": "chemshelf" },
-    { "x": 24, "y": 14, "tex": "chemshelf", "script": "chemshelf" },
-    { "x": 29, "y": 14, "tex": "notice", "script": "safety" },
-    { "x": 25, "y": 15, "tex": "labtable", "script": "labtable" },
-    { "x": 26, "y": 15, "tex": "labtable", "script": "bottle" },
-    { "x": 25, "y": 17, "tex": "lamp", "script": "lamp" },
-    { "x": 26, "y": 17, "tex": "labtable", "script": "labtable" },
+    { "x": 23, "y": 13, "tex": "chemshelf", "lift": -20, "below": true, "script": "chemshelf" },
+    { "x": 24, "y": 13, "tex": "chemshelf", "lift": -20, "below": true, "script": "chemshelf" },
+    { "x": 26, "y": 13, "tex": "notice_wide", "below": true, "script": "safety" },
+    { "x": 25, "y": 16, "tex": "labtable", "script": "labtable" },
+    { "x": 26, "y": 16, "tex": "labtable", "script": "bottle" },
+    { "x": 25, "y": 18, "tex": "lamp", "script": "lamp" },
+    { "x": 26, "y": 18, "tex": "labtable", "script": "labtable" },
     { "x": 30, "y": 16, "door": "prep", "script": "door_prep" },
     { "x": 33, "y": 17, "tex": "bag", "script": "bag" },
     { "x": 23, "y": 18, "tex": "ext_fallen", "script": "ext_fallen" },
