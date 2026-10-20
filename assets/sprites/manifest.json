@@ -139,6 +139,122 @@
   32,
   32
  ],
+ "exit_door": [
+  32,
+  32
+ ],
+ "cabinet": [
+  32,
+  64
+ ],
+ "cabinet_s": [
+  32,
+  96
+ ],
+ "notice_wide": [
+  32,
+  32
+ ],
+ "notice_side": [
+  32,
+  48
+ ],
+ "lectern": [
+  32,
+  32
+ ],
+ "desk_push": [
+  28,
+  28
+ ],
+ "desk_pile": [
+  24,
+  52
+ ],
+ "monitor": [
+  32,
+  64
+ ],
+ "keybox": [
+  32,
+  32
+ ],
+ "frame": [
+  32,
+  32
+ ],
+ "logdesk": [
+  32,
+  32
+ ],
+ "ext_fallen": [
+  32,
+  32
+ ],
+ "past_ext": [
+  32,
+  32
+ ],
+ "past_flame": [
+  32,
+  32
+ ],
+ "past_bottle": [
+  32,
+  32
+ ],
+ "desk_home": [
+  32,
+  25
+ ],
+ "desk_diary": [
+  32,
+  25
+ ],
+ "chair": [
+  32,
+  32
+ ],
+ "nightstand": [
+  32,
+  32
+ ],
+ "window_home": [
+  32,
+  32
+ ],
+ "dresser": [
+  32,
+  32
+ ],
+ "shelf_home": [
+  32,
+  40
+ ],
+ "rug": [
+  128,
+  96
+ ],
+ "slippers": [
+  32,
+  32
+ ],
+ "papers": [
+  32,
+  32
+ ],
+ "box": [
+  32,
+  32
+ ],
+ "photo_wall": [
+  32,
+  32
+ ],
+ "mirror_wall": [
+  32,
+  32
+ ],
  "player_down": [
   32,
   32
@@ -216,58 +332,6 @@
   32
  ],
  "player_right_4": [
-  32,
-  32
- ],
- "desk_home": [
-  32,
-  25
- ],
- "desk_diary": [
-  32,
-  25
- ],
- "chair": [
-  32,
-  32
- ],
- "nightstand": [
-  32,
-  32
- ],
- "window_home": [
-  32,
-  32
- ],
- "dresser": [
-  32,
-  32
- ],
- "shelf_home": [
-  32,
-  40
- ],
- "rug": [
-  128,
-  96
- ],
- "slippers": [
-  32,
-  32
- ],
- "papers": [
-  32,
-  32
- ],
- "box": [
-  32,
-  32
- ],
- "photo_wall": [
-  32,
-  32
- ],
- "mirror_wall": [
   32,
   32
  ]

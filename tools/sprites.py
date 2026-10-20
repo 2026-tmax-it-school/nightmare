@@ -23,8 +23,18 @@
                                              "gray": false  밝은 무채색을 배경으로 보지 않는다 (회색 금속 의자 등)
                                              "holes": [x0, y0, x1, y1]  이 범위(0~1 비율)에선 갇힌 배경(책상 다리 사이)도 지운다
                                              "all": true  떨어진 덩어리도 모두 남긴다 (위아래 두 판으로 된 게시판)
+                                             "neutral": [10, 30]  채도 낮은 회색 바닥도 지운다 (게임 화면에서 자른 가구)
+                                             "cool": true  어두운 회청색 그라데이션 배경도 지운다 (스크린샷에서 자른 그림)
   fill    : object를 비율과 상관없이 W×H에 꽉 채운다 (예: 사물함 높이를 줄일 때). [w, h]면 그 크기로 (top과 함께 쓰면 벽 윗부분에만 거는 창)
   top     : object를 아래가 아니라 위에서 이 픽셀만큼 내려 붙인다 (벽에 거는 물건, 예: 열쇠함)
+  rotate  : 90 / -90 / 180 — 잘라낸 그림을 돌린다 (90 = 반시계: 아래쪽 면이 오른쪽을 본다). 옆 벽에 붙는 탑뷰 가구
+  repeat_v: N — (돌린 뒤) 그림을 위아래로 N번 이어 붙인다. 두 칸짜리 긴 가구 (현관 신발장)
+  post    : 32px로 줄인 뒤의 마무리 보정 {"wood": 배율, "dark": 배율, "dim_bright": [밝기, 배율], "outline": [r, g, b],
+            "tear": 개수, "shadow": [dx, dy, 진하기]} — 나무색 어둡게 / 어두운 칸 밝게 / 밝은 종이 줄이기 / 1px 테두리 /
+            종이 모서리 찢김 / 그림자
+            "gray_to": [r, g, b] 무채색 면(회색 윗판)을 이 색 톤으로 / "side": {"w": px, "color": [r, g, b]} 오른쪽에 두께 면 (옆 벽에 선 게시판)
+  landscape: {"border": px} 세로 게시판을 가로로 눕힌다. 틀만 90° 돌리고, 안의 게시물은 위·아래 두 덩어리로 나눠
+            좌우로 나란히 다시 붙여 사진·종이는 똑바로 둔다 (나누는 줄은 게시물이 가장 덜 걸리는 줄)
   keep_box: box를 그림 경계로 좁히지 않고 그대로 쓴다. 나란히 붙는 두 그림의 높이·선을 맞출 때 (침실 책상 두 칸)
   parts   : object를 여러 조각으로 따로 잘라 한 장에 배치한다. [{"box": [...], "at": [x, y, w, h]}, ...]
             각 조각은 비율을 지켜 at 영역 안 아래 가운데에 놓인다 (예: 거울은 벽 칸 아래쪽, 세면대는 바로 아래 바닥 칸)
@@ -124,6 +134,11 @@ def flood_cut(sub, cfg):
     bgish = np.abs(sub - np.median(edge, axis=0)).sum(axis=2) < cfg.get('tol', 60)
     if cfg.get('gray', True):
         bgish |= (mx - mn < 20) & (mx > 165) & (mx < 250)
+    if 'neutral' in cfg:  # 채도 낮은 회색 바닥 [최대 채도차, 최소 밝기] — 갈색 가구·검은 외곽선은 남긴다 (스크린샷에서 자른 가구)
+        d, lo = cfg['neutral']
+        bgish |= (mx - mn < d) & (mx > lo)
+    if cfg.get('cool'):  # 어두운 회청색 그라데이션 배경 (검은 외곽선은 남긴다)
+        bgish |= (sub[..., 2] >= sub[..., 0]) & (mx - mn < 24) & (mx > 27) & (mx < 95)
     for c in cfg.get('extra', []):
         bgish |= np.abs(sub - np.array(c)).sum(axis=2) < cfg.get('extra_tol', 22)
     h, w = bgish.shape
@@ -203,6 +218,13 @@ def build(key, cfg):
     if not cfg.get('keep_box'):
         ys, xs = np.nonzero(mask)
         sub, mask = sub[ys.min():ys.max() + 1, xs.min():xs.max() + 1], mask[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    if cfg.get('rotate'):
+        k = cfg['rotate'] // 90
+        sub, mask = np.rot90(sub, k).copy(), np.rot90(mask, k).copy()
+    if cfg.get('repeat_v'):
+        sub, mask = np.concatenate([sub] * cfg['repeat_v']), np.concatenate([mask] * cfg['repeat_v'])
+    if 'landscape' in cfg:
+        sub, mask = landscape(sub, mask, cfg['landscape']['border'])
     sh, sw = mask.shape
     scale = min(W / sw, H / sh) * cfg.get('scale', 1)
     tw, th = max(1, round(sw * scale)), max(1, round(sh * scale))
@@ -212,7 +234,82 @@ def build(key, cfg):
     canvas = np.zeros((H, W, 4), np.uint8)
     ox, oy = (W - tw) // 2, cfg.get('top', H - th)
     canvas[oy:oy + th, ox:ox + tw] = small
-    return clean_edge(canvas)
+    canvas = clean_edge(canvas)
+    return post_process(canvas, cfg['post']) if 'post' in cfg else canvas
+
+
+def post_process(c, p):
+    """줄인 그림(RGBA)에 하는 마무리 보정. 옵션 설명은 맨 위 post 참고."""
+    c = c.copy()
+    rgb, a = c[..., :3].astype(np.float32), c[..., 3] > 0
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    mx, mn = rgb.max(axis=2), rgb.min(axis=2)
+    if 'wood' in p:
+        m = a & (r > g) & (g > b) & (r - b > 25) & (mn < 140)
+        rgb[m] *= p['wood']
+    if 'dark' in p:
+        m = a & (mx < 70)
+        rgb[m] *= p['dark']
+    if 'gray_to' in p:  # 무채색(채도 낮은) 면을 지정 색 톤으로 — 밝기는 유지
+        m = a & (mx - mn < 28) & (mx > 60)
+        tone = np.array(p['gray_to'], np.float32)
+        rgb[m] = (mx[m][:, None] / max(tone.max(), 1)) * tone
+    if 'dim_bright' in p:
+        thr, f = p['dim_bright']
+        m = a & (mn > thr)
+        rgb[m] *= f
+    c[..., :3] = rgb.clip(0, 255).astype(np.uint8)
+    if 'tear' in p:  # 종이(밝은 칸)의 위·오른쪽 모서리 몇 칸을 아래 색(코르크)으로 바꿔 찢긴 것처럼
+        paper = a & (c[..., :3].min(axis=2) > 110)
+        H, W = paper.shape
+        edge = [(y, x) for y in range(1, H) for x in range(W - 1, 0, -1) if paper[y, x] and (not paper[y - 1, x] or not paper[y, x + 1] if x + 1 < W else True)]
+        for y, x in edge[::max(1, len(edge) // max(1, p['tear']))][:p['tear']]:
+            c[y, x, :3] = c[min(H - 1, y + 1), max(0, x - 1), :3] if not paper[min(H - 1, y + 1), max(0, x - 1)] else (110, 70, 45)
+    if 'side' in p:  # 그림 오른쪽에 나무 두께 면 (위 1줄은 조금 밝게) — 옆 벽에 붙은 판이 신발장처럼 보이게
+        w, col = p['side']['w'], np.array(p['side']['color'])
+        op = c[..., 3] > 0
+        for y in range(c.shape[0]):
+            xs = np.nonzero(op[y])[0]
+            if len(xs):
+                x1 = xs.max() + 1
+                c[y, x1:x1 + w] = (*col, 255)
+        ys = np.nonzero(op.any(axis=1))[0]
+        if len(ys):
+            row = c[ys.min()]
+            row[row[..., 3] > 0, :3] = np.clip(row[row[..., 3] > 0, :3].astype(int) + 25, 0, 255)
+    if 'outline' in p:  # 바깥쪽 1px를 테두리 색으로 (틀이 두꺼워진다)
+        pad = np.pad(c[..., 3] > 0, 1)
+        near = pad[:-2, 1:-1] | pad[2:, 1:-1] | pad[1:-1, :-2] | pad[1:-1, 2:]
+        ring = near & (c[..., 3] == 0)
+        c[ring] = (*p['outline'], 255)
+    if 'shadow' in p:  # 그림 뒤에 옅은 그림자 (벽에서 살짝 떠 보이게)
+        dx, dy, al = p['shadow']
+        sh = np.zeros_like(c)
+        src = c[..., 3] > 0
+        ys, xs = np.nonzero(src)
+        ys2, xs2 = ys + dy, xs + dx
+        ok = (ys2 >= 0) & (ys2 < c.shape[0]) & (xs2 >= 0) & (xs2 < c.shape[1])
+        sh[ys2[ok], xs2[ok]] = (0, 0, 0, int(255 * al))
+        under = (c[..., 3] == 0) & (sh[..., 3] > 0)
+        c[under] = sh[under]
+    return c
+
+
+def landscape(sub, mask, b):
+    """세로 게시판 → 가로 게시판. 틀은 돌리고 게시물은 똑바로 (위 반·아래 반을 좌우로)."""
+    H, W = mask.shape
+    rot, rmask = np.rot90(sub, 1).copy(), np.rot90(mask, 1).copy()
+    inner = sub[b:H - b, b:W - b]
+    ih, iw = inner.shape[:2]
+    cork = np.median(inner.reshape(-1, 3), axis=0)
+    busy = (np.abs(inner - cork).sum(axis=2) > 90).sum(axis=1)
+    lo, hi = int(ih * 0.35), int(ih * 0.65)
+    r = lo + int(np.argmin(busy[lo:hi]))
+    h2 = max(r, ih - r)
+    pad = lambda part: np.concatenate([part, np.broadcast_to(cork, (h2 - part.shape[0], iw, 3))]) if part.shape[0] < h2 else part
+    side = np.concatenate([pad(inner[:r]), pad(inner[r:])], axis=1).clip(0, 255).astype(np.uint8)
+    rot[b:W - b, b:H - b] = np.asarray(Image.fromarray(side).resize((ih, iw), Image.BOX)).astype(np.int32)
+    return rot, rmask
 
 
 def build_parts(img, cfg):

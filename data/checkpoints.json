@@ -13,7 +13,7 @@
       "id": "p1", "label": "1장 — P1 자리 배치도 앞", "from": "school", "scene": "Explore", "map": "school1f",
       "flags": ["ch1_start", "near13", "enter13", "read_attendance", "read_seatchart"],
       "clues": ["attendance", "date714", "photo", "seatchart"],
-      "pos": { "x": 22, "y": 2, "dir": "up" }
+      "pos": { "x": 22, "y": 1, "dir": "up" }
     },
     {
       "id": "frag1", "label": "1장 — 12번 책상 밀기 (P1 이후, 교실 뒷문 앞)", "from": "p1", "scene": "Explore", "map": "school1f",
@@ -23,7 +23,7 @@
     {
       "id": "p2", "label": "1장 — P2 열쇠함 앞", "from": "frag1", "scene": "Explore", "map": "school1f",
       "flags": ["frag1", "read_logbook"], "clues": ["notebook", "logbook"], "fragments": [1],
-      "pos": { "x": 15, "y": 15, "dir": "up" }
+      "pos": { "x": 15, "y": 14, "dir": "up" }
     },
     {
       "id": "chase1", "label": "1장 — 첫 추격 (사물함 앞)", "from": "p2", "scene": "Explore", "map": "school1f",

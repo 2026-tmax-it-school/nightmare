@@ -136,14 +136,30 @@ export default class Explore extends Phaser.Scene {
     else { this.camRoom = undefined; this.updateCamera(true); }
 
     // 가구 밑 그림자 (맵 옵션 shadows): 바닥에 놓인 물건 아래에 옅은 그림자. 바닥에 깔린 것(flat)·벽에 거는 것(벽 칸이고 lift 없음)은 제외
-    // 벽 칸에 두고 lift로 바닥까지 내려 그린 가구(앞 칸을 지나갈 수 있게 한 침실 가구)는 그림자가 있다
+    // 벽 칸에 두고 lift로 바닥까지 내려 그린 가구(앞 칸을 지나갈 수 있게 한 침실 가구)는 그림자가 있다.
+    // 그림자는 물건마다 따로 두고 update()에서 물건을 따라간다 — 밀린 책상·조건부로 나타나는 물건·시야 밖 물건에 그림자만 남지 않게
+    this.objShadows = [];
     if (m.shadows) {
-      const g = this.add.graphics().setDepth(1.5);
-      for (const o of m.objects) {
-        if (!o.tex || o.flat || (!this.isFloor(o.x, o.y) && !o.lift)) continue;
+      for (const o of new Set([...this.objects.values(), ...this.condObjs])) {
+        if (!o.img || o.flat || (!this.isFloor(o.x, o.y) && !o.lift)) continue;
+        // 벽에 거는 그림(열쇠함 등)은 아래쪽이 비어 있다 — 바닥에 닿지 않으니 그림자를 두지 않는다
+        const key = o.img.texture.key, iw = o.img.width, ih = o.img.height;
+        let grounded = false;
+        for (let y = ih - 1; y >= ih - 6 && !grounded; y--) for (let x = iw / 2 - 6; x <= iw / 2 + 6; x++) if (this.textures.getPixelAlpha(x, y, key) > 0) { grounded = true; break; }
+        if (!grounded) continue;
         // 그림의 실제 폭에 맞춘 그림자 (좁은 협탁은 작게, 책상은 넓게)
-        const w = Math.min(TILE + 4, (this.textures.get(this.objTex(o)).getSourceImage().width || TILE) - 2);
-        g.fillStyle(0x000000, 0.36).fillEllipse(cx(o.x) + (o.dx || 0), (o.y + 1) * TILE - 2 - (o.lift || 0), w, 9);
+        // shadowSide: 옆 벽에 붙은 긴 가구(신발장·게시판)는 가구 모양 그대로의 그림자를 방 쪽 아래로 살짝 밀어 두 겹(진하게·옅게) 깐다
+        if (o.shadowSide) {
+          const sd = o.shadowSide === 'right' ? 1 : -1;
+          for (const [d, al] of [[2, 0.32], [4, 0.14]]) {
+            const e = this.add.image(0, 0, key).setOrigin(0.5, 1).setTintFill(0x000000).setAlpha(al).setDepth(1.5);
+            this.objShadows.push({ o, e, dx: sd * d, dy: d - 1 });
+          }
+          continue;
+        }
+        // 그림의 실제 폭에 맞춘 그림자 (좁은 협탁은 작게, 책상은 넓게)
+        const w = Math.min(TILE + 4, o.img.width - 2);
+        this.objShadows.push({ o, e: this.add.ellipse(0, 0, w, 9, 0x000000, 0.36).setDepth(1.5), dx: 0, dy: -2 });
       }
     }
     // 은은한 빛 (맵 옵션 lights): 창으로 드는 달빛 등. { x, y, r(px), color, alpha } — 칸 가운데 기준, 가장자리로 갈수록 옅어진다
@@ -210,6 +226,7 @@ export default class Explore extends Phaser.Scene {
   update(time, delta) {
     this.stepCamera(delta);
     this.playerShadow?.setPosition(this.player.x, this.player.y + 14);
+    for (const { o, e, dx, dy } of this.objShadows) e.setPosition(o.img.x + dx, o.img.y + dy).setVisible(o.img.visible);
     if (this.rainWins.length) this.drawWindowRain(delta);
     this.drawSight();
     if (this.dark) this.drawDark();
@@ -552,6 +569,8 @@ export default class Explore extends Phaser.Scene {
     const shown = this.grid.map(r => r.map(() => null));
     let wallHits;
     for (const o of this.objects?.values() || []) {
+      // below: 아래쪽 방을 향해 벽에 건 물건(게시판 등)은 그 방 바닥 칸이 보일 때만 보인다 (벽 너머 복도에서 비치지 않게)
+      if (shown[o.y][o.x] === null && o.below) shown[o.y][o.x] = this.seeTile(ox, oy, o.x, o.y + 1);
       if (shown[o.y][o.x] === null && this.opaque[o.y]?.[o.x]) {
         wallHits ??= this.castSight(ox, oy).hits;
         shown[o.y][o.x] = wallHits.has(o.y * this.cols + o.x) || this.seeTile(ox, oy, o.x, o.y);
@@ -675,6 +694,7 @@ export default class Explore extends Phaser.Scene {
     if (o) {
       if (o.door) return flag('open_' + o.door);
       if (o.tex && o.solid !== false) return false;
+      if (o.solid === true) return false; // 그림 없이 막기만 하는 칸 (두 칸짜리 가구의 윗칸 등)
     }
     return !this.solid.has(this.grid[y][x]);
   }
