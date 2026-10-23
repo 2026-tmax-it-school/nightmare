@@ -93,15 +93,18 @@
   "tank": { "src": "roof_b.webp", "box": [17, 275, 134, 424], "mode": "object", "size": [64, 96], "cutout": { "kind": "flood", "tol": 40 }, "crop": [0, 0, 32, 96] },
   "tank_r": { "src": "roof_b.webp", "box": [17, 275, 134, 424], "mode": "object", "size": [64, 96], "cutout": { "kind": "flood", "tol": 40 }, "crop": [32, 0, 32, 96] },
   "shelf": { "src": "roof2_objects.png", "box": [332, 12, 532, 508], "pixel": 8, "mode": "object", "size": [32, 64] },
-  "extbox": { "src": "roof2_objects.png", "box": [660, 52, 812, 244], "pixel": 8, "mode": "object" },
+  "extbox": { "src": "roof2_objects.png", "box": [660, 52, 812, 244], "pixel": 8, "mode": "object", "shrink": 0.75 },
   "roofbench": { "src": "bench_hand.png", "box": [0, 0, 512, 256], "pixel": 8, "mode": "object", "size": [64, 32], "crop": [0, 0, 32, 32] },
   "comic": { "src": "bench_hand.png", "box": [0, 0, 512, 256], "pixel": 8, "mode": "object", "size": [64, 32], "crop": [32, 0, 32, 32] },
   "ball": { "src": "roof2_items.png", "box": [76, 76, 196, 196], "pixel": 8, "mode": "object", "center": true },
-  "tag": { "src": "roof2_items_v1.png", "box": [348, 92, 500, 180], "pixel": 8, "mode": "object", "center": true },
+  "tag": { "src": "roof2_items_v1.png", "box": [348, 92, 500, 180], "pixel": 8, "mode": "object", "center": true, "shrink": 0.7 },
   "butts": { "src": "butts_hand.png", "box": [0, 0, 256, 256], "pixel": 8, "mode": "object", "center": true },
   "rail_h": {"existing": true, "size": [32, 16]},
   "desk": {"existing": true, "size": [32, 32]},
   "board": {"existing": true, "size": [96, 32]},
   "window": {"existing": true, "size": [32, 32]},
-  "scorch": {"existing": true, "size": [32, 32]}
+  "scorch": {"existing": true, "size": [32, 32]},
+  "shadow": { "src": "char_shadow.webp", "box": [440, 270, 800, 1040], "mode": "object" },
+  "ghost": { "src": "char_ghost.webp", "box": [450, 270, 800, 1040], "mode": "object", "brighten": 0.85 },
+  "past_fig": { "src": "char_past.png", "box": [88, 24, 188, 256], "mode": "object", "cutout": { "kind": "flood", "tol": 40 }, "brighten": 0.82 }
 }

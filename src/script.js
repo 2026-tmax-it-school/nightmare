@@ -39,12 +39,12 @@ async function exec(h, a) {
     }
     case 'save': saveGame(); h.ui.toast('자동 저장됨'); return;
     case 'effect': return effect(h, a);
-    case 'memory': return h.ui.memory(a.lines);
+    case 'memory': return h.ui.covered(() => h.ui.memory(a.lines));
     case 'puzzle': {
       const ok = await h.ui.puzzle(a.id);
       return runScript(h, ok ? a.success : a.fail);
     }
-    case 'deduction': return h.ui.deduction(a.id);
+    case 'deduction': return h.ui.covered(() => h.ui.deduction(a.id));
     // 플레이어가 Space로 직접 두드린 횟수가 n과 같으면 success
     case 'knock': {
       const n = await h.ui.knock();

@@ -240,6 +240,9 @@ export default class Explore extends Phaser.Scene {
       if (this.dir === 'up') this.promptTxt.setPosition(this.focus.x, this.focus.y - 26);
       else this.promptTxt.setPosition(this.player.x, this.player.y - 26);
     }
+    // 목표 패널이 플레이어나 바로 앞 칸(조사 대상)을 가리면 흐리게 (옥상 「7.13」처럼 위쪽 끝의 조사 지점)
+    const [fdx, fdy] = DIRS[this.dir];
+    this.ui.fadeHudOver([this.playerScreenBox(), this.screenBox(cx(this.tx + fdx), cx(this.ty + fdy), 16, 16)]);
     if (this.busy || this.moving || this.hidden || this.over) return;
     const k = this.keys;
     const dir = (k.UP.isDown || k.W.isDown) ? 'up'
@@ -745,6 +748,18 @@ export default class Explore extends Phaser.Scene {
   }
 
   // ── 조사 ──
+  // 월드 좌표의 상자(가운데 x, y, 반폭 hw, 반높이 hh)를 화면 좌표로 — 목표 패널·대화창이 가리는지 판단할 때
+  screenBox(x, y, hw, hh) {
+    const v = this.cameras.main.worldView, z = this.cameras.main.zoom;
+    return { x0: (x - hw - v.x) * z, y0: (y - hh - v.y) * z, x1: (x + hw - v.x) * z, y1: (y + hh - v.y) * z };
+  }
+
+  // 플레이어 그림(머리부터 발까지)이 화면에서 차지하는 자리. UI가 대화창 위치를 정할 때도 쓴다
+  playerScreenBox() {
+    if (!this.player?.visible || this.hidden) return null;
+    return this.screenBox(this.player.x, this.player.y, 12, 16);
+  }
+
   frontObj() {
     const [dx, dy] = DIRS[this.dir];
     return this.objects.get(key(this.tx + dx, this.ty + dy));
@@ -986,7 +1001,7 @@ export default class Explore extends Phaser.Scene {
     this.busy = true;
     this.updatePrompt();
     sfx('beep');
-    await this.ui.notebook(this.hint(), this.progress());
+    await this.ui.covered(() => this.ui.notebook(this.hint(), this.progress()));
     this.busy = false;
     this.updatePrompt();
     // 설정 탭에서 새 소리 스위치를 바꿨으면 배경음도 바로 바꾼다
@@ -1019,7 +1034,8 @@ export default class Explore extends Phaser.Scene {
   // 진행이 바뀔 때마다(스크립트·사물함·추격 후) 목표 패널과 반짝임을 함께 갱신한다
   updateObjective() {
     this.ui.objective(this.progress(), this.hint());
-    this.ui.obj.c.setVisible(!this.hidden);
+    this.ui.hudOff = !!this.hidden;
+    this.ui.syncHud();
     this.updateSparkles();
   }
 
