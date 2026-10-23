@@ -29,7 +29,13 @@ export default class Boot extends Phaser.Scene {
   }
 
   create() {
+    this.resizeSpriteTextures();
     makeTextures(this);
+    // 칠판 한 장을 세 칸으로 나눠 각 칸의 시야·조사 판정을 유지한다.
+    const board = this.textures.get('board');
+    if (board.getSourceImage().width === 96) {
+      for (let i = 0; i < 3; i++) board.add(`part${i}`, 0, i * 32, 0, 32, 32);
+    }
     const json = k => this.cache.json.get(k);
     const clues = json('clues');
     Object.assign(DB.clues, clues.clues);
@@ -47,5 +53,24 @@ export default class Boot extends Phaser.Scene {
     for (const id of MAPS) DB.maps[id] = json('map_' + id);
     if (DEV) DB.checkpoints = json('checkpoints').checkpoints;
     this.scene.start(DEV ? 'Dev' : 'Title');
+  }
+
+  // PNG는 보존하고 메모리의 텍스처만 게임용 크기로 맞춘다.
+  // 프레임 자체의 크기를 맞춰 벽 가림(setCrop), 그림자, 조사 표시에도 동일하게 적용한다.
+  resizeSpriteTextures() {
+    const sizes = this.cache.json.get('sprites') || {};
+    for (const [name, [width, height]] of Object.entries(sizes)) {
+      if (!this.textures.exists(name)) continue;
+      const source = this.textures.get(name).getSourceImage();
+      if (source.width === width && source.height === height) continue;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      context.imageSmoothingEnabled = false;
+      context.drawImage(source, 0, 0, width, height);
+      this.textures.remove(name);
+      this.textures.addCanvas(name, canvas);
+    }
   }
 }

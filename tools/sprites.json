@@ -98,5 +98,10 @@
   "comic": { "src": "bench_hand.png", "box": [0, 0, 512, 256], "pixel": 8, "mode": "object", "size": [64, 32], "crop": [32, 0, 32, 32] },
   "ball": { "src": "roof2_items.png", "box": [76, 76, 196, 196], "pixel": 8, "mode": "object", "center": true },
   "tag": { "src": "roof2_items_v1.png", "box": [348, 92, 500, 180], "pixel": 8, "mode": "object", "center": true },
-  "butts": { "src": "butts_hand.png", "box": [0, 0, 256, 256], "pixel": 8, "mode": "object", "center": true }
+  "butts": { "src": "butts_hand.png", "box": [0, 0, 256, 256], "pixel": 8, "mode": "object", "center": true },
+  "rail_h": {"existing": true, "size": [32, 16]},
+  "desk": {"existing": true, "size": [32, 32]},
+  "board": {"existing": true, "size": [96, 32]},
+  "window": {"existing": true, "size": [32, 32]},
+  "scorch": {"existing": true, "size": [32, 32]}
 }

@@ -378,6 +378,14 @@ def main():
     for key, cfg in conf.items():
         if key.startswith('_'):
             continue
+        if cfg.get('existing'):
+            # 완성 PNG는 가공하지 않고 게임에서 사용할 표시 크기만 등록한다.
+            done = os.path.join(OUT, key + '.png')
+            if not os.path.exists(done):
+                raise FileNotFoundError(done)
+            made[key] = cfg['size']
+            print(f'{key:16s} 기존 PNG 유지 — 표시 크기 {cfg["size"]}')
+            continue
         if not os.path.exists(os.path.join(SRC, cfg['src'])):
             # 원본은 Git에 없다. 다른 컴퓨터에서는 이미 만들어진 PNG를 그대로 둔다
             done = os.path.join(OUT, key + '.png')
@@ -403,7 +411,7 @@ def main():
     sheet = Image.new('RGBA', (cell * min(6, len(made)), cell * ((len(made) + 5) // 6)), (60, 60, 60, 255))
     for i, key in enumerate(made):
         im = Image.open(os.path.join(OUT, key + '.png'))
-        big = im.resize((im.width * 4, im.height * 4), Image.NEAREST)
+        big = im.resize((made[key][0] * 4, made[key][1] * 4), Image.NEAREST)
         sheet.alpha_composite(big, (i % 6 * cell + 4, i // 6 * cell + 4))
     if os.path.isdir(SRC):
         sheet.save(os.path.join(SRC, '_preview.png'))
@@ -413,7 +421,7 @@ def main():
     ref = Image.new('RGB', (cell * cols, cell * ((len(made) + cols - 1) // cols)), (128, 128, 128))
     for i, key in enumerate(made):
         im = Image.open(os.path.join(OUT, key + '.png')).convert('RGBA')
-        big = im.resize((im.width * 8, im.height * 8), Image.NEAREST)
+        big = im.resize((made[key][0] * 8, made[key][1] * 8), Image.NEAREST)
         ref.paste(big, (i % cols * cell + 8, i // cols * cell + 8), big)
     ref.save(os.path.join(ROOT, 'docs', 'asset_reference.png'))
 

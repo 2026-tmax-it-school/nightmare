@@ -69,7 +69,10 @@ export default class Explore extends Phaser.Scene {
     this.areaName = null;
     this.ui = new UI(this);
 
-    this.tiles = this.grid.map((row, y) => row.map((ch, x) => this.add.image(cx(x), cx(y), this.tileTex(x, y)).setDepth(0)));
+    this.tiles = this.grid.map((row, y) => row.map((ch, x) => {
+      const rotation = (m.tileRotations || []).find(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
+      return this.add.image(cx(x), cx(y), this.tileTex(x, y)).setAngle(rotation?.angle || 0).setDepth(0);
+    }));
     // 문 칸 밑에 문 너머 바닥을 깔아, 열린 문의 빈 곳으로 바닥이 보이게 한다 (정면 문 = 위쪽 칸이 문 너머)
     this.grid.forEach((row, y) => row.forEach((ch, x) => {
       if (!(m.legend[ch] || '').startsWith('door')) return;
@@ -94,6 +97,7 @@ export default class Explore extends Phaser.Scene {
         // flat: 바닥에 깔린 것(카펫·종이 등)은 플레이어보다 아래에 그린다
         obj.img = this.add.image(cx(obj.x) + (o.dx || 0), (obj.y + 1) * TILE - (o.lift || 0), this.objTex(o)).setOrigin(0.5, 1)
           .setDepth(o.flat ? 1.2 : depthAt(obj.y));
+        if (o.frame !== undefined && obj.img.texture.has(o.frame)) obj.img.setFrame(o.frame);
       }
       if (o.door && flag('open_' + o.door)) this.tiles[o.y][o.x].setTexture('door_open');
       if (o.cond) { this.condObjs.push(obj); obj.img?.setVisible(false); continue; }
