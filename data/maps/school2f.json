@@ -1,5 +1,6 @@
 {
   "id": "school2f",
+  "tileRotations": [{ "x": 30, "y": 14, "w": 3, "h": 2, "angle": 180 }],
   "bgm": "drone", "bgmTrial": "hall2",
   "dark": true,
   "legend": {
@@ -71,9 +72,9 @@
     { "x": 32, "y": 12, "w": 1, "h": 2, "cond": { "notFlag": "pendingChase" }, "script": "door_roof" }
   ],
   "objects": [
-    { "x": 4, "y": 1, "tex": "board", "script": "board_music" },
-    { "x": 5, "y": 1, "tex": "board", "script": "board_music" },
-    { "x": 6, "y": 1, "tex": "board", "script": "board_music" },
+    { "x": 4, "y": 1, "tex": "board", "frame": "part0", "script": "board_music" },
+    { "x": 5, "y": 1, "tex": "board", "frame": "part1", "script": "board_music" },
+    { "x": 6, "y": 1, "tex": "board", "frame": "part2", "script": "board_music" },
     { "x": 9, "y": 1, "tex": "piano_l", "script": "piano" },
     { "x": 10, "y": 1, "tex": "piano_r", "script": "piano" },
     { "x": 9, "y": 2, "tex": "bench", "script": "bench" },

@@ -160,9 +160,9 @@
     }
   ],
   "objects": [
-    { "x": 4, "y": 0, "tex": "board", "script": "board11" },
-    { "x": 5, "y": 0, "tex": "board", "script": "board11" },
-    { "x": 6, "y": 0, "tex": "board", "script": "board11" },
+    { "x": 4, "y": 0, "tex": "board", "frame": "part0", "script": "board11" },
+    { "x": 5, "y": 0, "tex": "board", "frame": "part1", "script": "board11" },
+    { "x": 6, "y": 0, "tex": "board", "frame": "part2", "script": "board11" },
     { "x": 5, "y": 2, "tex": "lectern", "script": [{ "t": "text", "text": "텅 빈 교탁. 오랫동안 아무도 쓰지 않은 것 같다." }] },
     { "x": 2, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 4, "y": 4, "tex": "desk", "script": "desk" },
@@ -182,9 +182,9 @@
     { "x": 8, "y": 7, "tex": "desk", "script": "desk" },
     { "x": 1, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
 
-    { "x": 14, "y": 0, "tex": "board", "script": "board12" },
-    { "x": 15, "y": 0, "tex": "board", "script": "board12" },
-    { "x": 16, "y": 0, "tex": "board", "script": "board12" },
+    { "x": 14, "y": 0, "tex": "board", "frame": "part0", "script": "board12" },
+    { "x": 15, "y": 0, "tex": "board", "frame": "part1", "script": "board12" },
+    { "x": 16, "y": 0, "tex": "board", "frame": "part2", "script": "board12" },
     { "x": 15, "y": 2, "tex": "lectern", "script": [{ "t": "text", "text": "텅 빈 교탁. 오랫동안 아무도 쓰지 않은 것 같다." }] },
     { "x": 12, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 14, "y": 4, "tex": "desk", "script": "desk" },
@@ -205,9 +205,9 @@
     { "x": 11, "y": 1, "tex": "locker", "hide": true, "view": "classroom" },
 
     { "x": 22, "y": 0, "tex": "notice_wide", "below": true, "script": "notice" },
-    { "x": 24, "y": 0, "tex": "board", "script": "board13" },
-    { "x": 25, "y": 0, "tex": "board", "script": "board13" },
-    { "x": 26, "y": 0, "tex": "board", "script": "board13" },
+    { "x": 24, "y": 0, "tex": "board", "frame": "part0", "script": "board13" },
+    { "x": 25, "y": 0, "tex": "board", "frame": "part1", "script": "board13" },
+    { "x": 26, "y": 0, "tex": "board", "frame": "part2", "script": "board13" },
     { "x": 25, "y": 2, "tex": "lectern", "script": "lectern" },
     { "x": 22, "y": 4, "tex": "desk", "script": "desk" },
     { "x": 24, "y": 4, "tex": "desk", "script": "desk" },
