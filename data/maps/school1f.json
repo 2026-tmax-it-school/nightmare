@@ -81,6 +81,8 @@
     { "x": 11, "y": 1, "tex": "decal_dust" },
     { "x": 15, "y": 18, "tex": "decal_dust" },
     { "x": 17, "y": 18, "tex": "decal_drain" },
+    { "x": 18, "y": 15, "tex": "puddle" },
+    { "x": 19, "y": 18, "tex": "tissue_roll" },
     { "x": 21, "y": 14, "tex": "decal_drain" },
     { "x": 3, "y": 17, "tex": "slippers" },
     { "x": 5, "y": 15, "tex": "slippers" },
@@ -291,10 +293,14 @@
     { "x": 15, "y": 13, "tex": "keybox", "below": true, "script": "keybox" },
     { "x": 10, "y": 16, "tex": "logdesk", "scale": 1.25, "script": "logdesk" },
 
-    { "x": 18, "y": 14, "tex": "mirror", "script": "mirror" },
-    { "x": 20, "y": 14, "tex": "mirror", "script": "mirror" },
-    { "x": 21, "y": 16, "tex": "stall", "script": "stall" },
-    { "x": 21, "y": 18, "tex": "stall", "script": "stall_burnt" },
+    { "x": 21, "y": 13, "tex": "dryer", "scale": 0.6, "lift": 4, "below": true },
+    { "x": 17, "y": 13, "tex": "janitor", "scale": 0.8, "lift": -8, "below": true },
+    { "x": 20, "y": 15, "tex": "trash_tip" },
+    { "x": 18, "y": 13, "tex": "mirror", "scale": 0.65, "lift": -10, "below": true, "script": "mirror" },
+    { "x": 20, "y": 13, "tex": "mirror", "scale": 0.65, "lift": -10, "below": true, "script": "mirror" },
+    { "x": 21, "y": 17, "tex": "stall", "dx": 4, "script": "stall_empty" },
+    { "x": 21, "y": 16, "tex": "stall", "dx": 4, "script": "stall" },
+    { "x": 21, "y": 18, "tex": "stall", "dx": 4, "script": "stall_burnt" },
 
 
     { "x": 23, "y": 13, "tex": "chemshelf", "lift": -20, "below": true, "script": "chemshelf" },
@@ -1132,6 +1138,10 @@
           }
         ]
       }
+    ],
+    "stall_empty": [
+      { "t": "stall", "kind": "empty" },
+      { "t": "text", "text": "칸막이 문이 조금 열려 있다. ……안은 비어 있다." }
     ],
     "stall_burnt": [
       { "t": "stall", "kind": "burnt" },
