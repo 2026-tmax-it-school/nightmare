@@ -1,6 +1,6 @@
 {
   "id": "bedroom",
-  "bgm": "rain",
+  "bgm": "rain", "music": "m_bedroom",
   "ambient": { "color": "#0a1020", "alpha": 0.35 },
   "legend": { "#": "wall", "b": "floor_room", "H": "homedoor" },
   "solid": ["#", "H"],

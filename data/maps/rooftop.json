@@ -1,6 +1,6 @@
 {
   "id": "rooftop",
-  "bgm": "wind", "bgmTrial": "roof",
+  "bgm": "wind", "bgmTrial": "roof", "music": "m_rooftop",
   "dark": true,
   "legend": {
     "F": "fence", "r": "floor_roof", "#": "wall", "L": "door_locked", "=": "floor_stairs", "|": "floor_stairs_side", ".": "floor_corridor", "D": "door_open"
