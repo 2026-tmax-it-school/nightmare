@@ -45,6 +45,8 @@
     { "x": 29.3, "y": 10.4, "text": "뜨거워", "angle": 6, "cond": { "flag": "stage2" } }
   ],
   "decor": [
+    { "x": 26, "y": 4, "tex": "papers" },
+    { "x": 30, "y": 3, "tex": "papers" },
     { "x": 5, "y": 10, "tex": "scorch", "cond": { "flag": "stage2" } },
     { "x": 17, "y": 9, "tex": "scorch", "cond": { "flag": "stage2" } },
     { "x": 18, "y": 10, "tex": "scorch", "cond": { "flag": "stage2" } },
@@ -99,6 +101,10 @@
     { "x": 27, "y": 1, "tex": "console", "script": "console" },
     { "x": 28, "y": 1, "tex": "console", "script": "console" },
     { "x": 30, "y": 1, "tex": "tapedeck", "script": "tapedeck" },
+    { "x": 29, "y": 2, "tex": "chair" },
+    { "x": 32, "y": 1, "tex": "box" },
+    { "x": 32, "y": 6, "tex": "box" },
+    { "x": 24, "y": 6, "tex": "extbox" },
 
     { "x": 11, "y": 8, "tex": "locker", "hide": true, "view": "corridor" },
 

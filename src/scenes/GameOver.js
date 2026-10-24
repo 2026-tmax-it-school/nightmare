@@ -1,7 +1,7 @@
 import { W, H } from '../constants.js';
 import { state, loadGame } from '../state.js';
 import { stopAllLoops } from '../audio.js';
-import { UI, textStyle } from '../ui/ui.js';
+import { UI, textStyle, cgBackdrop } from '../ui/ui.js';
 
 export default class GameOver extends Phaser.Scene {
   constructor() { super('GameOver'); }
@@ -9,6 +9,7 @@ export default class GameOver extends Phaser.Scene {
   create() {
     this.ui = new UI(this);
     stopAllLoops();
+    cgBackdrop(this, 'enter', 0.7, 0x200404);
     this.cameras.main.fadeIn(800);
     this.add.text(W / 2, H / 2 - 60, '붙잡혔다.', textStyle(28, '#a02020')).setOrigin(0.5);
     this.add.text(W / 2, H / 2 - 20, '그날의 내가, 나를 내려다보고 있었다.', textStyle(13, '#77707f')).setOrigin(0.5);
