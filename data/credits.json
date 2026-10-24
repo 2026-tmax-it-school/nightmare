@@ -1,0 +1,16 @@
+{
+  "_comment": "엔딩 후 보이는 크레딧. kind: title(제목) / sub(부제) / head(항목 제목) / text(본문) / gap(빈 줄). 내용은 팀 회의와 공모전 규정(#113) 확인 뒤 바꾼다.",
+  "lines": [
+    { "kind": "title", "text": "잊힌 교실" },
+    { "kind": "sub", "text": "— IT희망학교 —" },
+    { "kind": "gap" },
+    { "kind": "head", "text": "기획 · 제작" },
+    { "kind": "text", "text": "IT희망학교 팀" },
+    { "kind": "gap" },
+    { "kind": "head", "text": "그래픽" },
+    { "kind": "text", "text": "도트 그래픽과 컷신 CG는\nAI로 생성한 그림을 사용했습니다." },
+    { "kind": "gap" },
+    { "kind": "gap" },
+    { "kind": "text", "text": "플레이해 주셔서 감사합니다." }
+  ]
+}
