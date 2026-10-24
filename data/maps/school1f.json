@@ -286,10 +286,10 @@
     { "x": 1, "y": 15, "tex": "cabinet_s", "dx": -4, "shadowSide": "right", "script": "shoebox" },
     { "x": 7, "y": 15, "tex": "notice_side", "dx": 10, "shadowSide": "left", "script": "hallnotice" },
 
-    { "x": 9, "y": 14, "tex": "cabinet", "lift": 12, "script": "cabinet" },
-    { "x": 13, "y": 14, "tex": "monitor", "script": "monitor" },
+    { "x": 9, "y": 14, "tex": "cabinet", "lift": 12, "tight": true, "script": "cabinet" },
+    { "x": 13, "y": 13, "tex": "monitor", "lift": -8, "tight": true, "below": true, "script": "monitor" },
     { "x": 15, "y": 13, "tex": "keybox", "below": true, "script": "keybox" },
-    { "x": 10, "y": 16, "tex": "logdesk", "script": "logdesk" },
+    { "x": 10, "y": 16, "tex": "logdesk", "scale": 1.25, "script": "logdesk" },
 
     { "x": 18, "y": 14, "tex": "mirror", "script": "mirror" },
     { "x": 20, "y": 14, "tex": "mirror", "script": "mirror" },
@@ -318,9 +318,9 @@
     { "x": 31, "y": 7, "tex": "paper_stack" },
     { "x": 38, "y": 1, "tex": "box" },
     { "x": 6, "y": 18, "tex": "trash" },
-    { "x": 10, "y": 17, "tex": "chair" },
+    { "x": 10, "y": 17, "tex": "chair", "scale": 1.5 },
     { "x": 15, "y": 18, "tex": "box" },
-    { "x": 14, "y": 14, "tex": "extbox" }
+    { "x": 14, "y": 13, "tex": "extbox", "lift": -8, "below": true }
   ],
   "scripts": {
     "near13": [
