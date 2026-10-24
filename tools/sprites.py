@@ -39,10 +39,11 @@
   parts   : object를 여러 조각으로 따로 잘라 한 장에 배치한다. [{"box": [...], "at": [x, y, w, h]}, ...]
             각 조각은 비율을 지켜 at 영역 안 아래 가운데에 놓인다 (예: 거울은 벽 칸 아래쪽, 세면대는 바로 아래 바닥 칸)
   frame   : 문틀(양옆·위 어두운 나무)과 문턱(아래 회색 줄)을 둘러 벽과 구분되게 한다
-  brighten: tile·stretch 결과의 밝기를 곱한다 (예: 1.5 → 어두운 문을 밝게). 문틀은 그 뒤에 둘러서 그대로
+  brighten: 결과의 밝기를 곱한다 (예: 1.5 → 어두운 문을 밝게, 0.85 → 너무 밝은 캐릭터를 낮춤). 문틀은 그 뒤에 둘러서 그대로
   clear_dark : [x0, y0, x1, y1, 밝기] 결과 이미지의 이 범위(0~1 비율)에서 어두운 픽셀을 투명하게 (열린 문 너머로 바닥이 보이게)
   pixel   : 8 → 도트 한 개가 8×8 블록인 깔끔한 원본을 블록 가운데 색으로 정확히 1/8로 줄인다 (box는 블록 경계에 맞춤)
             mode가 object면 마젠타를 지워 칸 아래 가운데에 놓고, center: true면 칸 한가운데에 놓는다 (바닥 소품)
+  shrink  : 0.7 → 다 만든 물체를 0.7배로 줄인다. 사람(키 30px)에 비해 큰 소품의 비율을 맞출 때 (옥상 명찰·소화기함)
             align: "left" / "right"로 칸 왼쪽·오른쪽 끝에 붙인다 (두 칸짜리 그림을 반으로 나눈 벤치)
   draw    : [[x, y, w, h, [r, g, b]], ...] 결과 위에 색 사각형을 찍는다 (AI가 못 그린 숫자 각인 등)
   crop    : [x, y, w, h] 결과에서 이 부분만 잘라 쓴다 (두 칸짜리 그림을 칸마다 나눌 때: 물탱크 왼쪽·오른쪽)
@@ -319,6 +320,30 @@ def landscape(sub, mask, b):
     return rot, rmask
 
 
+def shrink_object(arr, factor, center=False):
+    """다 만든 물체 그림을 factor배로 줄인다 (사람 키에 비해 큰 소품용).
+    면적 평균으로 줄인 뒤 원래 그림에 있던 색으로만 다시 칠해 도트가 번지지 않게 하고, 같은 자리(아래 가운데·한가운데)에 놓는다."""
+    H, W = arr.shape[:2]
+    ys, xs = np.nonzero(arr[..., 3] > 40)
+    sub = arr[ys.min():ys.max() + 1, xs.min():xs.max() + 1].astype(np.float32)
+    th, tw = max(1, round(sub.shape[0] * factor)), max(1, round(sub.shape[1] * factor))
+    pm = sub.copy()
+    pm[..., :3] *= pm[..., 3:4] / 255
+    small = np.array(Image.fromarray(pm.clip(0, 255).astype(np.uint8), 'RGBA').resize((tw, th), Image.BOX)).astype(np.float32)
+    keep = small[..., 3] > 90
+    pal = np.unique(sub[sub[..., 3] > 200][:, :3], axis=0)
+    px = small[keep, :3] / (small[keep, 3:4] / 255)
+    near = ((px[:, None, :] - pal[None]) ** 2).sum(2).argmin(1)
+    out = np.zeros((th, tw, 4), np.uint8)
+    out[keep, :3] = pal[near]
+    out[keep, 3] = 255
+    canvas = np.zeros((H, W, 4), np.uint8)
+    ox = (W - tw) // 2
+    oy = (H - th) // 2 if center else H - th
+    canvas[oy:oy + th, ox:ox + tw] = out
+    return canvas
+
+
 def build_pixel(img, cfg):
     """도트 한 개가 n×n 블록으로 깔끔하게 그려진 원본: 블록 가운데 색을 하나씩 집어 정확히 1/n로 줄인다 (번짐 없음).
     box는 블록 경계에 맞춘다. mode가 object면 마젠타를 지우고 W×H 칸 아래 가운데(center면 한가운데)에 놓는다."""
@@ -397,8 +422,12 @@ def main():
                 print(f'{key:16s} 원본 없음 — 건너뜀 ({cfg["src"]})')
             continue
         arr = build(key, cfg)
+        if cfg.get('mode') == 'object' and cfg.get('brighten'):
+            arr[..., :3] = (arr[..., :3].astype(np.float32) * cfg['brighten']).clip(0, 255).astype(np.uint8)
         for x, y, w, h, rgb in cfg.get('draw', []):
             arr[y:y + h, x:x + w] = [*rgb, 255]
+        if cfg.get('shrink'):
+            arr = shrink_object(arr, cfg['shrink'], cfg.get('center'))
         if 'crop' in cfg:
             x, y, w, h = cfg['crop']
             arr = np.ascontiguousarray(arr[y:y + h, x:x + w])

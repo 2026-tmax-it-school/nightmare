@@ -25,9 +25,39 @@ export class UI {
   constructor(scene) {
     this.s = scene;
     this.toasts = [];
+    this.covers = 0;      // 화면 전체를 덮는 창(퍼즐·추리·기억 노트)이 열려 있는 수
+    this.hudOff = false;  // 사물함 안처럼 장면이 직접 목표 패널을 끈 상태
+    this.dlgTop = false;  // 대화창을 화면 위쪽에 띄운 상태 (오른쪽 위 목표 패널과 겹친다)
   }
 
   fixed(obj, depth = 100) { return obj.setScrollFactor(0).setDepth(depth); }
+
+  // 목표 패널·알림은 덮는 창 뒤로 글자가 비치거나 위쪽 대화창과 겹치지 않게 그동안 숨긴다
+  syncHud() {
+    const on = !this.covers && !this.hudOff && !this.dlgTop;
+    this.obj?.c.setVisible(on);
+    for (const t of this.toasts) t.setVisible(on);
+  }
+
+  async covered(fn) {
+    this.covers++;
+    this.syncHud();
+    try { return await fn(); } finally { this.covers--; this.syncHud(); }
+  }
+
+  // 목표 패널이 플레이어나 바로 앞 조사 대상을 가리면 흐리게 한다. rects: 화면 좌표 [{x0, y0, x1, y1}]
+  fadeHudOver(rects) {
+    const o = this.obj;
+    if (!o || !o.c.visible) return;
+    const PW = 250, M = 6;
+    const px0 = W - 14 - PW - M, px1 = W - 14 + M, py0 = 12 - M, py1 = o.bottom + M;
+    const hit = rects.some(r => r && r.x1 > px0 && r.x0 < px1 && r.y1 > py0 && r.y0 < py1);
+    const want = hit ? 0.18 : 1;
+    if (o.fadeTo === want) return;
+    o.fadeTo = want;
+    this.s.tweens.killTweensOf(o.c);
+    this.s.tweens.add({ targets: o.c, alpha: want, duration: 180 });
+  }
   wait(ms) { return new Promise(r => this.s.time.delayedCall(ms, r)); }
 
   // 다음 프레임부터 키 입력을 받는다 (현재 눌린 키가 바로 전달되지 않도록)
@@ -59,6 +89,11 @@ export class UI {
 
   say(who, text) {
     const d = this.ensureDialog();
+    // 플레이어가 화면 아래쪽(대화창 자리)에 있으면 대화창을 위로 올려 가리지 않게 한다 (쯔꾸르식)
+    const p = this.s.playerScreenBox?.();
+    this.dlgTop = !!p && p.y1 > H - 128 - 4;
+    d.c.setY(this.dlgTop ? 16 : H - 128);
+    this.syncHud();
     d.c.setVisible(true);
     d.name.setText(who || '');
     d.body.setColor(who ? '#e8e2d6' : '#bdb6aa').setY(who ? 34 : 24).setText('');
@@ -92,7 +127,10 @@ export class UI {
     });
   }
 
-  hideDialog() { if (this.dlg) this.dlg.c.setVisible(false); }
+  hideDialog() {
+    if (this.dlg) this.dlg.c.setVisible(false);
+    if (this.dlgTop) { this.dlgTop = false; this.syncHud(); }
+  }
 
   // ── 목록 선택 (키보드 + 마우스) ──
   select(container, x, y, labels, { cancel = false, size = 15, gap = 28 } = {}) {
@@ -168,6 +206,7 @@ export class UI {
     const t = this.fixed(this.s.add.text(W - 14, y, msg, textStyle(13, '#e8d8b0', {
       backgroundColor: 'rgba(20,18,26,0.88)', padding: { x: 10, y: 5 },
     })).setOrigin(1, 0), 150);
+    t.setVisible(!this.covers && !this.dlgTop);
     this.toasts.push(t);
     this.s.tweens.add({
       targets: t, alpha: 0, delay: 2200, duration: 500,
@@ -312,10 +351,7 @@ export class UI {
     const p = DB.puzzles[id];
     const fn = { seat: this.seatPuzzle, keypad: this.keypad, piano: this.piano, match: this.match, order: this.order, silhouette: this.silhouette, compare: this.compare, timeline: this.timeline }[p.type];
     // 퍼즐 창은 화면 가운데라 오른쪽 위 목표 패널과 겹친다
-    this.obj?.c.setVisible(false);
-    const ok = await fn.call(this, p);
-    this.obj?.c.setVisible(true);
-    return ok;
+    return this.covered(() => fn.call(this, p));
   }
 
   seatPuzzle(p) {
