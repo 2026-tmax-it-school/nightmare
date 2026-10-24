@@ -880,8 +880,17 @@ export default class Explore extends Phaser.Scene {
 
   // 플레이어를 그릴 높이: 맵 옵션 wallHug(px)가 있으면 바로 위가 벽인 줄에서 그만큼 위로 그린다
   // (침실처럼 가구를 벽 아랫부분까지 올린 방에서 캐릭터도 벽에 붙어 보이게)
+  // 문은 벽의 일부로 친다 — 가로 벽의 문 바로 아래 칸만 내려가 보이지 않게. 문 칸에 서 있을 때는 올리지 않는다
+  // (세로 벽의 문 칸은 위가 벽이라 올리면 문틀 위로 튀어나온다, 이슈 #124)
   playerY(x, y) {
-    return cx(y) - (this.map.wallHug && this.isWall(x, y - 1) ? this.map.wallHug : 0);
+    const hug = this.map.wallHug && !this.isDoor(x, y) && (this.isWall(x, y - 1) || this.isDoor(x, y - 1));
+    return cx(y) - (hug ? this.map.wallHug : 0);
+  }
+
+  isDoor(x, y) {
+    if (x < 0 || y < 0 || x >= this.cols || y >= this.rows) return false;
+    const t = this.map.legend[this.grid[y][x]];
+    return t === 'door_open' || t === 'door_locked' || t === 'exit_door' || t === 'homedoor';
   }
 
   // 조사 표시·반짝임 위치: 보통은 칸 가운데, lift로 그림을 옮긴 물건은 그림 가운데
