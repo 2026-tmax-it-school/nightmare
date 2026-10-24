@@ -35,6 +35,7 @@
   "front": [
     { "t": "bg", "color": "#0b0d14", "image": "front", "label": "[CG] 비 내리는 밤, 폐교 정문" },
     { "t": "rain" },
+    { "t": "flag", "key": "at_school" },
     { "t": "text", "text": "버스가 끊긴 산길을 한참 걸었다." },
     { "t": "text", "text": "녹슨 교문에 낡은 명판이 붙어 있다. ── IT희망학교" },
     { "t": "text", "who": "재민", "text": "여기가… 내가 다니던 학교였나?" },

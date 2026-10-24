@@ -8,7 +8,7 @@
       "flags": ["woke"], "clues": ["card"]
     },
     { "id": "front", "label": "프롤로그 — 폐교 앞", "from": "shaman", "scene": "Cutscene", "cutscene": "front", "items": ["map", "talisman"] },
-    { "id": "school", "label": "1장 — 1층 진입", "from": "front", "scene": "Explore", "map": "school1f" },
+    { "id": "school", "label": "1장 — 1층 진입", "from": "front", "scene": "Explore", "map": "school1f", "flags": ["at_school"] },
     {
       "id": "p1", "label": "1장 — P1 자리 배치도 앞", "from": "school", "scene": "Explore", "map": "school1f",
       "flags": ["ch1_start", "near13", "enter13", "read_attendance", "read_seatchart"],
