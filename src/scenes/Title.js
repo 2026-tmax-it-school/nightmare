@@ -1,4 +1,4 @@
-import { W, H, GAME_TITLE } from '../constants.js';
+import { W, H, GAME_TITLE, TITLE_FONT } from '../constants.js';
 import { state, resetState, loadGame, hasSave, loadMeta } from '../state.js';
 import { initAudio, sfx, startLoop, stopAllLoops } from '../audio.js';
 import { UI, textStyle, cgBackdrop } from '../ui/ui.js';
@@ -29,8 +29,8 @@ export default class Title extends Phaser.Scene {
   async showMenu() {
     startLoop('drone');
     startLoop('m_title');
-    const title = this.add.text(W / 2, 140, GAME_TITLE, textStyle(34, '#d8d0c0')).setOrigin(0.5).setAlpha(0);
-    const sub = this.add.text(W / 2, 184, '— IT희망학교 —', textStyle(13, '#7a7480')).setOrigin(0.5).setAlpha(0);
+    const title = this.add.text(W / 2, 140, GAME_TITLE, textStyle(34, '#d8d0c0', { fontFamily: TITLE_FONT, fontStyle: '600' })).setOrigin(0.5).setAlpha(0);
+    const sub = this.add.text(W / 2, 184, '— IT희망학교 —', textStyle(13, '#7a7480', { fontFamily: TITLE_FONT, fontStyle: '600' })).setOrigin(0.5).setAlpha(0);
     this.tweens.add({ targets: [title, sub], alpha: 1, duration: 1200 });
     this.add.text(W / 2, H - 36, '이 게임은 학교폭력과 죽음을 소재로 합니다.', textStyle(12, '#6d6875')).setOrigin(0.5);
     // 2회차 요소: 본 엔딩과 가장 많이 모은 기억 조각 (엔딩을 하나라도 봤을 때만)

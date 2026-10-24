@@ -1,11 +1,12 @@
 // 엔딩 크레딧: data/credits.json 의 줄들이 CG 배경 위로 천천히 올라간다. 아무 키나 클릭하면 건너뛰고 타이틀로
-import { W, H } from '../constants.js';
+import { W, H, TITLE_FONT } from '../constants.js';
 import { DB } from '../db.js';
 import { textStyle, cgBackdrop } from '../ui/ui.js';
 
+const SERIF = { fontFamily: TITLE_FONT, fontStyle: '600' };
 const STYLE = {
-  title: [34, '#d8d0c0'],
-  sub: [13, '#7a7480'],
+  title: [34, '#d8d0c0', SERIF],
+  sub: [13, '#7a7480', SERIF],
   head: [15, '#8f8996'],
   text: [14, '#d8d0c0'],
 };
@@ -24,8 +25,8 @@ export default class Credits extends Phaser.Scene {
     let y = 0;
     for (const l of DB.credits) {
       if (l.kind === 'gap') { y += GAP; continue; }
-      const [size, color] = STYLE[l.kind] || STYLE.text;
-      const t = this.add.text(W / 2, y, l.text, textStyle(size, color, { align: 'center' })).setOrigin(0.5, 0);
+      const [size, color, font] = STYLE[l.kind] || STYLE.text;
+      const t = this.add.text(W / 2, y, l.text, textStyle(size, color, { align: 'center', ...font })).setOrigin(0.5, 0);
       lines.add(t);
       y += t.height + 14;
     }

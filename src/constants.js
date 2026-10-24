@@ -3,6 +3,7 @@ export const W = 640;
 export const H = 480;
 export const GAME_TITLE = '잊힌 교실'; // 2026-10-14 확정
 export const FONT = '"Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
+export const TITLE_FONT = '"Noto Serif KR", "Batang", "Apple Myungjo", serif'; // 타이틀 글자 (SemiBold 600)
 export const MAPS = ['bedroom', 'school1f', 'school2f', 'rooftop'];
 
 // 개발자 모드 (?dev, ?dev&start=<체크포인트 id>) — src/dev.js 참고
