@@ -763,7 +763,10 @@ export default class Explore extends Phaser.Scene {
 
   frontObj() {
     const [dx, dy] = DIRS[this.dir];
-    return this.objects.get(key(this.tx + dx, this.ty + dy));
+    const o = this.objects.get(key(this.tx + dx, this.ty + dy));
+    // below: 아래쪽 방을 향해 벽에 건 물건은 그 방에서만 조사한다 (벽 너머 복도에서 열쇠함을 열지 않게, #116)
+    if (o?.below && this.ty !== o.y + 1) return undefined;
+    return o;
   }
 
   // ── 반짝임 (GDD 4.7): 아직 조사하지 않은 물건은 멀리서도 보이게 작은 빛이 깜빡인다 ──
