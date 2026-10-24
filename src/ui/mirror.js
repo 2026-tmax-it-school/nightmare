@@ -35,10 +35,22 @@ export function drawPortrait(g, f, fx, fy, bottom) {
   g.fillStyle(0x7a4a40).fillRect(FX - 12, FY + 34, 24, 3);
 }
 
+// 거울 완성 CG (assets/cg/mirror_*.png, 640×480). 상태에 맞는 그림이 있으면 코드로 그린 화면 대신 쓴다
+function cgKey(o) {
+  if (o.place === 'bedroom') return 'cg_mirror_bedroom';
+  if (o.face === 'young') return 'cg_mirror_young';
+  if (o.fog) return 'cg_mirror_now_fog';
+  return o.cracked ? 'cg_mirror_now_cracked' : 'cg_mirror_now';
+}
+const CG_GLASS = { x: 119, y: 28, w: 404, h: 308 };   // CG 안 거울 유리 영역 (640×480 기준)
+// 거울 속 사람은 이 점(유리 아래 가운데)을 기준으로 숨 쉬듯 늘었다 줄어든다
+const CG_ANCHOR = { x: 320, y: 336 };
+
 export class MirrorView {
   constructor(scene, opts = {}) {
     this.s = scene;
     this.bedroom = opts.place === 'bedroom';
+    if (scene.textures.exists(cgKey({ face: 'now', ...opts }))) return this.initCG(scene, opts);
     this.room = scene.add.graphics();
     this.drawRoom(this.room);
     this.glass = scene.add.graphics();
@@ -65,9 +77,61 @@ export class MirrorView {
     this.breath = scene.tweens.add({ targets: this.faceBox, y: 3, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
+  // 완성 CG 화면: 얼굴·김 서림·금 상태에 따라 그림을 바꾼다. 어린 얼굴에 금이 간 그림은 없어서 어린 얼굴 위에 코드로 금을 긋는다
+  initCG(scene, opts) {
+    this.cg = true;
+    this.opts = { face: 'now', place: opts.place, ...opts };
+    const key = cgKey(this.opts), parts = this.cgParts(key);
+    // 사람 층(_person)과 사람을 지운 바탕(_back)이 있으면 사람만 움직이고, 없으면 그림 한 장을 그대로 쓴다
+    this.img = scene.add.image(0, 0, parts.back).setOrigin(0).setDisplaySize(W, H);
+    this.person = scene.add.image(CG_ANCHOR.x, CG_ANCHOR.y, parts.person || parts.back)
+      .setOrigin(CG_ANCHOR.x / W, CG_ANCHOR.y / H).setVisible(!!parts.person);
+    this.crackG = scene.add.graphics();
+    this.root = scene.add.container(0, 0, [
+      scene.add.rectangle(0, 0, W, H, 0x000000).setOrigin(0), this.img, this.person, this.crackG,
+      scene.add.text(W / 2, H - 14, '거울을 보고 있다', textStyle(11, '#6f6878')).setOrigin(0.5, 1),
+    ]).setScrollFactor(0).setDepth(90).setAlpha(0);
+    scene.tweens.add({ targets: this.root, alpha: 1, duration: 220 });
+    this.breath = scene.tweens.add({ targets: this.person, scaleY: 1.014, scaleX: 1.004, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.drawCGCracks();
+  }
+
+  // 상태에 맞는 CG 한 벌: 사람을 나눈 그림이 있으면 { back, person }, 아니면 { back: 그림 한 장 }
+  cgParts(key) {
+    const t = this.s.textures;
+    return t.exists(key + '_person') && t.exists(key + '_back') ? { back: key + '_back', person: key + '_person' } : { back: key };
+  }
+
+  drawCGCracks() {
+    const g = this.crackG;
+    g.clear();
+    if (!(this.opts.cracked && this.opts.face === 'young')) return;
+    const { x, y, w, h } = CG_GLASS, ox = x + w / 2, oy = y + h * 0.45;
+    g.lineStyle(2, 0xe8eef2, 0.75);
+    for (let i = 0; i < 11; i++) {
+      // 금은 유리 가장자리에서 끝난다 (광선이 유리 사각형 밖으로 나가는 거리까지만)
+      const a = (i / 11) * Math.PI * 2 + 0.3, ux = Math.cos(a), uy = Math.sin(a);
+      const tx = ux > 0 ? (x + w - ox) / ux : (x - ox) / ux, ty = uy > 0 ? (y + h - oy) / uy : (y - oy) / uy;
+      const len = Math.min(tx, ty) * (0.82 + (i % 3) * 0.09), dx = ux * len, dy = uy * len;
+      g.beginPath().moveTo(ox, oy).lineTo(ox + dx * 0.45 + 8, oy + dy * 0.45 - 6).lineTo(ox + dx, oy + dy).strokePath();
+    }
+    g.lineStyle(1, 0xe8eef2, 0.5).strokeCircle(ox, oy, 14).strokeCircle(ox, oy, 34);
+  }
+
   // 얼굴·김 서림·금을 바꾼다 (지정하지 않은 값은 그대로)
   set(opts) {
     this.opts = { ...this.opts, ...opts };
+    if (this.cg) {
+      const key = cgKey(this.opts);
+      if (this.s.textures.exists(key)) {
+        const parts = this.cgParts(key);
+        this.img.setTexture(parts.back);
+        this.person.setTexture(parts.person || parts.back).setVisible(!!parts.person);
+      }
+      this.drawCGCracks();
+      if (opts.face && this.root.alpha > 0) this.s.cameras.main.flash(160, 40, 40, 50);
+      return;
+    }
     const { face, fog, cracked } = this.opts;
     this.glass.clear();
     this.drawReflection(this.glass);
