@@ -370,7 +370,7 @@ export class UI {
       c.add([
         this.s.add.rectangle(0, 0, pw, ph, 0xd9cfb4).setOrigin(0).setStrokeStyle(2, 0x3a2e20),
         this.s.add.text(pw / 2, 14, p.title, textStyle(18, '#2a2016')).setOrigin(0.5, 0),
-        this.s.add.text(pw / 2, 48, '[ 칠판 · 교탁 ]', textStyle(12, '#5a4a36')).setOrigin(0.5, 0),
+        this.s.add.text(pw / 2, 40, '[ 칠판 · 교탁 ]', textStyle(12, '#5a4a36')).setOrigin(0.5, 0),
         this.s.add.text(24, gy + 70, '창\n가', textStyle(13, '#5a4a36')),
       ]);
       for (let col = 0; col < p.cols; col++) {
@@ -663,7 +663,9 @@ export class UI {
     };
     const msg = this.s.add.text(20, 398, '', textStyle(14, '#b08080', { wordWrap: { width: W - 40, useAdvancedWrap: true } }));
     const head = this.s.add.text(340, 56, p.placeTitle, textStyle(13, '#77707f'));
-    c.add([msg, head]);
+    // 다른 퍼즐처럼 아래쪽에 조작 안내를 둔다 (선택은 select: ↑↓ 고르기, E 정하기, ESC 닫기) (#110)
+    const keys = this.s.add.text(W / 2, H - 14, '↑↓ 고르기  E 정하기  ESC 닫기', textStyle(11, '#6d6875')).setOrigin(0.5, 1);
+    c.add([msg, head, keys]);
 
     const placed = await this.pickRows(c, p.spots, {
       choices: p.people, rowX: 340, rowY: 84, rowGap: 30, optX: 40, optY: 296, optGap: 24, msg,
@@ -679,6 +681,7 @@ export class UI {
     });
     if (!said) { c.destroy(); return false; }
     await this.wait(600);
+    keys.destroy();
     c.add(this.s.add.text(W / 2, H - 22, 'E: 계속', textStyle(12, '#77707f')).setOrigin(0.5));
     await this.waitConfirm();
     c.destroy();
@@ -999,10 +1002,15 @@ export class UI {
           return rows;
         }
         // 생각하기: 지금 할 일 + 이번 장의 단계 체크리스트 (data/objectives.json)
-        const steps = (prog?.ch.steps || []).map((s, i) => ({
-          name: `${prog.marks[i] ? '✔' : '·'} ${s.name}`,
-          desc: prog.marks[i] ? '끝냈다.' : '아직이다.',
-        }));
+        // 아직 일어나지 않은 단계가 미리 드러나지 않게, 끝낸 단계와 지금 해야 할 첫 단계만 이름을 보이고 그 뒤는 「???」로 가린다 (#110)
+        const now = (prog?.marks || []).findIndex(m => !m);
+        const steps = (prog?.ch.steps || []).map((s, i) => {
+          const hidden = !prog.marks[i] && now >= 0 && i > now;
+          return {
+            name: `${prog.marks[i] ? '✔' : '·'} ${hidden ? '???' : s.name}`,
+            desc: prog.marks[i] ? '끝냈다.' : hidden ? '아직 알 수 없다.' : '아직이다.',
+          };
+        });
         return [{ name: '지금 할 일', desc: hintText }, ...steps];
       };
       const draw = () => {

@@ -15,3 +15,5 @@ export const DEV_START = params.get('start');
 export const VIEW_CGS = ['stall_empty', 'stall_scratch', 'stall_knock', 'stall_graffiti', 'stall_clogged', 'stall_burnt', 'mirror_bedroom', 'mirror_now', 'mirror_now_fog', 'mirror_now_cracked', 'mirror_young', 'photo_graduation',
   // 거울 속 사람만 움직이게 나눈 그림 (tools/split_person.py)
   'mirror_now_back', 'mirror_now_person', 'mirror_now_fog_back', 'mirror_now_fog_person', 'mirror_young_back', 'mirror_young_person', 'mirror_bedroom_back', 'mirror_bedroom_person'];
+// 점프스케어 그림 (src/ui/jumpscare.js, 이슈 #113). assets/cg/<이름>.png를 만들면 여기 이름을 넣는다. 없으면 임시 그림
+export const SCARE_CGS = ['scare_cabinet', 'scare_extbox', 'scare_drawer', 'scare_shelf'];
