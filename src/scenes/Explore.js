@@ -292,6 +292,7 @@ export default class Explore extends Phaser.Scene {
     // 아래로 갈 때 미리 앞쪽 깊이로 올려야 이동 중에 가구 밑으로 파고들지 않는다
     this.player.setDepth(depthAt(Math.max(ny, ny - dy), true));
     this.updatePrompt();
+    this.passDoor(nx, ny);
     this.steps = (this.steps || 0) + 1;
     if (this.steps % 2 === 0) sfx('step');
     // 걷는 그림(player_<방향>_1~4)이 있으면 한 칸에 두 장씩, 걸음마다 다음 두 장으로 넘긴다
@@ -752,6 +753,9 @@ export default class Explore extends Phaser.Scene {
       saveGame();
       this.ui.toast('자동 저장됨');
     }
+    // 장소 소리 (맵 옵션 areaSfx: { 구역 이름: 소리 }, 이슈 #132): 들어설 때마다 (예: 2층 화장실 물방울)
+    const snd = this.map.areaSfx?.[a.name];
+    if (snd) sfx(snd);
     this.areaTxt.setText(a.name);
     this.tweens.killTweensOf(this.areaTxt);
     this.areaTxt.setAlpha(1);
@@ -967,6 +971,18 @@ export default class Explore extends Phaser.Scene {
     const above = this.objects?.get(key(x, y - 1));
     if (above?.img && above.tex && !above.flat && above.solid !== false && above.img.height >= TILE * 2 && above.img.y > y * TILE) return Math.max(base, above.img.y + TILE / 2);
     return base;
+  }
+
+  // 열린 교실 문 칸을 지날 때 미닫이 소리 (GDD 4.7, 이슈 #132). 같은 문을 4초 안에 다시 지나면 생략한다.
+  // 현관·집 문(exit_door·homedoor)은 장면 전환 쪽 소리를 쓰므로 제외
+  passDoor(x, y) {
+    const t = this.map.legend[this.grid[y][x]];
+    if (t !== 'door_open' && t !== 'door_locked') return;
+    const k = key(x, y), now = this.time.now;
+    this.doorPassAt ||= {};
+    if (now - (this.doorPassAt[k] ?? -Infinity) < 4000) return;
+    this.doorPassAt[k] = now;
+    sfx('doorPass');
   }
 
   isDoor(x, y) {

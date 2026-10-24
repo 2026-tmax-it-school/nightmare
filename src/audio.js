@@ -79,6 +79,15 @@ function tone(t, { freq = 440, to = null, type = 'sine', peak = 0.2, a = 0.01, d
   o.start(t); o.stop(t + a + d + 0.05);
 }
 
+// 계단 발소리 (이슈 #132): 걸음마다 신발 밑창 + 계단 판의 낮은 울림. freqs 순서로 높이가 바뀐다
+function stairSteps(t, freqs) {
+  freqs.forEach((f, i) => {
+    const at = t + i * 0.22;
+    noise(at, { freq: f, q: 1.5, peak: 0.09, d: 0.06 });
+    tone(at, { freq: f / 4, peak: 0.06, d: 0.08 });
+  });
+}
+
 // 각 효과음은 재생 길이(초)를 반환한다.
 const SFX = {
   step: t => { noise(t, { freq: 420, q: 1.5, peak: 0.07, d: 0.06 }); return 0.1; },
@@ -239,6 +248,66 @@ const SFX = {
     return 2.3;
   },
   // 배경음 속 가끔 섞이는 소리
+  // ── 이동 효과음 (GDD 4.7, 이슈 #132) ──
+  // 계단: 발소리 4걸음. 올라갈 땐 걸음마다 높게, 내려갈 땐 낮게 (화면이 어두워지는 0.6초 동안 + 조금 더)
+  stairsUpNew: t => { stairSteps(t, [300, 360, 420, 490]); return 1; },
+  stairsDownNew: t => { stairSteps(t, [490, 420, 360, 300]); return 1; },
+  // 옥상 철문: 녹슨 경첩이 끼이익 길게 → 무겁게 쿵 + 쇠 울림
+  roofDoorNew: t => {
+    const o = ctx.createOscillator();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(140, t);
+    o.frequency.linearRampToValueAtTime(260, t + 0.45);
+    o.frequency.linearRampToValueAtTime(180, t + 0.7);
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 8;
+    const g = ctx.createGain();
+    env(g.gain, t, 0.08, 0.14, 0.62);
+    o.connect(f).connect(g).connect(dest());
+    o.start(t); o.stop(t + 0.75);
+    noise(t + 0.72, { type: 'lowpass', freq: 420, peak: 0.4, d: 0.3 });
+    tone(t + 0.72, { freq: 82, to: 50, peak: 0.3, d: 0.45 });
+    tone(t + 0.74, { freq: 612, peak: 0.025, d: 0.9 });
+    return 1.6;
+  },
+  // 열린 교실 문 지나가기: 미닫이 레일이 드르륵 (작게)
+  doorSlideNew: t => {
+    for (let i = 0; i < 9; i++) noise(t + i * 0.035, { freq: 700 + (i % 3) * 120, q: 2, peak: 0.07 - i * 0.004, d: 0.025 });
+    noise(t + 0.34, { type: 'lowpass', freq: 380, peak: 0.08, d: 0.06 });
+    return 0.45;
+  },
+  // ── 2장(2층) 장면 소리 (이슈 #132) ──
+  // 켜진 PC: 낡은 본체 팬이 웅— 돌고 짧게 삑
+  pcOnNew: t => {
+    tone(t, { freq: 118, peak: 0.07, a: 0.3, d: 1.2, vib: 1.5 });
+    tone(t, { freq: 236, peak: 0.025, a: 0.3, d: 1.0 });
+    noise(t, { freq: 1400, q: 0.7, peak: 0.02, a: 0.3, d: 1.1 });
+    tone(t + 0.35, { freq: 1000, type: 'square', peak: 0.04, d: 0.08 });
+    return 1.5;
+  },
+  // 방송실 스피커: 지직거리는 잡음
+  speakerHissNew: t => {
+    noise(t, { freq: 3200, q: 0.6, peak: 0.05, a: 0.15, d: 1.4 });
+    for (let i = 0; i < 6; i++) noise(t + 0.1 + Math.random() * 1.2, { freq: 1800 + Math.random() * 2000, q: 4, peak: 0.08, d: 0.02 });
+    return 1.6;
+  },
+  // 테이프 재생: 데크 버튼 딸깍 → 테이프가 도는 잡음 + 낮은 모터 소리
+  tapePlayNew: t => {
+    noise(t, { freq: 2600, q: 3, peak: 0.18, d: 0.03 });
+    noise(t + 0.05, { type: 'lowpass', freq: 500, peak: 0.12, d: 0.05 });
+    noise(t + 0.15, { freq: 4200, q: 0.7, peak: 0.04, a: 0.2, d: 1.2 });
+    tone(t + 0.15, { freq: 60, peak: 0.04, a: 0.2, d: 1.1, vib: 2 });
+    return 1.5;
+  },
+  // 화장실 수도꼭지: 물방울 똑, 똑 + 타일에 울리는 잔향
+  faucetNew: t => {
+    [0, 0.7, 1.25].forEach((dt, i) => {
+      const f = 1500 + i * 120;
+      tone(t + dt, { freq: f, to: f * 0.55, peak: 0.07, a: 0.002, d: 0.1 });
+      tone(t + dt + 0.09, { freq: f * 0.9, to: f * 0.5, peak: 0.02, a: 0.002, d: 0.12 });
+    });
+    return 1.5;
+  },
   drip: t => { tone(t, { freq: 1800 + Math.random() * 600, to: 900, peak: 0.03, a: 0.002, d: 0.12 }); return 0.15; },
   // 2층 음악실 피아노: 도윤 악보의 앞 두 음 「미 솔」만 치다 멈춘다 (이슈 #131). 음량·먹먹함은 거리에 따라 sfx()로 준다
   pianoPhrase: t => {
@@ -278,6 +347,15 @@ const SITUATION = {
   doorClose: 'doorShutNew',
   caught: 'caughtNew',
   escape: 'escapeNew',
+  // 이동·2층 장면 (이슈 #132)
+  stairsUp: 'stairsUpNew',
+  stairsDown: 'stairsDownNew',
+  roofDoor: 'roofDoorNew',
+  doorPass: 'doorSlideNew',
+  pcOn: 'pcOnNew',
+  speakerHiss: 'speakerHissNew',
+  tapePlay: 'tapePlayNew',
+  faucet: 'faucetNew',
 };
 
 // vol: 0~1 음량 배율 (0이면 재생하지 않음), muffle: 벽 너머처럼 높은 소리를 깎는다
