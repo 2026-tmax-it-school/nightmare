@@ -3,7 +3,7 @@
   "bgm": "wind", "bgmTrial": "roof", "music": "m_rooftop",
   "dark": true,
   "legend": {
-    "F": "fence", "r": "floor_roof", "#": "wall", "L": "door_locked", "=": "floor_stairs", "|": "floor_stairs_side", ".": "floor_corridor", "D": "door_open", "a": "floor_stairs_up_top", "b": "floor_stairs_up", "v": "floor_stairs_down", "w": "floor_stairs_down_end" },
+    "F": "fence", "r": "floor_roof", "#": "wall", "L": "door_locked", "=": "floor_stairs", "|": "floor_stairs_side", ".": "floor_corridor", "D": "door_open", "a": "floor_stairs_up_top", "b": "floor_stairs_up", "v": "floor_stairs_down", "w": "floor_stairs_down_end", "x": "floor_stairs_down_w", "y": "floor_stairs_down_end_w" },
   "solid": ["F", "#", "L"],
   "grid": [
     "FFFFFFFFFFFFFFFFFFFF",
@@ -16,8 +16,8 @@
     "FrrrrrrrrrrrrrrrrrrF",
     "FrrrrrrrrrrrrrrrrrrF",
     "Frrrrr####L##rrrrrrF",
-    "Frrrrr#vvv..#rrrrrrF",
-    "Frrrrr#www..#rrrrrrF",
+    "Frrrrr#xxy..#rrrrrrF",
+    "Frrrrr#xxy..#rrrrrrF",
     "####################"
   ],
   "spawn": { "x": 10, "y": 10, "dir": "up" },
