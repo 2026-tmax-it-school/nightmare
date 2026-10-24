@@ -950,10 +950,14 @@ export class UI {
   }
 
   // ── 기억 노트 (ESC) ──
-  notebook(hintText, prog) {
+  // save: 수동 저장 함수(성공 여부를 돌려준다). 「저장하고 타이틀로」를 고르면 'title'로 끝난다 (GDD 4.7, 이슈 #121)
+  notebook(hintText, prog, save) {
     return new Promise(resolve => {
       const tabs = ['소지품', '단서', '기억 조각', '인물', '타임라인', '생각하기', '설정'];
       const SETTINGS = tabs.length - 1;
+      // 설정 탭의 줄: 0 볼륨, 1 저장하기, 2 저장하고 타이틀로
+      const SAVE = 1, SAVE_QUIT = 2;
+      let saved = '';
       // 목록은 구분선(y 104~404) 안에 ROWS줄만 보이고, 커서를 따라 스크롤된다
       const ROWS = 11;
       let tab = 0, idx = 0, first = 0;
@@ -984,7 +988,15 @@ export class UI {
         if (tab === 3) return DB.people.filter(e => checkCond(e.cond));
         if (tab === 4) return DB.timeline.filter(e => checkCond(e.cond));
         if (tab === SETTINGS) {
-          return [{ name: `전체 볼륨  ${Math.round(getVolume() * 100)}%`, desc: '↑↓ 로 볼륨을 조절합니다.\n바꾼 값은 이 브라우저에 기억됩니다.' }];
+          const rows = [{ name: `전체 볼륨  ${Math.round(getVolume() * 100)}%`, desc: 'Q 로 줄이고 E 로 키웁니다.\n바꾼 값은 이 브라우저에 기억됩니다.' }];
+          if (save) {
+            const note = saved ? saved + '\n\n' : '';
+            rows.push(
+              { name: '저장하기', desc: note + '지금 있는 곳과 진행 상황을 저장합니다.\n타이틀의 「이어하기」로 여기서 다시 시작합니다.' },
+              { name: '저장하고 타이틀로', desc: note + '저장한 뒤 타이틀 화면으로 돌아갑니다.' },
+            );
+          }
+          return rows;
         }
         // 생각하기: 지금 할 일 + 이번 장의 단계 체크리스트 (data/objectives.json)
         const steps = (prog?.ch.steps || []).map((s, i) => ({
@@ -995,7 +1007,8 @@ export class UI {
       };
       const draw = () => {
         tabTexts.forEach((t, i) => t.setColor(i === tab ? '#ffffff' : '#6d6875'));
-        keys.setText(tab === SETTINGS ? '←→ 탭   ↑↓ 볼륨   ESC 닫기' : '←→ 탭   ↑↓ 선택   ESC 닫기');
+        const action = tab !== SETTINGS ? '' : idx === 0 ? '   Q·E 볼륨' : '   E 실행';
+        keys.setText(`←→ 탭   ↑↓ 선택${action}   ESC 닫기`);
         list.removeAll(true);
         const es = entries();
         idx = Math.min(idx, Math.max(0, es.length - 1));
@@ -1013,7 +1026,13 @@ export class UI {
         const last = entries().length - 1;
         if (d === 'left') { tab = (tab + tabs.length - 1) % tabs.length; idx = first = 0; sfx('tick'); }
         else if (d === 'right') { tab = (tab + 1) % tabs.length; idx = first = 0; sfx('tick'); }
-        else if (tab === SETTINGS && (d === 'up' || d === 'down')) { setVolume(getVolume() + (d === 'up' ? 0.1 : -0.1)); sfx('tick'); }
+        else if (tab === SETTINGS && idx === 0 && (e.code === 'KeyQ' || isConfirm(e))) { setVolume(getVolume() + (e.code === 'KeyQ' ? -0.1 : 0.1)); sfx('tick'); }
+        else if (tab === SETTINGS && idx >= SAVE && isConfirm(e)) {
+          const ok = save();
+          sfx(ok ? 'ok' : 'error');
+          if (ok && idx === SAVE_QUIT) { off(); c.destroy(); resolve('title'); return; }
+          saved = ok ? '── 저장했다.' : '── 저장하지 못했다. (브라우저 저장소를 쓸 수 없음)';
+        }
         else if (d === 'up') { if (idx > 0) { idx--; sfx('tick'); } }
         else if (d === 'down') { if (idx < last) { idx++; sfx('tick'); } }
         else if (e.code === 'Escape') { off(); c.destroy(); resolve(); return; }
