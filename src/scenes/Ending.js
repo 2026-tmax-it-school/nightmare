@@ -3,7 +3,10 @@ import { W, H } from '../constants.js';
 import { DB } from '../db.js';
 import { state, recordEnding } from '../state.js';
 import { stopAllLoops } from '../audio.js';
-import { UI, textStyle } from '../ui/ui.js';
+import { UI, textStyle, cgBackdrop } from '../ui/ui.js';
+
+// 엔딩 화면 배경은 그 엔딩 컷신의 첫 CG
+const ENDING_CG = { 1: 'ending1', 2: 'ending2_walk', 3: 'ending3_gate' };
 
 export default class Ending extends Phaser.Scene {
   constructor() { super('Ending'); }
@@ -13,6 +16,7 @@ export default class Ending extends Phaser.Scene {
   create() {
     this.ui = new UI(this);
     stopAllLoops();
+    cgBackdrop(this, ENDING_CG[this.ending], 0.65);
     const e = DB.endings[this.ending];
     const meta = recordEnding(this.ending);
     this.cameras.main.fadeIn(1200);

@@ -10,6 +10,14 @@ export const textStyle = (size = 15, color = '#e8e2d6', extra = {}) => ({
   fontFamily: FONT, fontSize: `${size}px`, color, lineSpacing: 6, resolution: 3, ...extra,
 });
 
+// 타이틀·게임오버·엔딩 화면 배경: 컷신 CG를 어둡게 깔아 글자가 읽히게 한다. CG가 없으면 아무것도 깔지 않는다
+export function cgBackdrop(scene, name, dim = 0.5, tint = 0x000000) {
+  const key = 'cg_' + name;
+  if (!scene.textures.exists(key)) return;
+  scene.add.image(0, 0, key).setOrigin(0).setDisplaySize(W, H).setDepth(-2);
+  scene.add.rectangle(0, 0, W, H, tint, dim).setOrigin(0).setDepth(-1);
+}
+
 const CONFIRM = ['KeyE', 'Space', 'Enter', 'NumpadEnter'];
 const DIR_KEYS = {
   ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down',
