@@ -131,7 +131,7 @@ export default class Explore extends Phaser.Scene {
     state.dir = this.dir;
     this.player = this.add.image(cx(this.tx), this.playerY(this.tx, this.ty), 'player_' + this.dir).setDepth(depthAt(this.ty, true));
     // 그림자 맵에선 플레이어 발밑에도 그림자 (카펫 위에서 떠 보이지 않게). 위치는 update()가 맞춘다
-    if (m.shadows) this.playerShadow = this.add.ellipse(0, 0, 20, 6, 0x000000, 0.3).setDepth(1.5);
+    this.playerShadow = m.shadows ? this.add.ellipse(0, 0, 20, 6, 0x000000, 0.3).setDepth(1.5) : null;
 
     const cam = this.cameras.main;
     const mw = this.cols * TILE, mh = this.rows * TILE;
@@ -180,7 +180,8 @@ export default class Explore extends Phaser.Scene {
     if (m.ambient) {
       this.add.rectangle(0, 0, mw, mh, Phaser.Display.Color.HexStringToColor(m.ambient.color).color, m.ambient.alpha).setOrigin(0).setDepth(9);
     }
-    if (m.dark) this.dark = this.add.renderTexture(0, 0, mw, mh).setOrigin(0).setDepth(10);
+    // 씬을 다시 시작해도 인스턴스는 그대로라, 어둡지 않은 맵에선 null로 비워야 이전 맵의 (파괴된) 어둠을 그리지 않는다
+    this.dark = m.dark ? this.add.renderTexture(0, 0, mw, mh).setOrigin(0).setDepth(10) : null;
     this.tint = this.add.rectangle(0, 0, W, H, 0x5a0000, 0).setOrigin(0).setScrollFactor(0).setDepth(11);
     this.promptTxt = this.add.text(0, 0, 'E', textStyle(11, '#111111', { backgroundColor: '#d8cfb4', padding: { x: 4, y: 1 } }))
       .setOrigin(0.5).setDepth(12).setVisible(false);
