@@ -87,6 +87,8 @@
       { "t": "text", "who": "재민", "text": "……여기, 와 본 적 있어. 누군가랑 같이." }
     ],
     "stairs_down": [
+      { "t": "sfx", "name": "roofDoor" },
+      { "t": "sfx", "name": "stairsDown" },
       { "t": "goto", "scene": "Explore", "map": "school2f", "pos": { "x": 31, "y": 12, "dir": "left" } }
     ],
 

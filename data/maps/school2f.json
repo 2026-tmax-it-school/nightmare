@@ -3,6 +3,7 @@
   "tileRotations": [{ "x": 30, "y": 14, "w": 3, "h": 2, "angle": 180 }],
   "bgm": "drone", "bgmTrial": "hall2", "music": "m_school2f",
   "piano": { "x": 9.5, "y": 1, "room": "음악실", "hear": 32, "until": "p3" },
+  "areaSfx": { "2층 화장실": "faucet" },
   "dark": true,
   "legend": {
     "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "c": "floor_pc", "r": "floor_room", "=": "floor_stairs", "|": "floor_stairs_side",
@@ -140,6 +141,7 @@
   ],
   "scripts": {
     "stairs_down": [
+      { "t": "sfx", "name": "stairsDown" },
       { "t": "goto", "scene": "Explore", "map": "school1f", "pos": { "x": 36, "y": 16, "dir": "left" } }
     ],
 
@@ -249,6 +251,7 @@
         "t": "if", "cond": { "flag": "p4" },
         "then": [{ "t": "text", "text": "모니터는 이제 꺼져 있다. 까만 화면에 내 얼굴만 비친다." }],
         "else": [
+          { "t": "sfx", "name": "pcOn" },
           {
             "t": "if", "cond": { "flag": "pc_unlocked" },
             "then": [{ "t": "call", "name": "pc_chat" }],
@@ -306,7 +309,7 @@
 
     "door_broadcast": [{ "t": "text", "text": "방송실. 문이 잠겨 있다. 안에서 지직거리는 소리가 새어 나온다." }],
     "tapeshelf": [{ "t": "text", "text": "카세트테이프가 빼곡하다. 「졸업식」 「체육대회」 「합창대회」… 가운데 칸 네 개만 비어 있다." }],
-    "console": [{ "t": "text", "text": "방송 콘솔. 「ON AIR」 표시등은 꺼져 있는데, 스피커에서 희미한 잡음이 흘러나온다." }],
+    "console": [{ "t": "sfx", "name": "speakerHiss" }, { "t": "text", "text": "방송 콘솔. 「ON AIR」 표시등은 꺼져 있는데, 스피커에서 희미한 잡음이 흘러나온다." }],
     "tapedeck": [
       {
         "t": "if", "cond": { "flag": "p5" },
@@ -324,6 +327,7 @@
               {
                 "label": "듣는다",
                 "then": [
+                  { "t": "sfx", "name": "tapePlay", "wait": true },
                   {
                     "t": "puzzle", "id": "tapes",
                     "success": [
@@ -443,6 +447,8 @@
     ],
 
     "door_roof": [
+      { "t": "sfx", "name": "stairsUp" },
+      { "t": "sfx", "name": "roofDoor" },
       { "t": "goto", "scene": "Explore", "map": "rooftop", "pos": { "x": 10, "y": 10, "dir": "up" } }
     ]
   }
