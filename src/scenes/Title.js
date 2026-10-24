@@ -1,13 +1,14 @@
 import { W, H, GAME_TITLE } from '../constants.js';
 import { state, resetState, loadGame, hasSave, loadMeta } from '../state.js';
 import { initAudio, sfx, startLoop, stopAllLoops } from '../audio.js';
-import { UI, textStyle } from '../ui/ui.js';
+import { UI, textStyle, cgBackdrop } from '../ui/ui.js';
 
 export default class Title extends Phaser.Scene {
   constructor() { super('Title'); }
 
   create() {
     this.ui = new UI(this);
+    cgBackdrop(this, 'front', 0.55);
     this.cameras.main.fadeIn(400);
     // 브라우저 자동재생 정책: 첫 입력에서 오디오를 연다
     const gate = this.add.container(0, 0, [

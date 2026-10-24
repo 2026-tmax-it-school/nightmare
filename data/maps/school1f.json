@@ -56,6 +56,11 @@
     { "x": 31.2, "y": 12.35, "text": "뜨거워", "angle": 5, "cond": { "flag": "stage2" } }
   ],
   "decor": [
+    { "x": 3, "y": 17, "tex": "slippers" },
+    { "x": 5, "y": 15, "tex": "slippers" },
+    { "x": 12, "y": 16, "tex": "papers" },
+    { "x": 34, "y": 7, "tex": "papers" },
+    { "x": 36, "y": 5, "tex": "papers" },
     { "x": 24, "y": 16, "tex": "scorch", "cond": { "flag": "stage2" } },
     { "x": 27, "y": 16, "tex": "scorch", "cond": { "flag": "stage2" } },
     { "x": 28, "y": 17, "tex": "scorch", "cond": { "flag": "stage2" } },
@@ -262,7 +267,7 @@
 
     { "x": 18, "y": 14, "tex": "mirror", "script": "mirror" },
     { "x": 20, "y": 14, "tex": "mirror", "script": "mirror" },
-    { "x": 21, "y": 17, "tex": "stall", "script": "stall" },
+    { "x": 21, "y": 16, "tex": "stall", "script": "stall" },
     { "x": 21, "y": 18, "tex": "stall", "script": "stall_burnt" },
 
 
@@ -276,7 +281,19 @@
     { "x": 30, "y": 16, "door": "prep", "script": "door_prep" },
     { "x": 33, "y": 17, "tex": "bag", "script": "bag" },
     { "x": 23, "y": 18, "tex": "ext_fallen", "script": "ext_fallen" },
-    { "x": 24, "y": 12, "tex": "trash", "script": "trash" }
+    { "x": 24, "y": 12, "tex": "trash", "script": "trash" },
+
+    { "x": 35, "y": 0, "tex": "shelf", "lift": -20, "_": "방 소품(#112): 이 아래는 조사되지 않는 장식. 통로와 동선 위는 비운다" },
+    { "x": 36, "y": 0, "tex": "shelf", "lift": -20 },
+    { "x": 33, "y": 5, "tex": "chair" },
+    { "x": 35, "y": 5, "tex": "chair" },
+    { "x": 31, "y": 3, "tex": "dresser" },
+    { "x": 31, "y": 7, "tex": "box" },
+    { "x": 38, "y": 1, "tex": "box" },
+    { "x": 6, "y": 18, "tex": "trash" },
+    { "x": 10, "y": 17, "tex": "chair" },
+    { "x": 15, "y": 18, "tex": "box" },
+    { "x": 14, "y": 14, "tex": "extbox" }
   ],
   "scripts": {
     "near13": [
