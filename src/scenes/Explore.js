@@ -99,6 +99,7 @@ export default class Explore extends Phaser.Scene {
         // flat: 바닥에 깔린 것(카펫·종이 등)은 플레이어보다 아래에 그린다
         obj.img = this.add.image(cx(obj.x) + (o.dx || 0), (obj.y + 1) * TILE - (o.lift || 0), this.objTex(o)).setOrigin(0.5, 1)
           .setDepth(o.flat ? 1.2 : depthAt(obj.y));
+        if (o.scale) obj.img.setScale(o.scale); // scale: 그림 크기 배율 (아래 가운데 기준으로 줄어든다). 두 칸 이어 붙은 그림은 dx로 이음새를 맞춘다
         if (o.frame !== undefined && obj.img.texture.has(o.frame)) obj.img.setFrame(o.frame);
       }
       if (o.door && flag('open_' + o.door)) this.tiles[o.y][o.x].setTexture('door_open');
@@ -814,7 +815,7 @@ export default class Explore extends Phaser.Scene {
     for (const p of parts) {
       const img = p.img && !p.flat ? p.img : null;
       const [l, t, r, b] = img
-        ? [img.x - img.width / 2, img.y - (crop && img.isCropped ? TILE : img.height), img.x + img.width / 2, img.y]
+        ? [img.x - img.displayWidth / 2, img.y - (crop && img.isCropped ? TILE : img.displayHeight), img.x + img.displayWidth / 2, img.y]
         : [p.x * TILE, p.y * TILE, (p.x + 1) * TILE, (p.y + 1) * TILE];
       x0 = Math.min(x0, l); y0 = Math.min(y0, t); x1 = Math.max(x1, r); y1 = Math.max(y1, b);
     }
@@ -846,7 +847,7 @@ export default class Explore extends Phaser.Scene {
     this.glows = imgs;
     if (!imgs.length || this.renderer.type !== Phaser.WEBGL) return;
     const copies = imgs.map(img => {
-      const c = this.add.image(img.x, img.y, img.texture.key, img.frame.name).setOrigin(0.5, 1);
+      const c = this.add.image(img.x, img.y, img.texture.key, img.frame.name).setOrigin(0.5, 1).setScale(img.scaleX, img.scaleY);
       if (img.isCropped) c.setCrop(0, img.height - TILE, img.width, TILE);
       return c;
     });
