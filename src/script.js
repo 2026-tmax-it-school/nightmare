@@ -3,6 +3,7 @@ import { DB } from './db.js';
 import { setFlag, addClue, addItem, removeItem, addFragment, addDenial, saveGame, checkCond } from './state.js';
 import { sfx, startLoop, stopLoop } from './audio.js';
 import { jumpscare } from './ui/jumpscare.js';
+import { teaser } from './ui/teaser.js';
 
 const delay = (h, ms) => new Promise(r => h.time.delayedCall(ms, r));
 
@@ -41,6 +42,7 @@ async function exec(h, a) {
     case 'save': saveGame(); h.ui.toast('자동 저장됨'); return;
     case 'effect': return effect(h, a);
     case 'jumpscare': return jumpscare(h, a);
+    case 'teaser': return teaser(h);
     case 'memory': return h.ui.covered(() => h.ui.memory(a.lines));
     case 'puzzle': {
       const ok = await h.ui.puzzle(a.id);

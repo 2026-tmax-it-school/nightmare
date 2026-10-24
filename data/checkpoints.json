@@ -101,6 +101,11 @@
       "pos": { "x": 35, "y": 10, "dir": "up" }
     },
     {
+      "id": "spoiler", "label": "프롤로그 — 스포주의 (발표용: 교무실 퍼즐을 풀면 끝)", "from": "office", "scene": "Explore", "map": "school1f",
+      "flags": ["teaser"],
+      "pos": { "x": 35, "y": 10, "dir": "up" }
+    },
+    {
       "id": "p7", "label": "4장 — 담임 책상 서랍 앞 (서류함·액자 확인)", "from": "office", "scene": "Explore", "map": "school1f",
       "flags": ["open_staff", "read_report", "read_photo"], "clues": ["report", "photo_friends"],
       "pos": { "x": 37, "y": 4, "dir": "up" }

@@ -588,6 +588,7 @@
           { "t": "text", "who": "재민", "text": "……걔가 도와 달라고 한 날, 나는 그걸 고자질이라고 불렀어." },
           { "t": "flag", "key": "frag6" },
           { "t": "fragment", "n": 6 },
+          { "t": "if", "cond": { "flag": "teaser" }, "then": [{ "t": "teaser" }] },
           { "t": "text", "text": "기록철 맨 뒤에 열쇠 하나가 끼워져 있다. 꼬리표 「과학실 — 사고 후 봉인」." },
           { "t": "item", "id": "keyScience" },
           { "t": "text", "who": "재민", "text": "과학실… 그날의 장소. 복도 건너편, 화장실 옆이었지." }
