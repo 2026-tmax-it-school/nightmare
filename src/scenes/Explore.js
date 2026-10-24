@@ -204,7 +204,12 @@ export default class Explore extends Phaser.Scene {
     this.keys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
     this.input.keyboard.on('keydown', this.onKey, this);
     this.events.on('denial', this.applyStage, this);
+    const onLeave = e => this.saveOnLeave(e);
+    window.addEventListener('pagehide', onLeave);
+    document.addEventListener('visibilitychange', onLeave);
     this.events.once('shutdown', () => {
+      window.removeEventListener('pagehide', onLeave);
+      document.removeEventListener('visibilitychange', onLeave);
       this.input.keyboard.off('keydown', this.onKey, this);
       this.chaseTimer?.remove();
       this.breathTimer?.remove();
@@ -1005,7 +1010,9 @@ export default class Explore extends Phaser.Scene {
     this.busy = true;
     this.updatePrompt();
     sfx('beep');
-    await this.ui.covered(() => this.ui.notebook(this.hint(), this.progress()));
+    // 기억 노트는 탐색 중에만 열리므로 여기서의 수동 저장은 진행이 반만 기록될 일이 없다 (GDD 4.7, 이슈 #121)
+    const end = await this.ui.covered(() => this.ui.notebook(this.hint(), this.progress(), saveGame));
+    if (end === 'title') return this.toTitle();
     this.busy = false;
     this.updatePrompt();
     // 설정 탭에서 새 소리 스위치를 바꿨으면 배경음도 바로 바꾼다
@@ -1071,6 +1078,23 @@ export default class Explore extends Phaser.Scene {
       }
       case 'ghost': return this.ghost(a);
     }
+  }
+
+  // 「저장하고 타이틀로」: 타이틀은 배경음을 끄지 않으므로 여기서 끄고 넘어간다
+  toTitle() {
+    this.busy = true;
+    stopAllLoops();
+    const cam = this.cameras.main;
+    cam.fadeOut(600);
+    cam.once('camerafadeoutcomplete', () => this.scene.start('Title'));
+  }
+
+  // 창을 닫거나 숨길 때: 탐색 중이면 저장한다. 대화·이벤트·퍼즐·노트(busy), 추격, 사물함, 게임오버 중에는
+  // 진행이 반만 기록될 수 있어 저장하지 않는다. 걷는 중이면 state.pos는 마지막으로 도착한 칸이다
+  saveOnLeave(e) {
+    if (e.type === 'visibilitychange' && document.visibilityState !== 'hidden') return;
+    if (this.busy || this.hidden || this.chase || this.over || state.flags.pendingChase) return;
+    saveGame();
   }
 
   goto(a) {
