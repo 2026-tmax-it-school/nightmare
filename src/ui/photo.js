@@ -26,6 +26,7 @@ export function bedroomWall(s) {
 export class PhotoView {
   constructor(scene) {
     this.s = scene;
+    if (scene.textures.exists('cg_photo_graduation')) return this.initCG(scene);
     const wall = this.buildWall();
     const frame = scene.add.container(W / 2, 186).setAngle(-7);
     const g = scene.add.graphics();
@@ -35,6 +36,17 @@ export class PhotoView {
     frame.add(g);
     this.root = scene.add.container(0, 0, [
       ...wall, frame,
+      scene.add.text(W / 2, H - 14, '액자를 보고 있다', textStyle(11, '#6f6878')).setOrigin(0.5, 1),
+    ]).setScrollFactor(0).setDepth(90).setAlpha(0);
+    scene.tweens.add({ targets: this.root, alpha: 1, duration: 220 });
+  }
+
+  // 완성 CG 화면: 액자 그림을 그대로 보여 준다 (움직임 없음)
+  initCG(scene) {
+    this.cg = true;
+    this.img = scene.add.image(0, 0, 'cg_photo_graduation').setOrigin(0).setDisplaySize(W, H);
+    this.root = scene.add.container(0, 0, [
+      scene.add.rectangle(0, 0, W, H, 0x000000).setOrigin(0), this.img,
       scene.add.text(W / 2, H - 14, '액자를 보고 있다', textStyle(11, '#6f6878')).setOrigin(0.5, 1),
     ]).setScrollFactor(0).setDepth(90).setAlpha(0);
     scene.tweens.add({ targets: this.root, alpha: 1, duration: 220 });
