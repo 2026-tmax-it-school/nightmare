@@ -1120,6 +1120,7 @@
           { "t": "flag", "key": "went2f" }
         ]
       },
+      { "t": "sfx", "name": "stairsUp" },
       { "t": "goto", "scene": "Explore", "map": "school2f", "pos": { "x": 31, "y": 14, "dir": "left" } }
     ]
   }
