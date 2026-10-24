@@ -390,37 +390,7 @@
               { "t": "sfx", "name": "knock" }, { "t": "wait", "ms": 450 },
               { "t": "sfx", "name": "knock" }, { "t": "wait", "ms": 450 },
               { "t": "sfx", "name": "knock" }, { "t": "wait", "ms": 700 },
-              { "t": "text", "text": "……똑, 똑, 똑. 안쪽에서 누군가 문을 두드린다." },
-              { "t": "text", "who": "재민", "text": "테이프에서 들었던… 그 소리랑 같아." },
-              {
-                "t": "choice", "prompt": "두드려서 대답할까?",
-                "options": [
-                  {
-                    "label": "대답한다",
-                    "then": [
-                      {
-                        "t": "knock", "n": 3,
-                        "success": [
-                          { "t": "wait", "ms": 700 },
-                          { "t": "sfx", "name": "unlock" }, { "t": "wait", "ms": 300 },
-                          { "t": "sfx", "name": "creak" },
-                          { "t": "flag", "key": "knock_open" },
-                          { "t": "stall", "kind": "knock" },
-                          { "t": "text", "text": "딸깍. 잠금이 풀리고, 칸막이 문이 스르르 열린다." },
-                          { "t": "text", "text": "……아무도 없다. 문 안쪽 아래에 손톱으로 긁은 자국만 길게 나 있다." },
-                          { "t": "sfx", "name": "whisper" },
-                          { "t": "text", "who": "재민", "text": "누가… 여기 갇혀 있었던 것 같아. 왜 이렇게 숨이 막히지." }
-                        ],
-                        "fail": [
-                          { "t": "wait", "ms": 600 },
-                          { "t": "text", "text": "……두드리는 소리가 뚝 끊겼다. 대답이 맞지 않았던 걸까." }
-                        ]
-                      }
-                    ]
-                  },
-                  { "label": "그만둔다", "then": [{ "t": "text", "text": "……못 들은 척, 문에서 한 발 물러선다." }] }
-                ]
-              }
+              { "t": "text", "text": "……똑, 똑, 똑. 안쪽에서 누군가 문을 두드린다." }
             ]
           }
         ]
