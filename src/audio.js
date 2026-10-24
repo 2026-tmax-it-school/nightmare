@@ -1,4 +1,4 @@
-// 임시 사운드: Web Audio로 합성한다. 무료 효과음이 정해지면 파일 재생으로 교체.
+// 사운드: assets/sounds/manifest.json에 있는 소리는 파일로, 나머지는 Web Audio로 합성한 임시 소리로 낸다 (이슈 #114).
 
 let ctx = null;
 let master = null;
@@ -6,6 +6,60 @@ let noiseBuf = null;
 let bus = null;  // sfx(name, vol, muffle) 호출 동안만 쓰는 출력 (음량·먹먹함). 평소엔 master
 const loops = {};
 const dest = () => bus || master;
+
+// ── 소리 파일 (이슈 #114) ──
+// manifest: { "이름": "파일" } 또는 { "이름": { "file": "파일", "vol": 0.6 } }. 이름은 SFX·배경음 이름 (docs/에셋_목록.md 「소리」)
+// file을 배열로 적으면 재생할 때마다 그중 하나를 고른다 (발소리처럼 자주 나는 소리가 똑같이 들리지 않게)
+// 파일 내려받기는 바로 시작하고, 디코딩은 AudioContext가 생긴 뒤(initAudio) 한다. 디코딩이 끝나기 전·실패하면 합성음
+const SOUND_DIR = 'assets/sounds/';
+let manifest = null;  // 이름 → { bytes: Promise<ArrayBuffer[]>, vol }
+const decoding = {};  // 이름 → 디코딩 Promise (실패하면 지운다)
+const files = {};     // 이름 → { bufs, vol } (디코딩 끝난 것)
+
+fetch(SOUND_DIR + 'manifest.json')
+  .then(r => (r.ok ? r.json() : {}))
+  .catch(() => ({}))
+  .then(list => {
+    manifest = {};
+    for (const [name, v] of Object.entries(list)) {
+      const { file, vol = 1 } = typeof v === 'string' || Array.isArray(v) ? { file: v } : v;
+      const bytes = Promise.all([].concat(file).map(f =>
+        fetch(SOUND_DIR + f).then(r => { if (!r.ok) throw new Error(`${r.status} ${f}`); return r.arrayBuffer(); })));
+      bytes.catch(() => {});  // 실패는 decodeFiles에서 알린다 (initAudio 전이면 처리 안 된 거부로 남지 않게)
+      manifest[name] = { vol, bytes };
+    }
+    decodeFiles();
+  });
+
+function decodeFiles() {
+  if (!ctx || !manifest) return;
+  for (const [name, { bytes, vol }] of Object.entries(manifest)) {
+    if (decoding[name] || files[name]) continue;
+    decoding[name] = bytes
+      .then(list => Promise.all(list.map(b => ctx.decodeAudioData(b))))
+      .then(bufs => (files[name] = { bufs, vol }))
+      .catch(e => {
+        console.warn(`소리 파일을 불러오지 못해 합성음을 씁니다: ${name}`, e);
+        delete decoding[name];
+        return null;
+      });
+  }
+}
+
+function playFile(name, t, out, loop = false) {
+  const { bufs, vol } = files[name];
+  const s = ctx.createBufferSource();
+  s.buffer = bufs[Math.floor(Math.random() * bufs.length)];
+  s.loop = loop;
+  const g = ctx.createGain();
+  g.gain.value = vol;
+  s.connect(g).connect(out);
+  s.start(t);
+  return s;
+}
+
+// 파일이 있으면 파일을, 없으면 합성음을 낸다. 재생 길이(초)를 반환한다
+const play = (name, t) => (files[name] ? playFile(name, t, dest()).buffer.duration : SFX[name](t));
 
 // 전체 볼륨 (0~1). 기억 노트의 설정 탭에서 바꾸고, 브라우저에 기억해 둔다.
 const VOLUME_KEY = 'ithope_volume';
@@ -35,6 +89,7 @@ export function initAudio() {
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
   const d = noiseBuf.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  decodeFiles();
 }
 
 function env(param, t, a, peak, d) {
@@ -361,8 +416,8 @@ const SITUATION = {
 // vol: 0~1 음량 배율 (0이면 재생하지 않음), muffle: 벽 너머처럼 높은 소리를 깎는다
 export function sfx(name, vol = 1, muffle = false) {
   if (SITUATION[name]) name = SITUATION[name];
-  if (!ctx || !SFX[name] || vol <= 0) return 0;
-  if (vol >= 1 && !muffle) return SFX[name](ctx.currentTime + 0.02);
+  if (!ctx || !(SFX[name] || files[name]) || vol <= 0) return 0;
+  if (vol >= 1 && !muffle) return play(name, ctx.currentTime + 0.02);
   const g = ctx.createGain();
   g.gain.value = Math.min(1, vol);
   if (muffle) {
@@ -372,7 +427,7 @@ export function sfx(name, vol = 1, muffle = false) {
     bus = f;
   } else bus = g;
   g.connect(master);
-  try { return SFX[name](ctx.currentTime + 0.02); } finally { bus = null; }
+  try { return play(name, ctx.currentTime + 0.02); } finally { bus = null; }
 }
 
 // ── 배경 음악 (GDD 4.7, 이슈 #118): 느린 화음 패드 + 음계 안에서 무작위로 드문드문 치는 음 ──
@@ -447,6 +502,21 @@ export function startLoop(name) {
   out.connect(master);
   const nodes = [];
   let timer = null;
+
+  // 소리 파일이 있으면 그 파일을 끝없이 되풀이한다 (합성 배경음 대신). 디코딩 중이면 끝난 뒤 시작하고, 실패하면 합성음으로
+  if (files[name] || decoding[name]) {
+    loops[name] = { out, nodes, timer };
+    const begin = f => {
+      if (loops[name]?.out !== out) return;
+      if (f) { nodes.push(playFile(name, ctx.currentTime, out, true)); return; }
+      out.disconnect();
+      delete loops[name];
+      startLoop(name);
+    };
+    if (files[name]) begin(files[name]);
+    else decoding[name].then(begin);
+    return;
+  }
 
   const osc = (freq, type, gain) => {
     const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq;
