@@ -63,6 +63,15 @@ export class StallView {
   constructor(scene, opts = {}) {
     this.s = scene;
     const parts = [];
+    // 칸 종류의 완성 CG(cg_stall_<kind>)가 있으면 코드로 그린 화면 대신 그 그림을 쓴다
+    const cg = 'cg_stall_' + opts.kind;
+    if (scene.textures.exists(cg)) {
+      parts.push(scene.add.rectangle(0, 0, W, H, 0x000000).setOrigin(0), scene.add.image(0, 0, cg).setOrigin(0).setDisplaySize(W, H),
+        scene.add.text(W / 2, H - 14, '칸막이 안을 보고 있다', textStyle(11, '#6f6878')).setOrigin(0.5, 1));
+      this.root = scene.add.container(0, 0, parts).setScrollFactor(0).setDepth(90).setAlpha(0);
+      scene.tweens.add({ targets: this.root, alpha: 1, duration: 220 });
+      return;
+    }
     const g = scene.add.graphics();
     parts.push(g);
     this.drawStall(g);
