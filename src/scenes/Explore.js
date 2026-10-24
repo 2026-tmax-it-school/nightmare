@@ -590,8 +590,8 @@ export default class Explore extends Phaser.Scene {
     const shown = this.grid.map(r => r.map(() => null));
     let wallHits;
     for (const o of this.objects?.values() || []) {
-      // below: 아래쪽 방을 향해 벽에 건 물건(게시판 등)은 그 방 바닥 칸이 보일 때만 보인다 (벽 너머 복도에서 비치지 않게)
-      if (shown[o.y][o.x] === null && o.below) shown[o.y][o.x] = this.seeTile(ox, oy, o.x, o.y + 1);
+      // below: 아래쪽 방을 향해 벽에 건 물건(게시판 등)은 그 방 안에서 그 바닥 칸이 보일 때만 보인다 (벽 너머 복도에서, 열린 문으로 비스듬히 봐도 비치지 않게)
+      if (shown[o.y][o.x] === null && o.below) shown[o.y][o.x] = ids.includes(at(o.x, o.y + 1)) && this.seeTile(ox, oy, o.x, o.y + 1); // 열린 문으로 비스듬히 보여도, 그 방 안에 있을 때만 보인다
       if (shown[o.y][o.x] === null && this.opaque[o.y]?.[o.x]) {
         wallHits ??= this.castSight(ox, oy).hits;
         shown[o.y][o.x] = wallHits.has(o.y * this.cols + o.x) || this.seeTile(ox, oy, o.x, o.y);
@@ -816,13 +816,29 @@ export default class Explore extends Phaser.Scene {
 
   // 물건이 화면에서 차지하는 사각형: 그림이 있으면 그림(2칸 높이 가구·lift 포함), 없으면 칸.
   // crop: 다른 방에서 볼 때 아래 한 칸만 보이게 자른 그림(sharedWallAbove)은 보이는 부분만
+  // 텍스처에서 투명하지 않은 픽셀의 범위(그림 안 좌표). 한 번 구하면 기억해 둔다
+  opaqueBounds(img) {
+    this.opaqueCache = this.opaqueCache || {};
+    const k = img.texture.key + '/' + img.frame.name;
+    if (this.opaqueCache[k]) return this.opaqueCache[k];
+    let x0 = img.width, y0 = img.height, x1 = 0, y1 = 0;
+    for (let y = 0; y < img.height; y++) for (let x = 0; x < img.width; x++) {
+      if (this.textures.getPixelAlpha(x, y, img.texture.key, img.frame.name) > 20) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + 1); y1 = Math.max(y1, y + 1); }
+    }
+    return (this.opaqueCache[k] = x1 > x0 ? { x0, y0, x1, y1 } : { x0: 0, y0: 0, x1: img.width, y1: img.height });
+  }
+
   boxOf(parts, crop = true) {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const p of parts) {
       const img = p.img && !p.flat ? p.img : null;
-      const [l, t, r, b] = img
+      let [l, t, r, b] = img
         ? [img.x - img.displayWidth / 2, img.y - (crop && img.isCropped ? TILE : img.displayHeight), img.x + img.displayWidth / 2, img.y]
         : [p.x * TILE, p.y * TILE, (p.x + 1) * TILE, (p.y + 1) * TILE];
+      if (img && p.tight) { // tight: 그림의 투명한 여백을 뺀, 실제로 그려진 부분에만 조사 표시를 잡는다 (32×64 그림 위쪽이 비어 있는 모니터 등)
+        const o = this.opaqueBounds(img), sx = img.displayWidth / img.width, sy = img.displayHeight / img.height;
+        [l, t, r, b] = [img.x - img.displayWidth / 2 + o.x0 * sx, img.y - img.displayHeight + o.y0 * sy, img.x - img.displayWidth / 2 + o.x1 * sx, img.y - img.displayHeight + o.y1 * sy];
+      }
       x0 = Math.min(x0, l); y0 = Math.min(y0, t); x1 = Math.max(x1, r); y1 = Math.max(y1, b);
     }
     return { x0, y0, x1, y1 };
