@@ -185,18 +185,12 @@ export default class Explore extends Phaser.Scene {
     this.tint = this.add.rectangle(0, 0, W, H, 0x5a0000, 0).setOrigin(0).setScrollFactor(0).setDepth(11);
     this.promptTxt = this.add.text(0, 0, 'E', textStyle(11, '#111111', { backgroundColor: '#d8cfb4', padding: { x: 4, y: 1 } }))
       .setOrigin(0.5).setDepth(12).setVisible(false);
-    // 조사 대상 칸 표시: 모서리 괄호 테두리가 은은하게 깜빡인다
+    // 조사 대상 표시: 바라보는 물건 전체(붙어 있는 칸 모두)를 모서리 괄호로 감싸 은은하게 깜빡인다 (이슈 #136)
     // 방 조명(ambient 9) 위에 그려야 밝은 방에서도 흐려지지 않는다. 어둠(10) 아래라 손전등 밖에선 보이지 않는다
-    // 어두운 외곽선 위에 흰색 — 밝은 벽·바닥에서도 외곽선 덕분에 눈에 띈다
+    // 어두운 외곽선 위에 흰색 — 밝은 벽·바닥에서도 외곽선 덕분에 눈에 띈다. 크기는 대상이 바뀔 때 updatePrompt가 다시 그린다
     this.focus = this.add.graphics().setDepth(9.6).setVisible(false);
-    const h = TILE / 2, l = 9;
-    for (const [w, c, a] of [[4, 0x120c06, 0.7], [2, 0xffffff, 1]]) {
-      this.focus.lineStyle(w, c, a);
-      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-        this.focus.lineBetween(sx * h, sy * h, sx * (h - l), sy * h);
-        this.focus.lineBetween(sx * h, sy * h, sx * h, sy * (h - l));
-      }
-    }
+    this.focusKey = null;
+    this.glows = [];
     this.tweens.add({ targets: this.focus, alpha: 0.6, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     this.areaTxt = this.add.text(14, 12, '', textStyle(13, '#a8a1b0', { backgroundColor: 'rgba(0,0,0,0.55)', padding: { x: 8, y: 4 } }))
       .setScrollFactor(0).setDepth(95).setAlpha(0);
@@ -222,6 +216,7 @@ export default class Explore extends Phaser.Scene {
     stopAllLoops([this.bgm, this.music]);
     if (this.bgm) startLoop(this.bgm);
     if (this.music && !state.flags.pendingChase) startLoop(this.music);
+    if (m.piano) this.time.delayedCall(2000, this.pianoTick, [], this);
     this.applyStage();
     this.updatePrompt();
     this.updateArea();
@@ -246,7 +241,7 @@ export default class Explore extends Phaser.Scene {
     this.lockerView?.update(this.chase, this.tx, this.ty);
     // 위를 볼 때는 머리 위 E가 조사 대상을 가리므로 대상 칸 위로 올린다
     if (this.promptTxt.visible) {
-      if (this.dir === 'up') this.promptTxt.setPosition(this.focus.x, this.focus.y - 26);
+      if (this.dir === 'up') this.promptTxt.setPosition(this.focus.x, this.focusTop - 10);
       else this.promptTxt.setPosition(this.player.x, this.player.y - 26);
     }
     // 목표 패널이 플레이어나 바로 앞 칸(조사 대상)을 가리면 흐리게 (옥상 「7.13」처럼 위쪽 끝의 조사 지점)
@@ -782,8 +777,71 @@ export default class Explore extends Phaser.Scene {
     return o;
   }
 
-  // ── 반짝임 (GDD 4.7): 아직 조사하지 않은 물건은 멀리서도 보이게 작은 빛이 깜빡인다 ──
-  // 같은 방의 같은 스크립트 물건(책상 16개, 피아노 좌우 등)은 하나로 묶어 대표 한 칸에만 띄운다.
+  // ── 물건 크기 (이슈 #136): 같은 조사 내용으로 서로 붙어 있는 칸을 한 물건으로 본다 (피아노 2칸, 칠판 3칸) ──
+  // 떨어져 있는 같은 종류(보면대·PC)는 따로. 스크립트가 없는 물건(사물함 등)은 그 칸 하나
+  partsOf(o) {
+    const room = this.roomOf(o.x, o.y);
+    const same = p => p && (o.script ? p.script === o.script : p === o) && this.roomOf(p.x, p.y) === room;
+    const parts = [o];
+    for (let i = 0; i < parts.length; i++) {
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const p = this.objects.get(key(parts[i].x + dx, parts[i].y + dy));
+        if (same(p) && !parts.includes(p)) parts.push(p);
+      }
+    }
+    return parts;
+  }
+
+  // 물건이 화면에서 차지하는 사각형: 그림이 있으면 그림(2칸 높이 가구·lift 포함), 없으면 칸.
+  // crop: 다른 방에서 볼 때 아래 한 칸만 보이게 자른 그림(sharedWallAbove)은 보이는 부분만
+  boxOf(parts, crop = true) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const p of parts) {
+      const img = p.img && !p.flat ? p.img : null;
+      const [l, t, r, b] = img
+        ? [img.x - img.width / 2, img.y - (crop && img.isCropped ? TILE : img.height), img.x + img.width / 2, img.y]
+        : [p.x * TILE, p.y * TILE, (p.x + 1) * TILE, (p.y + 1) * TILE];
+      x0 = Math.min(x0, l); y0 = Math.min(y0, t); x1 = Math.max(x1, r); y1 = Math.max(y1, b);
+    }
+    return { x0, y0, x1, y1 };
+  }
+
+  // 모서리 괄호 (조사 표시): 가운데 기준 w×h 사각형의 네 모서리
+  drawCorners(g, w, h) {
+    const hw = w / 2, hh = h / 2, l = Math.min(9, hw - 2, hh - 2);
+    g.clear();
+    for (const [lw, c, a] of [[4, 0x120c06, 0.7], [2, 0xffffff, 1]]) {
+      g.lineStyle(lw, c, a);
+      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        g.lineBetween(sx * hw, sy * hh, sx * (hw - l), sy * hh);
+        g.lineBetween(sx * hw, sy * hh, sx * hw, sy * (hh - l));
+      }
+    }
+  }
+
+  // 바라보는 물건의 그림 윤곽 빛 (이슈 #136). WebGL에서만 (postFX). 그림 없는 조사 지점은 괄호만.
+  // 여러 칸 물건(피아노 좌우 반쪽)은 그림마다 빛을 주면 맞닿는 이음새까지 빛나므로,
+  // 같은 그림을 한 컨테이너에 겹쳐 놓고 컨테이너 전체의 바깥 윤곽만 빛낸다(knockout: 그림은 그리지 않고 빛만)
+  setGlow(parts) {
+    const imgs = (parts || []).filter(p => p.img && !p.flat).map(p => p.img);
+    if (imgs.length === this.glows.length && imgs.every((img, i) => this.glows[i] === img)) return;
+    this.glowTween?.remove();
+    this.glowBox?.destroy();
+    this.glowBox = null;
+    this.glows = imgs;
+    if (!imgs.length || this.renderer.type !== Phaser.WEBGL) return;
+    const copies = imgs.map(img => {
+      const c = this.add.image(img.x, img.y, img.texture.key, img.frame.name).setOrigin(0.5, 1);
+      if (img.isCropped) c.setCrop(0, img.height - TILE, img.width, TILE);
+      return c;
+    });
+    this.glowBox = this.add.container(0, 0, copies).setDepth(9.55);
+    const fx = this.glowBox.postFX.addGlow(0xfff1c4, 1.5, 0, true, 0.1, 8);
+    this.glowTween = this.tweens.add({ targets: fx, outerStrength: 4, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  }
+
+  // ── 반짝임 (GDD 4.7): 아직 조사하지 않은 물건은 멀리서도 보이게 물건 가운데에 작은 별빛이 반짝인다 (이슈 #136) ──
+  // 같은 방의 같은 스크립트 물건(책상 16개, 피아노 좌우 등)은 하나로 묶어 대표 한 곳에만 띄운다.
   // 조사 결과의 갈래(if 조건들)가 마지막으로 본 때와 달라지면 다시 반짝인다 (예: 전화 후 알코올램프)
   buildSparkles() {
     this.sparkles = new Map();
@@ -792,19 +850,21 @@ export default class Explore extends Phaser.Scene {
       const g = `${typeof o.script === 'string' ? o.script : key(o.x, o.y)}@${this.roomOf(o.x, o.y)}`;
       o.sparkleKey = g;
       if (this.sparkles.has(g)) continue;
-      // 조사 표시(focus)와 같은 모서리 괄호가 반짝인다. 어둠(10) 아래에 그려 손전등 시야 밖에선 보이지 않는다
-      // 색은 조사 표시(focus)와 같다: 어두운 외곽선 위에 흰색
-      const b = this.add.graphics().setDepth(9.7).setPosition(...this.markAt(o));
-      const h = TILE / 2 - 1, l = 7;
-      for (const [w, c, a] of [[4, 0x120c06, 0.7], [2, 0xffffff, 1]]) {
-        b.lineStyle(w, c, a);
-        for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-          b.lineBetween(sx * h, sy * h, sx * (h - l), sy * h);
-          b.lineBetween(sx * h, sy * h, sx * h, sy * (h - l));
-        }
-      }
-      b.setAlpha(0.15);
-      this.tweens.add({ targets: b, alpha: 0.85, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: Phaser.Math.Between(0, 1400) });
+      // 네 갈래 별빛(✦): 어두운 외곽선 위에 따뜻한 흰색, 둘레에 옅은 빛. 어둠(10) 아래에 그려 손전등 시야 밖에선 보이지 않는다
+      const { x0, y0, x1, y1 } = this.boxOf(this.partsOf(o), false);
+      const b = this.add.graphics().setDepth(9.7).setPosition((x0 + x1) / 2, (y0 + y1) / 2);
+      const star = (R, r) => [0, 1, 2, 3, 4, 5, 6, 7].map(i => {
+        const a = (i * Math.PI) / 4 - Math.PI / 2, d = i % 2 ? r : R;
+        return new Phaser.Math.Vector2(Math.cos(a) * d, Math.sin(a) * d);
+      });
+      b.fillStyle(0xfff1c4, 0.18).fillCircle(0, 0, 7);
+      b.fillStyle(0x120c06, 0.7).fillPoints(star(8.5, 3), true);
+      b.fillStyle(0xfff6dc, 1).fillPoints(star(7, 1.8), true);
+      b.setAlpha(0.2).setScale(0.55);
+      this.tweens.add({
+        targets: b, alpha: 1, scale: 1, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        hold: 120, repeatDelay: Phaser.Math.Between(300, 900), delay: Phaser.Math.Between(0, 1400),
+      });
       this.sparkles.set(g, { o, parts: [b] });
     }
   }
@@ -860,7 +920,14 @@ export default class Explore extends Phaser.Scene {
     const on = !this.hidden && !this.busy && this.interactable(o);
     this.promptTxt.setVisible(on);
     this.focus.setVisible(on);
-    if (on) this.focus.setPosition(...this.markAt(o));
+    const parts = on ? this.partsOf(o) : null;
+    this.setGlow(parts);
+    if (!on) return;
+    const { x0, y0, x1, y1 } = this.boxOf(parts);
+    const k = `${x1 - x0}x${y1 - y0}`;
+    if (k !== this.focusKey) { this.focusKey = k; this.drawCorners(this.focus, x1 - x0, y1 - y0); }
+    this.focus.setPosition((x0 + x1) / 2, (y0 + y1) / 2);
+    this.focusTop = y0;
   }
 
   // 창 너머 비 (물건 옵션 rain: true): 창 그림의 유리 두 칸 안에서 빗줄기가 떨어진다. 좌표는 32×32 창 그림 기준.
@@ -899,12 +966,6 @@ export default class Explore extends Phaser.Scene {
     if (x < 0 || y < 0 || x >= this.cols || y >= this.rows) return false;
     const t = this.map.legend[this.grid[y][x]];
     return t === 'door_open' || t === 'door_locked' || t === 'exit_door' || t === 'homedoor';
-  }
-
-  // 조사 표시·반짝임 위치: 보통은 칸 가운데, lift로 그림을 옮긴 물건은 그림 가운데
-  markAt(o) {
-    if (!o.lift || !o.img) return [cx(o.x), cx(o.y)];
-    return [o.img.x, o.img.y - o.img.height / 2];
   }
 
   onKey(e) {
@@ -1039,6 +1100,18 @@ export default class Explore extends Phaser.Scene {
       if (bgm) startLoop(bgm);
       this.bgm = bgm;
     }
+  }
+
+  // 2층 음악실 피아노 (맵 옵션 piano: { x, y, room, hear, until }, GDD 4.7, 이슈 #131)
+  // hear칸 밖이면 들리지 않고 가까울수록 커진다. room 밖에서는 벽 너머처럼 먹먹하게. 대화·퍼즐·노트(busy)·추격 중엔 치지 않는다
+  pianoTick() {
+    const p = this.map.piano;
+    if (flag(p.until)) return;
+    if (!this.over && !this.busy && !this.chase) {
+      const v = 1 - Math.hypot(p.x - this.tx, p.y - this.ty) / p.hear;
+      if (v > 0) sfx('pianoPhrase', v, this.areaName !== p.room);
+    }
+    this.time.delayedCall(Phaser.Math.Between(6000, 9000), this.pianoTick, [], this);
   }
 
   // 맵 배경음. 새 배경음(bgmTrial)이 있으면 그것 (GDD 4.7, 이슈 #66)
