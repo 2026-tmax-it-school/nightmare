@@ -217,8 +217,11 @@ export default class Explore extends Phaser.Scene {
     });
 
     this.bgm = this.bgmName();
-    stopAllLoops([this.bgm]);
+    // 배경 음악 (GDD 4.7, 이슈 #118): 환경음 위에 깐다. 추격 중에는 멈춘다
+    this.music = m.music || null;
+    stopAllLoops([this.bgm, this.music]);
     if (this.bgm) startLoop(this.bgm);
+    if (this.music && !state.flags.pendingChase) startLoop(this.music);
     this.applyStage();
     this.updatePrompt();
     this.updateArea();
@@ -1267,6 +1270,7 @@ export default class Explore extends Phaser.Scene {
     // step: 그림자가 한 칸 움직이는 시간(ms). hide: 숨었을 때 반응 (없음 / breath / struggle). 추격마다 다르다 (GDD 4.6)
     // sparedScript: 문 붙잡기를 버텨 냈을 때 눈을 감기 전에 나오는 대사 (맵 스크립트 이름)
     this.chase = { x: pc.spawn.x, y: pc.spawn.y, sprite, lost: 0, step: pc.step || CHASE_STEP_MS, hide: pc.hide || null, sparedScript: pc.sparedScript || null };
+    if (this.music) stopLoop(this.music);
     startLoop('chase');
     this.chaseTimer = this.time.addEvent({ delay: this.chase.step, loop: true, callback: this.chaseStep, callbackScope: this });
     this.breathTimer = this.time.delayedCall(400, this.breathe, [], this);
@@ -1428,6 +1432,7 @@ export default class Explore extends Phaser.Scene {
     this.chase = null;
     stopLoop('chase');
     sfx('escape');
+    if (this.music) startLoop(this.music);
     this.tweens.add({ targets: c.sprite, alpha: 0, duration: 600, onComplete: () => c.sprite.destroy() });
     setFlag(pc.id + '_done');
     setFlag('pendingChase', null);

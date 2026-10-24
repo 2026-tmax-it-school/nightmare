@@ -1,6 +1,6 @@
 {
   "id": "school1f",
-  "bgm": "drone", "bgmTrial": "hall",
+  "bgm": "drone", "bgmTrial": "hall", "music": "m_school1f",
   "shadows": true,
   "wallHug": 12,
   "dark": true,
