@@ -2,6 +2,7 @@
   "id": "school2f",
   "tileRotations": [{ "x": 30, "y": 14, "w": 3, "h": 2, "angle": 180 }],
   "bgm": "drone", "bgmTrial": "hall2", "music": "m_school2f",
+  "piano": { "x": 9.5, "y": 1, "room": "음악실", "hear": 32, "until": "p3" },
   "dark": true,
   "legend": {
     "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "c": "floor_pc", "r": "floor_room", "=": "floor_stairs", "|": "floor_stairs_side",

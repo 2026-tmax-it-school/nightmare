@@ -222,6 +222,7 @@ export default class Explore extends Phaser.Scene {
     stopAllLoops([this.bgm, this.music]);
     if (this.bgm) startLoop(this.bgm);
     if (this.music && !state.flags.pendingChase) startLoop(this.music);
+    if (m.piano) this.time.delayedCall(2000, this.pianoTick, [], this);
     this.applyStage();
     this.updatePrompt();
     this.updateArea();
@@ -1039,6 +1040,18 @@ export default class Explore extends Phaser.Scene {
       if (bgm) startLoop(bgm);
       this.bgm = bgm;
     }
+  }
+
+  // 2층 음악실 피아노 (맵 옵션 piano: { x, y, room, hear, until }, GDD 4.7, 이슈 #131)
+  // hear칸 밖이면 들리지 않고 가까울수록 커진다. room 밖에서는 벽 너머처럼 먹먹하게. 대화·퍼즐·노트(busy)·추격 중엔 치지 않는다
+  pianoTick() {
+    const p = this.map.piano;
+    if (flag(p.until)) return;
+    if (!this.over && !this.busy && !this.chase) {
+      const v = 1 - Math.hypot(p.x - this.tx, p.y - this.ty) / p.hear;
+      if (v > 0) sfx('pianoPhrase', v, this.areaName !== p.room);
+    }
+    this.time.delayedCall(Phaser.Math.Between(6000, 9000), this.pianoTick, [], this);
   }
 
   // 맵 배경음. 새 배경음(bgmTrial)이 있으면 그것 (GDD 4.7, 이슈 #66)
