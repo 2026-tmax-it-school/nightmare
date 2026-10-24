@@ -18,6 +18,8 @@ const cx = t => t * TILE + TILE / 2;
 const depthAt = (y, player = false) => 2 + y / 100 + (player ? 0.005 : 0);
 // 그림이 아직 없는 타일은 비슷한 타일로 대신 그린다
 const TILE_FALLBACK = { floor_pc: 'floor_tile' };
+// 위쪽 벽 줄에 놓인 키 큰 가구(교무실 책장 등)는 그림 윗부분이 맵 위로 삐져나온다. 어둠·시야 층을 그만큼 위로 넓혀 그 부분도 어둠에 가린다 (#133)
+const DARK_TOP = 64;
 
 const MOVE_MS = 150;
 const WINDOW_PANES = [[6, 3, 9, 14], [18, 3, 8, 14]]; // 창 그림(window_home) 유리 두 칸 [x, y, w, h] — 비가 내리는 곳
@@ -181,7 +183,7 @@ export default class Explore extends Phaser.Scene {
       this.add.rectangle(0, 0, mw, mh, Phaser.Display.Color.HexStringToColor(m.ambient.color).color, m.ambient.alpha).setOrigin(0).setDepth(9);
     }
     // 씬을 다시 시작해도 인스턴스는 그대로라, 어둡지 않은 맵에선 null로 비워야 이전 맵의 (파괴된) 어둠을 그리지 않는다
-    this.dark = m.dark ? this.add.renderTexture(0, 0, mw, mh).setOrigin(0).setDepth(10) : null;
+    this.dark = m.dark ? this.add.renderTexture(0, -DARK_TOP, mw, mh + DARK_TOP).setOrigin(0).setDepth(10) : null;
     this.tint = this.add.rectangle(0, 0, W, H, 0x5a0000, 0).setOrigin(0).setScrollFactor(0).setDepth(11);
     this.promptTxt = this.add.text(0, 0, 'E', textStyle(11, '#111111', { backgroundColor: '#d8cfb4', padding: { x: 4, y: 1 } }))
       .setOrigin(0.5).setDepth(12).setVisible(false);
@@ -262,7 +264,7 @@ export default class Explore extends Phaser.Scene {
     rt.fill(0x000000, 1); // 부분 알파는 WebGL에서 훨씬 밝게 나와서 완전한 어둠 + 손전등 그라데이션으로 처리
     if (flag('stage1') && Math.random() < 0.01) return; // 손전등이 깜빡인다
     const [tex, r] = this.hidden ? ['light_s', 70] : ['light', 210]; // 반지름은 textures.js의 light()와 같게
-    rt.erase(tex, this.player.x - r, this.player.y - r);
+    rt.erase(tex, this.player.x - r, this.player.y - r + DARK_TOP);
   }
 
   // ── 이동 ──
@@ -439,7 +441,7 @@ export default class Explore extends Phaser.Scene {
   // 열린 문 너머는 문틈 각도만큼, 코너는 돌아서는 만큼 서서히 보인다.
   // 반짝임(9.7) 위·어둠·손전등(10) 아래에 깔아, 반만 보이는 칸의 반짝임이 어둠 속에 떠 보이지 않게 한다
   buildSight() {
-    this.sight = this.add.renderTexture(0, 0, this.cols * TILE, this.rows * TILE).setOrigin(0).setDepth(9.8);
+    this.sight = this.add.renderTexture(0, -DARK_TOP, this.cols * TILE, this.rows * TILE + DARK_TOP).setOrigin(0).setDepth(9.8);
     this.sightPoly = this.make.graphics({}, false);
     this.sightAt = null;
     this.buildOpaque();
@@ -553,7 +555,7 @@ export default class Explore extends Phaser.Scene {
       const x = i % this.cols;
       g.fillRect(x * TILE, ((i - x) / this.cols) * TILE, TILE, TILE);
     }
-    this.sight.clear().fill(0x000000, 1).erase(g);
+    this.sight.clear().fill(0x000000, 1).erase(g, 0, DARK_TOP);
   }
 
   // 칸이 보이는지 (가운데나 네 귀퉁이 중 하나라도 광선이 닿으면). 막힌 칸은 광선이 처음 닿은 칸이면 보인다
