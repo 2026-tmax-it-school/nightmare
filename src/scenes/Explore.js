@@ -791,15 +791,17 @@ export default class Explore extends Phaser.Scene {
   }
 
   // ── 물건 크기 (이슈 #136): 같은 조사 내용으로 서로 붙어 있는 칸을 한 물건으로 본다 (피아노 2칸, 칠판 3칸) ──
-  // 떨어져 있는 같은 종류(보면대·PC)는 따로. 스크립트가 없는 물건(사물함 등)은 그 칸 하나
+  // 떨어져 있는 같은 종류(보면대·PC)는 따로. 스크립트가 없는 물건(사물함 등)은 그 칸 하나.
+  // 같은 그림(같은 tex·frame)이 나란히 붙은 것은 한 그림의 조각이 아니라 따로 놓인 같은 물건(책상 줄·선반 둘)이라 묶지 않는다 (#152)
   partsOf(o) {
     const room = this.roomOf(o.x, o.y);
-    const same = p => p && (o.script ? p.script === o.script : p === o) && this.roomOf(p.x, p.y) === room;
+    const same = (a, p) => p && (o.script ? p.script === o.script : p === o) && this.roomOf(p.x, p.y) === room
+      && !(a.tex && a.tex === p.tex && a.frame === p.frame);
     const parts = [o];
     for (let i = 0; i < parts.length; i++) {
       for (const [dx, dy] of Object.values(DIRS)) {
         const p = this.objects.get(key(parts[i].x + dx, parts[i].y + dy));
-        if (same(p) && !parts.includes(p)) parts.push(p);
+        if (same(parts[i], p) && !parts.includes(p)) parts.push(p);
       }
     }
     return parts;
