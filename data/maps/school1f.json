@@ -159,7 +159,7 @@
       ]
     },
     {
-      "id": "prep", "x": 28, "y": 15, "w": 2, "h": 3, "flag": "past_prep", "cond": { "flag": "lab_compared" },
+      "id": "prep", "x": 28, "y": 15, "w": 2, "h": 3, "flag": "past_prep", "cond": { "flag": "lab_compared", "clue": "prep_door" },
       "figures": [{ "x": 29, "y": 15, "label": "럭키7" }, { "x": 28, "y": 16, "label": "재민" }, { "x": 31, "y": 16, "label": "도윤" }],
       "script": [
         { "t": "sfx", "name": "glass" },
@@ -441,7 +441,6 @@
         ]
       }
     ],
-    "desk_pushed": [{ "t": "text", "text": "누군가 끌어다 놓은 책상. 바닥에 끈 자국이 남아 있다. ……밀면 움직일 것 같다." }],
     "desk13_moved": [
       { "t": "text", "text": "창가 구석까지 끌려온 책상. 귀퉁이에 「윤재민」이라고 새겨져 있다." },
       { "t": "text", "who": "재민", "text": "……내 책상이다. 내 자리엔 의자만 잔뜩 쌓여 있고." },
@@ -891,7 +890,7 @@
           {
             "t": "choice", "prompt": "가방을 불씨에 가져다 댈까?",
             "options": [
-              { "label": "태운다", "then": [{ "t": "flag", "key": "final_burn" }, { "t": "goto", "scene": "Cutscene", "id": "ending1" }] },
+              { "label": "태운다", "then": [{ "t": "goto", "scene": "Cutscene", "id": "ending1" }] },
               { "label": "그만둔다", "then": [] }
             ]
           }
