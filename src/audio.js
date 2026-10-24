@@ -204,6 +204,20 @@ const SFX = {
     return 1;
   },
   laugh: t => { for (let i = 0; i < 5; i++) tone(t + i * 0.14, { freq: 320 - i * 12, type: 'triangle', peak: 0.05, a: 0.01, d: 0.09, vib: 30 }); return 0.8; },
+  // 귀신 웃음소리 (발표용 스포주의 프롤로그 끝): 아이처럼 높게 킥킥거리다 점점 늘어지며 낮아지고, 멀리서 메아리 + 길게 내쉬는 숨
+  ghostLaugh: t => {
+    const giggle = (t0, k) => {
+      for (let i = 0, at = t0; i < 7; i++, at += 0.13 + i * 0.012) {
+        const f = 620 - i * 28;
+        tone(at, { freq: f, to: f * 0.86, type: 'triangle', peak: 0.06 * k, a: 0.01, d: 0.1, vib: 40 });
+        noise(at, { freq: 2200, q: 3, peak: 0.03 * k, a: 0.005, d: 0.08 });
+      }
+    };
+    giggle(t, 1);
+    giggle(t + 0.35, 0.35);
+    noise(t + 1.3, { freq: 900, q: 1.5, peak: 0.05, a: 0.3, d: 1.2 });
+    return 2.6;
+  },
   beep: t => { tone(t, { freq: 880, type: 'square', peak: 0.05, d: 0.06 }); return 0.1; },
   tick: t => { tone(t, { freq: 1200, type: 'square', peak: 0.025, d: 0.02 }); return 0.05; },
   ok: t => { tone(t, { freq: 523, peak: 0.12, d: 0.15 }); tone(t + 0.12, { freq: 784, peak: 0.12, d: 0.3 }); return 0.5; },
