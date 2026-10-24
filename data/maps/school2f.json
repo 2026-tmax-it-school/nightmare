@@ -70,6 +70,10 @@
     { "x": 23, "y": 10, "tex": "decal_leaves" },
     { "x": 2, "y": 1, "tex": "decal_leaves" },
     { "x": 1, "y": 15, "tex": "decal_drain" },
+    { "x": 2, "y": 13, "tex": "puddle" },
+    { "x": 4, "y": 14, "tex": "puddle" },
+    { "x": 3, "y": 15, "tex": "puddle" },
+    { "x": 6, "y": 15, "tex": "tissue_roll" },
     { "x": 5, "y": 14, "tex": "decal_drain" },
     { "x": 26, "y": 4, "tex": "papers" },
     { "x": 30, "y": 3, "tex": "papers" },
@@ -145,11 +149,14 @@
 
     { "x": 11, "y": 8, "tex": "locker", "hide": true, "view": "corridor" },
 
-    { "x": 2, "y": 12, "tex": "mirror", "script": "mirror" },
-    { "x": 3, "y": 12, "tex": "mirror", "script": "mirror" },
-    { "x": 9, "y": 13, "tex": "stall", "script": "stall" },
-    { "x": 9, "y": 14, "tex": "stall", "script": "stall_knock" },
-    { "x": 9, "y": 15, "tex": "stall", "script": "stall_clogged" }
+    { "x": 9, "y": 11, "tex": "dryer", "scale": 0.6, "lift": 4, "below": true },
+    { "x": 4, "y": 11, "tex": "janitor", "scale": 0.8, "lift": -8, "below": true },
+    { "x": 1, "y": 12, "tex": "trash_tip" },
+    { "x": 6, "y": 11, "tex": "mirror", "scale": 0.65, "lift": -10, "below": true, "script": "mirror" },
+    { "x": 7, "y": 11, "tex": "mirror", "scale": 0.65, "lift": -10, "below": true, "script": "mirror" },
+    { "x": 9, "y": 13, "tex": "stall", "dx": 4, "script": "stall" },
+    { "x": 9, "y": 14, "tex": "stall", "dx": 4, "script": "stall_knock" },
+    { "x": 9, "y": 15, "tex": "stall", "dx": 4, "script": "stall_clogged" }
   ],
   "scripts": {
     "stairs_down": [
