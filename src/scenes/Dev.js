@@ -15,7 +15,7 @@ export default class Dev extends Phaser.Scene {
     stopAllLoops();
     this.cameras.main.fadeIn(200);
     this.add.text(W / 2, 28, '개발자 모드 — 시작 시점 선택', textStyle(16, '#c9a46a')).setOrigin(0.5);
-    this.add.text(W / 2, H - 22, '↑↓ 선택 · E 시작 · 플레이 중 ` 키로 이 화면 복귀 · 저장은 개발용 슬롯 사용', textStyle(11, '#6d6875')).setOrigin(0.5);
+    this.add.text(W / 2, H - 22, '↑↓ 선택 · E 시작 · 플레이 중 P 키로 이 화면 복귀 · 저장은 개발용 슬롯 사용', textStyle(11, '#6d6875')).setOrigin(0.5);
 
     // ?start=<id>: 처음 한 번만 바로 시작 (오디오 정책 때문에 키 입력 하나는 필요)
     const start = !autoStarted && DEV_START && findCheckpoint(DEV_START);

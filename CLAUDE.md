@@ -9,9 +9,12 @@
 - 1인 개발 공모전 작품이므로 범위를 작게 유지한다 (플레이 약 20분).
 
 ## 실행
+- 단일 실행 파일 빌드: `python3 tools/build_release.py --target all` (Go 필요) → `dist/`의 Windows x64·Mac Apple Silicon 바이너리. 실행하면 브라우저 자동 열기, 오프라인 지원. 상세: `docs/실행파일_배포.md`
 - `python tools/serve.py` → http://localhost:8123 (빌드 도구 없음, Phaser 3.80.1 CDN + ES 모듈)
 - `?debug`: 화면이 가려져도 게임 루프가 돌고 `window.__game` 노출 (브라우저 패널 자동 테스트용)
-- `?dev`: 개발자 모드 — 타이틀 대신 체크포인트 선택 화면. `?dev&start=<id>`로 바로 그 시점부터 시작, 플레이 중 `` ` `` 키로 선택 화면 복귀. 저장은 별도 슬롯(`ithope_save_v1_dev`). 체크포인트는 `data/checkpoints.json`(`from`으로 앞 체크포인트 상태 상속) — 콘텐츠가 바뀌면 플래그·좌표도 함께 갱신. 상세: `docs/개발자_모드.md`
+- **P**: 개발자 체크포인트 화면으로 진입하거나 플레이 중 목록으로 복귀.
+- **Ctrl + Shift + `**: 일반 모드 ↔ 개발자 모드 전환 (배포 주소에서도 동작, 페이지 새로 로드).
+- `?dev`: 개발자 모드 — 타이틀 대신 체크포인트 선택 화면. `?dev&start=<id>`로 바로 그 시점부터 시작, 플레이 중 P 또는 `` ` `` 키로 선택 화면 복귀. 저장은 별도 슬롯(`ithope_save_v1_dev`). 체크포인트는 `data/checkpoints.json`(`from`으로 앞 체크포인트 상태 상속) — 콘텐츠가 바뀌면 플래그·좌표도 함께 갱신. 상세: `docs/개발자_모드.md`
 
 ## 구조
 - `src/scenes/` — Boot(데이터·텍스처 로드), Title, Cutscene, Explore(탑뷰 탐색·추격), GameOver, Ending(엔딩 화면·2회차 기록)

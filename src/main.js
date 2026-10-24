@@ -43,4 +43,4 @@ const game = new Phaser.Game({
 });
 
 if (debug || DEV) window.__game = game;
-if (DEV) installDevHotkey(game);
+installDevHotkey(game);

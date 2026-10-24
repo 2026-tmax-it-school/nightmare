@@ -5,5 +5,8 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# 단일 실행 파일 빌드 결과와 다운로드 캐시
+.build/
+
 # AI 원본 이미지 (용량이 커서 Git에 올리지 않음, tools/sprites.py의 입력)
 assets/source/
