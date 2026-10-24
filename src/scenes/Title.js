@@ -28,6 +28,7 @@ export default class Title extends Phaser.Scene {
 
   async showMenu() {
     startLoop('drone');
+    startLoop('m_title');
     const title = this.add.text(W / 2, 140, GAME_TITLE, textStyle(34, '#d8d0c0')).setOrigin(0.5).setAlpha(0);
     const sub = this.add.text(W / 2, 184, '— IT희망학교 —', textStyle(13, '#7a7480')).setOrigin(0.5).setAlpha(0);
     this.tweens.add({ targets: [title, sub], alpha: 1, duration: 1200 });

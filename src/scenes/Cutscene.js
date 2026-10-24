@@ -2,7 +2,7 @@
 import { W, H } from '../constants.js';
 import { DB } from '../db.js';
 import { runScript } from '../script.js';
-import { startLoop, stopLoop } from '../audio.js';
+import { startLoop, stopLoop, stopMusic } from '../audio.js';
 import { UI, textStyle } from '../ui/ui.js';
 
 export default class Cutscene extends Phaser.Scene {
@@ -18,6 +18,7 @@ export default class Cutscene extends Phaser.Scene {
     this.rainG = this.add.graphics().setDepth(5);
     this.drops = null;
     this.events.once('shutdown', () => stopLoop('rain'));
+    stopMusic(); // 탐색 화면의 배경 음악은 컷신에서 끊는다 (GDD 4.7)
     this.cameras.main.fadeIn(500);
     runScript(this, DB.cutscenes[this.cid]).then(() => this.ui.hideDialog());
   }

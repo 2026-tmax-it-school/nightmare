@@ -295,6 +295,69 @@ export function sfx(name, vol = 1, muffle = false) {
   try { return SFX[name](ctx.currentTime + 0.02); } finally { bus = null; }
 }
 
+// ── 배경 음악 (GDD 4.7, 이슈 #118): 느린 화음 패드 + 음계 안에서 무작위로 드문드문 치는 음 ──
+// 정해진 선율이 없으므로 P3 정답 멜로디가 그대로 나오지 않는다. 이름이 m_으로 시작하는 루프
+const NOTE = (() => {
+  const names = { C: -9, D: -7, E: -5, F: -4, G: -2, A: 0, B: 2 };
+  return s => {
+    const [, l, acc, o] = s.match(/^([A-G])([#b]?)(\d)$/);
+    const semi = names[l] + (acc === '#' ? 1 : acc === 'b' ? -1 : 0) + (o - 4) * 12;
+    return 440 * 2 ** (semi / 12);
+  };
+})();
+const chords = list => list.map(c => c.split(' ').map(NOTE));
+// beat: 한 박(초), 한 마디 = 4박마다 화음이 바뀐다. density: 박마다 음을 칠 확률. pad·lead: 음량
+const MUSIC = {
+  m_title: { beat: 1.5, density: 0.3, pad: 0.016, lead: 0.03, cut: 900,
+    chords: chords(['A2 E3 C4', 'F2 C3 A3', 'C3 G3 E4', 'E2 B2 G#3']), scale: ['A4', 'C5', 'D5', 'E5', 'G5'].map(NOTE) },
+  m_bedroom: { beat: 1.4, density: 0.4, pad: 0.015, lead: 0.028, cut: 1100,
+    chords: chords(['D3 A3 F4', 'Bb2 F3 D4', 'F2 C3 A3', 'C3 G3 E4']), scale: ['D4', 'F4', 'G4', 'A4', 'C5'].map(NOTE) },
+  m_school1f: { beat: 2.0, density: 0.18, pad: 0.014, lead: 0.022, cut: 700,
+    chords: chords(['E2 B2 G3', 'C2 G2 E3', 'A2 E3 C4', 'B2 F3 D4']), scale: ['E5', 'F#5', 'G5', 'B5', 'C6'].map(NOTE) },
+  m_school2f: { beat: 1.6, density: 0.28, pad: 0.014, lead: 0.026, cut: 900,
+    chords: chords(['A2 E3 C4', 'D3 A3 F4', 'G2 D3 B3', 'E2 B2 G#3']), scale: ['A4', 'B4', 'C5', 'E5', 'F5'].map(NOTE) },
+  m_rooftop: { beat: 1.8, density: 0.22, pad: 0.015, lead: 0.024, cut: 1000,
+    chords: chords(['D3 A3 E4', 'C3 G3 D4', 'Bb2 F3 C4', 'G2 D3 A3']), scale: ['D5', 'E5', 'A5', 'C6'].map(NOTE) },
+};
+
+// 한 마디: 화음 패드(천천히 차오르고 사라짐) + 드문드문 치는 음. out에 연결한다
+function musicBar(m, bar, t, out) {
+  const len = m.beat * 4;
+  const f = ctx.createBiquadFilter();
+  f.type = 'lowpass'; f.frequency.value = m.cut;
+  f.connect(out);
+  for (const freq of m.chords[bar % m.chords.length]) {
+    for (const [type, mul] of [['sine', 1], ['triangle', 1.003]]) {
+      const o = ctx.createOscillator();
+      o.type = type; o.frequency.value = freq * mul;
+      const g = ctx.createGain();
+      // 다음 마디와 조금 겹쳐 끊김 없이 이어진다
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(m.pad, t + 1.5);
+      g.gain.setValueAtTime(m.pad, t + len - 0.7);
+      g.gain.linearRampToValueAtTime(0, t + len + 0.8);
+      o.connect(g).connect(f);
+      o.start(t); o.stop(t + len + 0.9);
+    }
+  }
+  for (let b = 0; b < 4; b++) {
+    if (Math.random() >= m.density) continue;
+    const freq = m.scale[Math.floor(Math.random() * m.scale.length)];
+    const s = t + b * m.beat + Math.random() * 0.15;
+    for (const [type, mul, peak] of [['triangle', 1, m.lead], ['sine', 2, m.lead * 0.25]]) {
+      const o = ctx.createOscillator();
+      o.type = type; o.frequency.value = freq * mul;
+      const g = ctx.createGain();
+      env(g.gain, s, 0.01, peak, 2.4);
+      o.connect(g).connect(out);
+      o.start(s); o.stop(s + 2.5);
+    }
+  }
+}
+
+// 지금 켜져 있는 배경음·음악 이름 (개발·확인용)
+export const activeLoops = () => Object.keys(loops);
+
 export function startLoop(name) {
   if (!ctx || loops[name]) return;
   const t = ctx.currentTime;
@@ -321,6 +384,16 @@ export function startLoop(name) {
   else if (name === 'drone') { osc(55, 'sine', 0.05); osc(55.6, 'sine', 0.05); hiss(200, 0.04); }
   else if (name === 'wind') { hiss(500, 0.09, 'bandpass'); hiss(180, 0.06); osc(48, 'sine', 0.03); }
   else if (name === 'chase') { osc(41, 'sawtooth', 0.025); sfx('heart'); timer = setInterval(() => sfx('heart'), 520); }
+  // 배경 음악: 1.5초 앞까지 마디를 미리 짜 둔다. 멈추면 타이머를 끄고 out을 줄여, 이미 짜 둔 음도 들리지 않는다
+  else if (MUSIC[name]) {
+    const m = MUSIC[name];
+    let bar = 0, next = t + 0.3;
+    const pump = () => {
+      while (next < ctx.currentTime + 1.5) { musicBar(m, bar++, next, out); next += m.beat * 4; }
+    };
+    pump();
+    timer = setInterval(pump, 500);
+  }
   // 새 배경음 (맵의 bgmTrial): 드론·바람 위에 가끔 다른 소리가 섞인다
   else if (name === 'hall' || name === 'hall2' || name === 'roof') {
     if (name === 'roof') { hiss(500, 0.09, 'bandpass'); hiss(180, 0.06); osc(48, 'sine', 0.03); }
@@ -357,4 +430,9 @@ export function stopLoop(name) {
 
 export function stopAllLoops(except = []) {
   Object.keys(loops).forEach(k => { if (!except.includes(k)) stopLoop(k); });
+}
+
+// 배경 음악만 멈춘다 (컷신: 환경음은 이어 가고 음악은 끊는다)
+export function stopMusic() {
+  Object.keys(loops).forEach(k => { if (MUSIC[k]) stopLoop(k); });
 }
