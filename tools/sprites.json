@@ -10,6 +10,8 @@
   "floor_pc_3": { "src": "pc_floor.webp", "box": [524, 524, 960, 1008] },
   "floor_stairs_side": { "src": "stairs_side2.webp", "box": [156, 80, 1100, 1176] },
   "floor_stairs": { "src": "floors.png", "box": [520, 524, 1008, 1008], "patch": [[860, 870, 80, 80, 0, -121]] },
+  "floor_stairs_l": { "src": "floor_stairs_l.png", "box": [0, 0, 218, 253], "mode": "stretch" },
+  "floor_stairs_r": { "src": "floor_stairs_r.png", "box": [0, 0, 228, 254], "mode": "stretch" },
   "locker": { "src": "lockers_doors.png", "box": [120, 4, 196, 184], "mode": "object", "size": [30, 54], "fill": true },
   "locker_back": { "src": "lockers_doors.png", "box": [480, 4, 556, 184], "mode": "object", "size": [30, 54], "fill": true },
   "door_open": { "src": "lockers_doors.png", "box": [68, 204, 256, 352], "mode": "stretch", "frame": true, "clear_dark": [0.45, 0.06, 0.94, 0.94, 150] },
