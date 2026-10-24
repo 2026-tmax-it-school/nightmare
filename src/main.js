@@ -17,7 +17,7 @@ const debug = new URLSearchParams(location.search).has('debug');
 const timeout = ms => new Promise(r => setTimeout(r, ms));
 try {
   await Promise.race([
-    Promise.all([document.fonts.load('400 16px "Noto Sans KR"'), document.fonts.load('700 16px "Noto Sans KR"')]),
+    Promise.all([document.fonts.load('400 16px "Noto Sans KR"'), document.fonts.load('700 16px "Noto Sans KR"'), document.fonts.load('600 16px "Noto Serif KR"')]),
     timeout(2000),
   ]);
 } catch {}

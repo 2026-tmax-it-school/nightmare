@@ -557,6 +557,10 @@
                 "t": "puzzle", "id": "drawer",
                 "success": [
                   { "t": "flag", "key": "drawer_open" },
+                  { "t": "text", "text": "딸깍. 서랍을 끝까지 당겨 손전등을 비춘다──" },
+                  { "t": "jumpscare", "image": "scare_drawer" },
+                  { "t": "text", "who": "재민", "text": "……읏!" },
+                  { "t": "text", "who": "재민", "text": "……잘못 봤나. 서류 사이로 빛이 번진 걸 착각했나 봐." },
                   { "t": "text", "text": "서랍 깊숙이, 다른 서류 밑에 깔린 상담 기록철이 나온다." },
                   { "t": "clue", "id": "counsel" },
                   { "t": "call", "name": "p7" }
@@ -590,7 +594,7 @@
       { "t": "text", "text": "교무실을 나서는 순간, 과학실 쪽에서 쾅— 무언가 부딪히는 소리." },
       { "t": "sfx", "name": "follow", "wait": true },
       { "t": "text", "who": "재민", "text": "……또 왔어. 이번엔, 더 빨라." },
-      { "t": "chase", "id": "chase3", "spawn": { "x": 22, "y": 12 }, "step": 160, "hide": "struggle", "sparedScript": "sparedChase3", "after": "afterChase3" }
+      { "t": "chase", "id": "chase3", "spawn": { "x": 22, "y": 12 }, "step": 150, "hide": "struggle", "sparedScript": "sparedChase3", "after": "afterChase3" }
     ],
     "sparedChase3": [
       { "t": "text", "who": "재민", "text": "……제발." },
@@ -663,6 +667,15 @@
       { "t": "text", "who": "재민", "text": "안쪽에 문이 하나 있어. ……준비실." }
     ],
     "chemshelf": [
+      {
+        "t": "if", "cond": { "notFlag": "scare_shelf" },
+        "then": [
+          { "t": "text", "text": "약품장 유리문에 손전등 빛이 번진다. 그 너머에──" },
+          { "t": "flag", "key": "scare_shelf" },
+          { "t": "jumpscare", "image": "scare_shelf" },
+          { "t": "text", "who": "재민", "text": "……하아, 하아. 내 얼굴이 비친 거야. 그냥, 내 얼굴." }
+        ]
+      },
       {
         "t": "if",
         "cond": {
@@ -874,7 +887,8 @@
           { "t": "clue", "id": "sister_photo" },
           { "t": "effect", "name": "glitch" },
           { "t": "text", "who": "재민", "text": "……이 얼굴. 점집의, 그 무당." },
-          { "t": "text", "who": "재민", "text": "한서진. 명함에 적혀 있던 이름." },
+          { "t": "text", "who": "재민", "text": "명함에서 번져 있던, 이름 앞 한 글자……" },
+          { "t": "text", "who": "재민", "text": "……한. 한서진. 도윤이의 누나." },
           { "t": "flag", "key": "saw_sister" },
           { "t": "save" },
           { "t": "goto", "scene": "Cutscene", "id": "call" }
@@ -1009,7 +1023,20 @@
     ],
     "shoebox": [{ "t": "text", "text": "신발장. 이름표가 붙은 칸이 몇 개 남아 있다. 다 바래서 읽을 수 없다." }],
     "hallnotice": [{ "t": "text", "text": "「교훈 — 꿈과 희망을 품은 사람」 글자가 반쯤 떨어져 나갔다." }],
-    "cabinet": [{ "t": "text", "text": "낡은 캐비닛. 서랍은 전부 비어 있다." }],
+    "cabinet": [
+      {
+        "t": "if", "cond": { "notFlag": "scare_cabinet" },
+        "then": [
+          { "t": "text", "text": "낡은 캐비닛. 문이 한 뼘쯤 벌어져 있다. 손잡이를 당긴다──" },
+          { "t": "flag", "key": "scare_cabinet" },
+          { "t": "jumpscare", "image": "scare_cabinet" },
+          { "t": "text", "who": "재민", "text": "……읏!" },
+          { "t": "text", "who": "재민", "text": "……잘못 봤나." },
+          { "t": "text", "text": "서랍은 전부 비어 있다. 안쪽 구석에서 손전등 빛만 일렁인다." }
+        ],
+        "else": [{ "t": "text", "text": "낡은 캐비닛. 서랍은 전부 비어 있다." }]
+      }
+    ],
     "monitor": [
       {
         "t": "if", "cond": { "flag": "stage1" },

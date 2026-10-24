@@ -58,7 +58,7 @@
     {
       "id": "chase2", "label": "2장 — 2층 추격 (사물함 앞)", "from": "p4", "scene": "Explore", "map": "school2f",
       "flags": ["pc_unlocked", "p4"], "clues": ["chatlog"], "fragments": [3],
-      "set": { "pendingChase": { "id": "chase2", "spawn": { "x": 32, "y": 9 }, "hide": "breath", "after": "afterChase2" } },
+      "set": { "pendingChase": { "id": "chase2", "spawn": { "x": 32, "y": 9 }, "step": 190, "hide": "breath", "after": "afterChase2" } },
       "pos": { "x": 11, "y": 9, "dir": "up" }
     },
     {
@@ -113,7 +113,7 @@
     {
       "id": "chase3", "label": "4장 — 3번째 추격 (교무실 문 앞, 그림자 접근 중)", "from": "frag6", "scene": "Explore", "map": "school1f",
       "flags": ["chase3_start"],
-      "set": { "pendingChase": { "id": "chase3", "spawn": { "x": 22, "y": 12 }, "step": 160, "hide": "struggle", "sparedScript": "sparedChase3", "after": "afterChase3" } },
+      "set": { "pendingChase": { "id": "chase3", "spawn": { "x": 22, "y": 12 }, "step": 150, "hide": "struggle", "sparedScript": "sparedChase3", "after": "afterChase3" } },
       "pos": { "x": 35, "y": 10, "dir": "up" }
     },
     {
