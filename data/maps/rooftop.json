@@ -172,6 +172,9 @@
             "t": "if", "cond": { "notFlag": "p6" },
             "then": [{ "t": "text", "text": "소화기함. 문이 녹슬어 꿈쩍도 하지 않는다." }],
             "else": [
+              { "t": "text", "text": "저절로 열린 소화기함. 녹슨 문을 끝까지 젖힌다──" },
+              { "t": "jumpscare", "image": "scare_extbox" },
+              { "t": "text", "who": "재민", "text": "……읏! ……아무것도, 없어." },
               { "t": "text", "text": "소화기 뒤에 열쇠 꾸러미가 테이프로 붙어 있다. 꼬리표 ── 「교무실 — 담임」." },
               { "t": "item", "id": "keyOffice" },
               { "t": "text", "who": "재민", "text": "담임이… 이걸 여기 숨겨 뒀다고? 왜?" },

@@ -377,6 +377,14 @@ const SFX = {
   alarm: t => { for (let i = 0; i < 6; i++) tone(t + i * 0.3, { freq: i % 2 ? 740 : 980, type: 'square', peak: 0.06, a: 0.01, d: 0.26 }); return 1.8; },
   // 칸막이 문을 두드리는 소리 한 번 (2층 화장실 노크)
   knock: t => { noise(t, { type: 'lowpass', freq: 520, q: 1.2, peak: 0.5, d: 0.08 }); tone(t, { freq: 140, to: 90, peak: 0.25, d: 0.09 }); return 0.15; },
+  // 점프스케어 (이슈 #113): 쾅 + 귀를 긁는 불협 화음이 확 터졌다가 꺼진다
+  scare: t => {
+    noise(t, { type: 'lowpass', freq: 400, peak: 0.9, d: 0.5 });
+    tone(t, { freq: 70, to: 35, peak: 0.8, d: 0.6 });
+    noise(t, { type: 'highpass', freq: 2500, peak: 0.35, a: 0.005, d: 0.7 });
+    [466, 494, 523, 740].forEach(f => tone(t, { freq: f, to: f * 0.92, type: 'sawtooth', peak: 0.05, a: 0.005, d: 0.9, vib: 25 }));
+    return 1;
+  },
   bang: t => {
     for (let i = 0; i < 4; i++) noise(t + i * 0.32, { type: 'lowpass', freq: 300, peak: 0.55, d: 0.16 });
     for (let i = 0; i < 6; i++) noise(t + 1.6 + i * 0.22, { freq: 520, q: 2, peak: 0.3 - i * 0.045, d: 0.07 });
