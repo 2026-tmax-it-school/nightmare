@@ -961,7 +961,12 @@ export default class Explore extends Phaser.Scene {
   // (세로 벽의 문 칸은 위가 벽이라 올리면 문틀 위로 튀어나온다, 이슈 #124)
   playerY(x, y) {
     const hug = this.map.wallHug && !this.isDoor(x, y) && (this.isWall(x, y - 1) || this.isDoor(x, y - 1));
-    return cx(y) - (hug ? this.map.wallHug : 0);
+    const base = cx(y) - (hug ? this.map.wallHug : 0);
+    // 바로 위 칸의 키 큰 가구(2칸 높이 이상: 약품장·서류함·책장)의 그림이 lift로 이 칸까지 내려와 있으면, 캐릭터를 그 그림 바로 아래에 세워 겹치지 않게 한다 (#125).
+    // 침실의 낮은 가구(책상·협탁 등)는 캐릭터를 벽에 붙여 그리는 것이 의도라 해당하지 않는다
+    const above = this.objects?.get(key(x, y - 1));
+    if (above?.img && above.tex && !above.flat && above.solid !== false && above.img.height >= TILE * 2 && above.img.y > y * TILE) return Math.max(base, above.img.y + TILE / 2);
+    return base;
   }
 
   isDoor(x, y) {
