@@ -47,6 +47,11 @@
             align: "left" / "right"로 칸 왼쪽·오른쪽 끝에 붙인다 (두 칸짜리 그림을 반으로 나눈 벤치)
   draw    : [[x, y, w, h, [r, g, b]], ...] 결과 위에 색 사각형을 찍는다 (AI가 못 그린 숫자 각인 등)
   crop    : [x, y, w, h] 결과에서 이 부분만 잘라 쓴다 (두 칸짜리 그림을 칸마다 나눌 때: 물탱크 왼쪽·오른쪽)
+  center  : (pixel이 아닌 object에서도) 칸 아래가 아니라 한가운데에 놓는다 (바닥 데칼)
+  recolor : [r, g, b] 그림의 명암은 두고 색조만 이 색으로 바꾼다 (분홍빛 얼룩을 갈색 물 얼룩으로)
+  desaturate: 0.4 → 채도를 이만큼 뺀다 (0 = 그대로, 1 = 흑백). brighten과 함께 너무 밝고 쨍한 그림을 제작 기준(밝기·채도)에 맞출 때
+  defringe: true → 마젠타 배경이 번져 가장자리에 남은 분홍·보라 기운을 걷어낸다 (바닥 데칼)
+  alpha   : 0.7 → 그림 전체를 이만큼만 불투명하게 (바닥에 은은히 깔리는 데칼)
 기본으로 tile·stretch는 가장자리를 4픽셀 더 잘라 배경색이 번진 테두리를 없앤다.
 """
 import json
@@ -240,7 +245,7 @@ def build(key, cfg):
         tw, th = cfg['fill'] if isinstance(cfg['fill'], list) else (W, H)
     small = shrink(sub, mask, (tw, th))
     canvas = np.zeros((H, W, 4), np.uint8)
-    ox, oy = (W - tw) // 2, cfg.get('top', H - th)
+    ox, oy = (W - tw) // 2, cfg.get('top', (H - th) // 2 if cfg.get('center') else H - th)
     canvas[oy:oy + th, ox:ox + tw] = small
     canvas = clean_edge(canvas)
     return post_process(canvas, cfg['post']) if 'post' in cfg else canvas
@@ -424,6 +429,22 @@ def main():
         arr = build(key, cfg)
         if cfg.get('mode') == 'object' and cfg.get('brighten'):
             arr[..., :3] = (arr[..., :3].astype(np.float32) * cfg['brighten']).clip(0, 255).astype(np.uint8)
+        if cfg.get('recolor'):
+            opaque = arr[..., 3] > 0
+            lum = arr[..., :3].astype(np.float32).mean(axis=2)
+            ratio = lum / max(lum[opaque].mean(), 1)
+            arr[..., :3] = (np.array(cfg['recolor'], np.float32) * ratio[..., None]).clip(0, 255).astype(np.uint8)
+        if cfg.get('desaturate'):
+            rgb = arr[..., :3].astype(np.float32)
+            gray = rgb.mean(axis=2, keepdims=True)
+            arr[..., :3] = (gray + (rgb - gray) * (1 - cfg['desaturate'])).clip(0, 255).astype(np.uint8)
+        if cfg.get('defringe'):
+            r, g, b = (arr[..., i].astype(np.float32) for i in range(3))
+            cast = np.minimum(r - g, b - g).clip(0, None) * 0.95
+            arr[..., 0] = (r - cast).clip(0, 255).astype(np.uint8)
+            arr[..., 2] = (b - cast).clip(0, 255).astype(np.uint8)
+        if cfg.get('alpha'):
+            arr[..., 3] = (arr[..., 3].astype(np.float32) * cfg['alpha']).astype(np.uint8)
         for x, y, w, h, rgb in cfg.get('draw', []):
             arr[y:y + h, x:x + w] = [*rgb, 255]
         if cfg.get('shrink'):
