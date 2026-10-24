@@ -12,6 +12,7 @@ export default class Boot extends Phaser.Scene {
     this.load.json('puzzles', 'data/puzzles.json');
     this.load.json('hints', 'data/hints.json');
     this.load.json('objectives', 'data/objectives.json');
+    this.load.json('credits', 'data/credits.json');
     // 컷신 CG (tools/cg.py가 만든 assets/cg/<이름>.png). 컷신의 bg에 적힌 image만 불러온다
     this.load.on('filecomplete-json-cutscenes', (key, type, data) => {
       const names = new Set();
@@ -44,6 +45,7 @@ export default class Boot extends Phaser.Scene {
     DB.people = clues.people;
     DB.timeline = clues.timeline;
     Object.assign(DB.endings, clues.endings);
+    DB.credits = json('credits').lines;
     const puzzles = json('puzzles');
     Object.assign(DB.puzzles, puzzles.puzzles);
     Object.assign(DB.deductions, puzzles.deductions);

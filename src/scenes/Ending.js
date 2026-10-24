@@ -26,11 +26,11 @@ export default class Ending extends Phaser.Scene {
     this.add.text(W / 2, H / 2 + 14, `기억 조각 ${state.fragments.length} / 8`, textStyle(13, '#6d6875')).setOrigin(0.5);
     const seen = Object.keys(DB.endings).map(n => (meta.endings.includes(Number(n)) ? `엔딩 ${n}` : '???')).join('   ');
     this.add.text(W / 2, H / 2 + 38, seen, textStyle(12, '#55505c')).setOrigin(0.5);
-    const menu = this.add.container(W / 2 - 50, H / 2 + 86);
+    const menu = this.add.container(W / 2 - 50, H / 2 + 76);
     this.time.delayedCall(1500, async () => {
-      await this.ui.select(menu, 0, 0, ['타이틀로']);
+      const i = await this.ui.select(menu, 0, 0, ['크레딧', '타이틀로']);
       this.cameras.main.fadeOut(500);
-      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Title'));
+      this.cameras.main.once('camerafadeoutcomplete', () => (i === 0 ? this.scene.start('Credits', { bg: ENDING_CG[this.ending] }) : this.scene.start('Title')));
     });
   }
 }
