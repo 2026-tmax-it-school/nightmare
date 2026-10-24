@@ -1,4 +1,4 @@
-import { W, H, MAPS, DEV, VIEW_CGS } from '../constants.js';
+import { W, H, MAPS, DEV, VIEW_CGS, SCARE_CGS } from '../constants.js';
 import { DB } from '../db.js';
 import { makeTextures } from '../textures.js';
 import { textStyle } from '../ui/ui.js';
@@ -19,7 +19,7 @@ export default class Boot extends Phaser.Scene {
       JSON.stringify(data, (k, v) => { if (v && v.t === 'bg' && v.image) names.add(v.image); return v; });
       for (const name of names) this.load.image('cg_' + name, `assets/cg/${name}.png`);
     });
-    for (const name of VIEW_CGS) this.load.image('cg_' + name, `assets/cg/${name}.png`);
+    for (const name of [...VIEW_CGS, ...SCARE_CGS]) this.load.image('cg_' + name, `assets/cg/${name}.png`);
     this.load.json('cutscenes', 'data/cutscenes.json');
     for (const id of MAPS) this.load.json('map_' + id, `data/maps/${id}.json`);
     if (DEV) this.load.json('checkpoints', 'data/checkpoints.json');

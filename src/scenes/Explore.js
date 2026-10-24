@@ -27,7 +27,13 @@ const SIGHT_R = 640;      // 레이캐스팅 시야 거리(px). 어두운 맵에
 const SIGHT_EPS = 0.0005; // 벽 모서리 양옆으로 쏘는 광선의 각도 차 — 모서리 너머까지 시야가 이어진다
 const WALL_TOP_TINT = 0x9aa6bc; // 위에서 내려다본 벽 줄의 문·창 색조 — 그림은 알아보이되 그늘진 벽 윗면과 어울리게
 const CAM_EASE_MS = 350; // 방 고정 ↔ 따라가기 전환 시간
-const CHASE_STEP_MS = 250;
+const CHASE_STEP_MS = 210;
+// 돌진 (GDD 4.6, 이슈 #113): 일직선 이 칸 수 안에서 플레이어가 보이면 잠깐 멈춰 숨을 들이켠 뒤 빠르게 달려든다
+const CHASE_DASH_SIGHT = 6;
+const CHASE_WINDUP_MS = 300;    // 멈칫하는 예고
+const CHASE_DASH_MS = 100;      // 돌진 중 한 칸 시간
+const CHASE_DASH_FOR_MS = 1200; // 돌진 길이
+const CHASE_DASH_REST_MS = 3500; // 돌진이 끝나고 다음 돌진까지
 const CHASE_WANDER_MS = 2500; // 숨은 뒤 그림자가 주변을 서성이는 시간
 const CHASE_LEAVE_DIST = 10;  // 서성인 뒤 숨은 곳에서 이 칸 수 이상 떨어진 복도까지 걸어 나가 사라진다
 // 그림자 소리 (GDD 4.6): 이 칸 수보다 멀면 들리지 않는다. 숨소리 간격은 멀 때 → 가까울 때
@@ -1373,8 +1379,48 @@ export default class Explore extends Phaser.Scene {
     this.chase = { x: pc.spawn.x, y: pc.spawn.y, sprite, lost: 0, step: pc.step || CHASE_STEP_MS, hide: pc.hide || null, sparedScript: pc.sparedScript || null };
     if (this.music) stopLoop(this.music);
     startLoop('chase');
-    this.chaseTimer = this.time.addEvent({ delay: this.chase.step, loop: true, callback: this.chaseStep, callbackScope: this });
+    this.chaseTimer = this.time.delayedCall(this.chase.step, this.chaseTick, [], this);
     this.breathTimer = this.time.delayedCall(400, this.breathe, [], this);
+  }
+
+  // 한 걸음 옮기고 다음 걸음을 예약한다. 걸음 사이 시간은 평소 / 돌진 예고 / 돌진 중에 따라 다르다
+  chaseTick() {
+    const c = this.chase;
+    if (!c || this.over) return;
+    this.chaseStep();
+    if (this.chase === c && !this.over) this.chaseTimer = this.time.delayedCall(this.chaseDelay(c), this.chaseTick, [], this);
+  }
+
+  chaseDelay(c) {
+    const now = this.time.now;
+    if (c.windupUntil > now) return c.windupUntil - now;
+    if (c.dashUntil > now) return CHASE_DASH_MS;
+    return c.step;
+  }
+
+  // 그림자에서 플레이어까지 같은 줄·칸에 가로막는 것 없이 CHASE_DASH_SIGHT 칸 안이면 보인다
+  shadowSees(c) {
+    const dx = Math.sign(this.tx - c.x), dy = Math.sign(this.ty - c.y);
+    const d = Math.abs(this.tx - c.x) + Math.abs(this.ty - c.y);
+    if ((dx && dy) || d < 2 || d > CHASE_DASH_SIGHT) return false;
+    for (let x = c.x, y = c.y, i = 0; i < d; i++) {
+      const nx = x + dx, ny = y + dy;
+      if (!this.passable(nx, ny) || this.railBetween(x, y, nx, ny)) return false;
+      [x, y] = [nx, ny];
+    }
+    return true;
+  }
+
+  // 돌진 예고: 그 자리에 멈칫해 숨을 크게 들이켜고 붉게 번뜩인 뒤 달려든다
+  startDash(c) {
+    const now = this.time.now;
+    c.windupUntil = now + CHASE_WINDUP_MS;
+    c.dashUntil = c.windupUntil + CHASE_DASH_FOR_MS;
+    c.dashReady = c.dashUntil + CHASE_DASH_REST_MS;
+    sfx('breath', 1);
+    c.sprite.setTint(0xff5a5a);
+    this.time.delayedCall(CHASE_WINDUP_MS + CHASE_DASH_FOR_MS, () => c.sprite.active && c.sprite.clearTint());
+    this.cameras.main.shake(CHASE_WINDUP_MS, 0.004);
   }
 
   // 그림자가 얼마나 가까운지 (0 = 들리지 않을 만큼 멂, 1 = 바로 옆)
@@ -1424,13 +1470,14 @@ export default class Explore extends Phaser.Scene {
     } else {
       c.lost = 0;
       c.exit = null;
+      if (!(c.dashReady > this.time.now) && this.shadowSees(c)) return this.startDash(c);
       next = this.pathStep(c.x, c.y, this.tx, this.ty);
     }
     if (!next) return;
     [c.px, c.py] = [c.x, c.y];
     [c.x, c.y] = next;
     this.shadowSfx('shadowStep');
-    this.tweens.add({ targets: c.sprite, x: cx(c.x), y: cx(c.y), duration: c.step - 20 });
+    this.tweens.add({ targets: c.sprite, x: cx(c.x), y: cx(c.y), duration: this.chaseDelay(c) - 20 });
     if (!this.hidden && c.x === this.tx && c.y === this.ty) this.caught();
   }
 
