@@ -240,11 +240,13 @@ const SFX = {
   },
   // 배경음 속 가끔 섞이는 소리
   drip: t => { tone(t, { freq: 1800 + Math.random() * 600, to: 900, peak: 0.03, a: 0.002, d: 0.12 }); return 0.15; },
-  farPiano: t => {
-    const f = [196, 220, 247, 262, 294][Math.floor(Math.random() * 5)];
-    tone(t, { freq: f, type: 'triangle', peak: 0.03, a: 0.01, d: 1.6 });
-    tone(t, { freq: f * 1.01, peak: 0.01, a: 0.01, d: 1.4 });
-    return 1.6;
+  // 2층 음악실 피아노: 도윤 악보의 앞 두 음 「미 솔」만 치다 멈춘다 (이슈 #131). 음량·먹먹함은 거리에 따라 sfx()로 준다
+  pianoPhrase: t => {
+    [[329.63, 0], [392.0, 0.75]].forEach(([f, dt]) => {
+      tone(t + dt, { freq: f, type: 'triangle', peak: 0.12, a: 0.005, d: 1.4 });
+      tone(t + dt, { freq: f * 2, peak: 0.025, a: 0.005, d: 0.8 });
+    });
+    return 2.2;
   },
   gust: t => { noise(t, { freq: 450, q: 0.8, peak: 0.12, a: 1.2, d: 1.6 }); return 2.8; },
   chime: t => { tone(t, { freq: 1320, peak: 0.06, a: 0.01, d: 1.0 }); tone(t, { freq: 1980, peak: 0.03, a: 0.01, d: 0.8 }); return 1; },
@@ -398,7 +400,8 @@ export function startLoop(name) {
   else if (name === 'hall' || name === 'hall2' || name === 'roof') {
     if (name === 'roof') { hiss(500, 0.09, 'bandpass'); hiss(180, 0.06); osc(48, 'sine', 0.03); }
     else { osc(55, 'sine', 0.05); osc(55.6, 'sine', 0.05); hiss(200, 0.04); }
-    const extra = { hall: ['drip', 'drip', 'creak'], hall2: ['farPiano', 'drip'], roof: ['gust'] }[name];
+    // 2층 피아노는 배경음이 아니라 거리에 따라 Explore가 친다 (pianoPhrase)
+    const extra = { hall: ['drip', 'drip', 'creak'], hall2: ['drip'], roof: ['gust'] }[name];
     const next = () => {
       timer = setTimeout(() => {
         if (loops[name]?.out !== out) return;

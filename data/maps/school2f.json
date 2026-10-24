@@ -2,6 +2,7 @@
   "id": "school2f",
   "tileRotations": [{ "x": 30, "y": 14, "w": 3, "h": 2, "angle": 180 }],
   "bgm": "drone", "bgmTrial": "hall2", "music": "m_school2f",
+  "piano": { "x": 9.5, "y": 1, "room": "음악실", "hear": 32, "until": "p3" },
   "dark": true,
   "legend": {
     "#": "wall", ".": "floor_corridor", ",": "floor_wood", "_": "floor_tile", "c": "floor_pc", "r": "floor_room", "=": "floor_stairs", "|": "floor_stairs_side",
@@ -81,7 +82,7 @@
       { "t": "chapter", "title": "2장", "sub": "2층" },
       { "t": "save" },
       { "t": "text", "text": "2층. 공기가 한층 더 차갑다." },
-      { "t": "text", "text": "……어디선가 피아노 건반 하나가 울린 것 같다." },
+      { "t": "text", "text": "……어디선가 피아노 소리. 미, 솔 ── 두 음만 울리고 끊긴다." },
       { "t": "text", "who": "재민", "text": "……음악실인가." }
     ]
   },
