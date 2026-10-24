@@ -463,6 +463,30 @@
   32,
   32
  ],
+ "server_rack": [
+  32,
+  64
+ ],
+ "shelf_crt": [
+  32,
+  64
+ ],
+ "notice_pc": [
+  32,
+  32
+ ],
+ "clock_wall": [
+  32,
+  32
+ ],
+ "decal_cables": [
+  32,
+  32
+ ],
+ "floppies": [
+  32,
+  32
+ ],
  "shadow": [
   32,
   32
