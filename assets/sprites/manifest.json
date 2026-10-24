@@ -351,7 +351,7 @@
   32,
   32
  ],
- "fence_v": [
+ "fence_post": [
   32,
   32
  ],
@@ -410,6 +410,18 @@
  "window": [
   32,
   32
+ ],
+ "desk_teacher": [
+  32,
+  32
+ ],
+ "paper_stack": [
+  32,
+  32
+ ],
+ "mat_broadcast": [
+  96,
+  64
  ],
  "decal_crack": [
   32,
