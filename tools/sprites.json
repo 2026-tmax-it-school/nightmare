@@ -118,6 +118,12 @@
   "decal_dust": { "src": "props_sheet2.png", "box": [655, 28, 750, 98], "mode": "object", "center": true, "defringe": true, "scale": 0.8, "brighten": 0.8 },
   "decal_drain": { "src": "props_sheet2.png", "box": [786, 12, 882, 106], "mode": "object", "center": true, "defringe": true, "scale": 0.5 },
   "scorch": { "src": "props_sheet2.png", "box": [918, 12, 1008, 108], "mode": "object", "center": true, "defringe": true, "scale": 0.9, "alpha": 0.85 },
+  "server_rack": { "src": "pcroom_props3.png", "box": [8, 12, 102, 200], "mode": "object", "size": [32, 64], "brighten": 0.8 },
+  "shelf_crt": { "src": "pcroom_props3.png", "box": [110, 10, 204, 200], "mode": "object", "size": [32, 64], "brighten": 0.8 },
+  "notice_pc": { "src": "pcroom_props3.png", "box": [434, 8, 522, 100], "mode": "object", "brighten": 0.8 },
+  "clock_wall": { "src": "pcroom_props3.png", "box": [530, 16, 604, 86], "mode": "object", "scale": 0.8, "brighten": 0.85 },
+  "decal_cables": { "src": "pcroom_props3.png", "box": [330, 224, 424, 318], "mode": "object", "center": true, "defringe": true, "scale": 0.9, "brighten": 0.8 },
+  "floppies": { "src": "pcroom_props3.png", "box": [424, 224, 518, 318], "mode": "object", "center": true, "defringe": true, "scale": 0.7, "brighten": 0.8 },
   "shadow": { "src": "char_shadow.webp", "box": [440, 270, 800, 1040], "mode": "object" },
   "ghost": { "src": "char_ghost.webp", "box": [450, 270, 800, 1040], "mode": "object", "brighten": 0.85 },
   "past_fig": { "src": "char_past.png", "box": [88, 24, 188, 256], "mode": "object", "cutout": { "kind": "flood", "tol": 40 }, "brighten": 0.82 }
