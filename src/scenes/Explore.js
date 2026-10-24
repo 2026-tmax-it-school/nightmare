@@ -105,6 +105,7 @@ export default class Explore extends Phaser.Scene {
         // flat: 바닥에 깔린 것(카펫·종이 등)은 플레이어보다 아래에 그린다
         obj.img = this.add.image(cx(obj.x) + (o.dx || 0), (obj.y + 1) * TILE - (o.lift || 0), this.objTex(o)).setOrigin(0.5, 1)
           .setDepth(o.flat ? 1.2 : depthAt(obj.y));
+        if (o.scale) obj.img.setScale(o.scale); // scale: 그림 크기 배율 (아래 가운데 기준으로 줄어든다). 두 칸 이어 붙은 그림은 dx로 이음새를 맞춘다
         if (o.frame !== undefined && obj.img.texture.has(o.frame)) obj.img.setFrame(o.frame);
       }
       if (o.door && flag('open_' + o.door)) this.tiles[o.y][o.x].setTexture('door_open');
@@ -636,12 +637,19 @@ export default class Explore extends Phaser.Scene {
   updateCamera(instant = false) {
     if (this.camFixedMap) return;
     let id = this.room[this.ty]?.[this.tx] ?? -1;
-    if (id < 0) { if (!instant) return; id = this.camRoom ?? -1; }
+    if (id < 0) { if (!instant) return; id = typeof this.camRoom === 'number' ? this.camRoom : -1; }
     const b = this.roomBox[id];
     const fits = !!b && (b.x1 - b.x0 + 1) * TILE <= W && (b.y1 - b.y0 + 1) * TILE <= H;
-    const target = fits ? id : null;
+    let target = fits ? id : null, box = fits ? b : null;
+    // 복도와 이어진 작은 구역(현관 등)은 방 전체로는 화면보다 크지만, 그 구역 자체는 화면에 들어온다.
+    // 이때는 구역을 화면 가운데에 고정해 맵 가장자리에 붙어 한쪽이 검게 비지 않게 한다 (맵 areas, #110)
+    if (!fits) {
+      const ai = (this.map.areas || []).findIndex(a => this.tx >= a.x && this.tx < a.x + a.w && this.ty >= a.y && this.ty < a.y + a.h && a.w * TILE <= W && a.h * TILE <= H);
+      if (ai >= 0) { const a = this.map.areas[ai]; target = 'a' + ai; box = { x0: a.x, y0: a.y, x1: a.x + a.w - 1, y1: a.y + a.h - 1 }; }
+    }
     if (target === this.camRoom && !instant) return;
     this.camRoom = target;
+    this.camBox = box;
     this.camEase(instant ? 0 : CAM_EASE_MS);
   }
 
@@ -659,7 +667,7 @@ export default class Explore extends Phaser.Scene {
 
   // 방 고정: 방 가운데 / 따라가기: 플레이어 (맵 밖이 보이지 않게 가장자리에서 멈춘다)
   camTarget() {
-    const b = this.camRoom != null && this.roomBox[this.camRoom];
+    const b = this.camRoom != null && this.camBox;
     if (b) return [(b.x0 + b.x1 + 1) * TILE / 2, (b.y0 + b.y1 + 1) * TILE / 2];
     const mw = this.cols * TILE, mh = this.rows * TILE;
     return [Phaser.Math.Clamp(this.player.x, W / 2, mw - W / 2), Phaser.Math.Clamp(this.player.y, H / 2, mh - H / 2)];
@@ -790,15 +798,17 @@ export default class Explore extends Phaser.Scene {
   }
 
   // ── 물건 크기 (이슈 #136): 같은 조사 내용으로 서로 붙어 있는 칸을 한 물건으로 본다 (피아노 2칸, 칠판 3칸) ──
-  // 떨어져 있는 같은 종류(보면대·PC)는 따로. 스크립트가 없는 물건(사물함 등)은 그 칸 하나
+  // 떨어져 있는 같은 종류(보면대·PC)는 따로. 스크립트가 없는 물건(사물함 등)은 그 칸 하나.
+  // 같은 그림(같은 tex·frame)이 나란히 붙은 것은 한 그림의 조각이 아니라 따로 놓인 같은 물건(책상 줄·선반 둘)이라 묶지 않는다 (#152)
   partsOf(o) {
     const room = this.roomOf(o.x, o.y);
-    const same = p => p && (o.script ? p.script === o.script : p === o) && this.roomOf(p.x, p.y) === room;
+    const same = (a, p) => p && (o.script ? p.script === o.script : p === o) && this.roomOf(p.x, p.y) === room
+      && !(a.tex && a.tex === p.tex && a.frame === p.frame);
     const parts = [o];
     for (let i = 0; i < parts.length; i++) {
       for (const [dx, dy] of Object.values(DIRS)) {
         const p = this.objects.get(key(parts[i].x + dx, parts[i].y + dy));
-        if (same(p) && !parts.includes(p)) parts.push(p);
+        if (same(parts[i], p) && !parts.includes(p)) parts.push(p);
       }
     }
     return parts;
@@ -811,7 +821,7 @@ export default class Explore extends Phaser.Scene {
     for (const p of parts) {
       const img = p.img && !p.flat ? p.img : null;
       const [l, t, r, b] = img
-        ? [img.x - img.width / 2, img.y - (crop && img.isCropped ? TILE : img.height), img.x + img.width / 2, img.y]
+        ? [img.x - img.displayWidth / 2, img.y - (crop && img.isCropped ? TILE : img.displayHeight), img.x + img.displayWidth / 2, img.y]
         : [p.x * TILE, p.y * TILE, (p.x + 1) * TILE, (p.y + 1) * TILE];
       x0 = Math.min(x0, l); y0 = Math.min(y0, t); x1 = Math.max(x1, r); y1 = Math.max(y1, b);
     }
@@ -843,7 +853,7 @@ export default class Explore extends Phaser.Scene {
     this.glows = imgs;
     if (!imgs.length || this.renderer.type !== Phaser.WEBGL) return;
     const copies = imgs.map(img => {
-      const c = this.add.image(img.x, img.y, img.texture.key, img.frame.name).setOrigin(0.5, 1);
+      const c = this.add.image(img.x, img.y, img.texture.key, img.frame.name).setOrigin(0.5, 1).setScale(img.scaleX, img.scaleY);
       if (img.isCropped) c.setCrop(0, img.height - TILE, img.width, TILE);
       return c;
     });
@@ -1017,7 +1027,9 @@ export default class Explore extends Phaser.Scene {
 
   // ── 과거 겹쳐보기 (GDD 4.5): 부적을 얻은 뒤, 맵의 past 구역에서 Q ──
   pastHere() {
-    return (this.map.past || []).find(p => this.tx >= p.x && this.tx < p.x + p.w && this.ty >= p.y && this.ty < p.y + p.h && checkCond(p.cond));
+    const inside = (r) => this.tx >= r.x && this.tx < r.x + r.w && this.ty >= r.y && this.ty < r.y + r.h;
+    // except: 구역 안에서 겹쳐 보이지 않는 칸 (옥상의 계단실 등) (#110)
+    return (this.map.past || []).find(p => inside(p) && !(p.except || []).some(inside) && checkCond(p.cond));
   }
 
   tryPast() {
@@ -1029,7 +1041,8 @@ export default class Explore extends Phaser.Scene {
 
   // 아직 보지 않은 구역에 들어서면 부적이 반응한다
   pastNotice() {
-    const p = flag('pastSight') && this.pastHere();
+    // 부적이 재가 된 뒤(6장)에는 능력은 남지만 부적이 반응하는 알림은 나오지 않는다 (GDD 4.5, #110)
+    const p = flag('pastSight') && checkCond({ item: 'talisman' }) && this.pastHere();
     const id = p && !flag(p.flag) ? p.id : null;
     if (id && id !== this.pastNoticed) { sfx('chime'); this.ui.toast('부적이 뜨거워진다… (Q: 과거 겹쳐보기)'); }
     this.pastNoticed = id;

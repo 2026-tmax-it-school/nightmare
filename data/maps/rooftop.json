@@ -38,7 +38,7 @@
   ],
   "past": [
     {
-      "id": "roof", "x": 1, "y": 1, "w": 18, "h": 11, "flag": "past_roof",
+      "id": "roof", "x": 1, "y": 1, "w": 18, "h": 11, "flag": "past_roof", "except": [{ "x": 6, "y": 9, "w": 7, "h": 3 }],
       "figures": [
         { "x": 6, "y": 4, "label": "일등" }, { "x": 10, "y": 2, "label": "럭키7" },
         { "x": 15, "y": 7, "label": "텐" }, { "x": 10, "y": 8, "label": "재민" }

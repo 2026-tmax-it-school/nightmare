@@ -9,6 +9,12 @@
       ]
     },
     {
+      "title": "프롤로그", "sub": "폐교", "start": { "flag": "at_school" },
+      "steps": [
+        { "name": "현관으로 들어가 복도를 따라가 보자" }
+      ]
+    },
+    {
       "title": "1장", "sub": "1층", "start": { "flag": "ch1_start" },
       "steps": [
         { "name": "1학년 3반 — 교탁의 출석부", "done": { "flag": "read_attendance" } },
