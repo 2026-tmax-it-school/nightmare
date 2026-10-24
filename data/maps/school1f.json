@@ -559,7 +559,8 @@
                   { "t": "flag", "key": "drawer_open" },
                   { "t": "text", "text": "딸깍. 서랍을 끝까지 당겨 손전등을 비춘다──" },
                   { "t": "jumpscare", "image": "scare_drawer" },
-                  { "t": "text", "who": "재민", "text": "……읏! ……서류, 서류뿐이야." },
+                  { "t": "text", "who": "재민", "text": "……읏!" },
+                  { "t": "text", "who": "재민", "text": "……잘못 봤나. 서류 사이로 빛이 번진 걸 착각했나 봐." },
                   { "t": "text", "text": "서랍 깊숙이, 다른 서류 밑에 깔린 상담 기록철이 나온다." },
                   { "t": "clue", "id": "counsel" },
                   { "t": "call", "name": "p7" }
@@ -1030,7 +1031,8 @@
           { "t": "flag", "key": "scare_cabinet" },
           { "t": "jumpscare", "image": "scare_cabinet" },
           { "t": "text", "who": "재민", "text": "……읏!" },
-          { "t": "text", "text": "……아무것도 없다. 서랍은 전부 비어 있다." }
+          { "t": "text", "who": "재민", "text": "……잘못 봤나." },
+          { "t": "text", "text": "서랍은 전부 비어 있다. 안쪽 구석에서 손전등 빛만 일렁인다." }
         ],
         "else": [{ "t": "text", "text": "낡은 캐비닛. 서랍은 전부 비어 있다." }]
       }
